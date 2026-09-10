@@ -1,11 +1,7 @@
-function App() {
-	return (
-		<div>
-			<h1>MindGame</h1>
+import AppRoutes from "./routes/AppRoutes.jsx";
 
-			<p>Jugando también sanamos emociones.</p>
-		</div>
-	);
+function App() {
+	return <AppRoutes />;
 }
 
 export default App;

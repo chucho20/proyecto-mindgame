@@ -1,0 +1,8 @@
+.admin-dashboard-page__status {
+	color: var(--color-slate-500);
+	font-size: 0.9rem;
+}
+
+.admin-dashboard-page__status--error {
+	color: var(--color-error-700);
+}

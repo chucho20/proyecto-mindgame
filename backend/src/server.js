@@ -3,9 +3,11 @@ import "dotenv/config";
 import http from "http";
 import { Server } from "socket.io";
 
+import env from "./config/env.js";
 import app from "./app.js";
+import registerGameSocket from "./sockets/game.socket.js";
 
-const PORT = process.env.PORT || 3000;
+const PORT = env.port;
 
 const server = http.createServer(app);
 
@@ -16,13 +18,7 @@ const io = new Server(server, {
 	},
 });
 
-io.on("connection", (socket) => {
-	console.log("Usuario conectado:", socket.id);
-
-	socket.on("disconnect", () => {
-		console.log("Usuario desconectado:", socket.id);
-	});
-});
+registerGameSocket(io);
 
 server.listen(PORT, () => {
 	console.log(`🎮 MindGame API ejecutándose en puerto ${PORT}`);

@@ -1,0 +1,64 @@
+/*
+ * Estilos base compartidos por toda la app: tipografía, elementos base y
+ * clases utilitarias chicas. Se apoya en los tokens de variables.css.
+ */
+
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&display=swap");
+
+body {
+	font-family: var(--font-body);
+	color: var(--color-text);
+	background: var(--color-bg);
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+	font-family: var(--font-heading);
+	font-weight: 700;
+	color: var(--color-slate-800);
+}
+
+a {
+	color: inherit;
+}
+
+button {
+	font-family: inherit;
+}
+
+input,
+select,
+textarea {
+	font-family: inherit;
+}
+
+::selection {
+	background: var(--color-primary-50);
+	color: var(--color-primary-700);
+}
+
+/* Utilidades */
+
+.visually-hidden {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	padding: 0;
+	margin: -1px;
+	overflow: hidden;
+	clip: rect(0, 0, 0, 0);
+	white-space: nowrap;
+	border: 0;
+}
+
+.container {
+	width: 100%;
+	max-width: 1200px;
+	margin: 0 auto;
+	padding: 0 var(--space-4);
+	box-sizing: border-box;
+}

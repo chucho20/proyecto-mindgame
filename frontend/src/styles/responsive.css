@@ -1,0 +1,106 @@
+/*
+ * Utilidades responsive compartidas y el patrón de layout con sidebar que se
+ * repite en los mockups de admin/docente/estudiante: sidebar fijo en desktop,
+ * colapsado a navegación inferior (layout/MobileNavigation) en mobile.
+ *
+ * Breakpoints (no se pueden usar var() dentro de @media, se repiten literales
+ * acá; están documentados también en variables.css):
+ *   tablet: 768px
+ *   desktop: 1024px
+ */
+
+.hide-mobile {
+	display: none;
+}
+
+.hide-desktop {
+	display: block;
+}
+
+@media (min-width: 768px) {
+	.hide-mobile {
+		display: block;
+	}
+
+	.hide-desktop {
+		display: none;
+	}
+}
+
+/* Layout compartido con sidebar (StudentLayout / AdminLayout) */
+
+.app-layout {
+	display: flex;
+	min-height: 100vh;
+}
+
+.app-layout__sidebar {
+	display: none;
+}
+
+.app-layout__content {
+	flex: 1;
+	min-width: 0;
+	display: flex;
+	flex-direction: column;
+	padding-bottom: 4.5rem;
+}
+
+.app-layout__main {
+	flex: 1;
+	padding: var(--space-4);
+}
+
+@media (min-width: 768px) {
+	.app-layout__sidebar {
+		display: flex;
+	}
+
+	.app-layout__content {
+		padding-bottom: 0;
+	}
+
+	.app-layout__main {
+		padding: var(--space-8);
+	}
+}
+
+/* Grilla de tarjetas de estadísticas (dashboard admin) */
+
+.stat-cards-grid {
+	display: grid;
+	grid-template-columns: 1fr;
+	gap: var(--space-4);
+}
+
+@media (min-width: 768px) {
+	.stat-cards-grid {
+		grid-template-columns: repeat(2, 1fr);
+	}
+}
+
+@media (min-width: 1024px) {
+	.stat-cards-grid {
+		grid-template-columns: repeat(4, 1fr);
+	}
+}
+
+/* Grilla de tarjetas genérica (misiones, retos, actividades) */
+
+.cards-grid {
+	display: grid;
+	grid-template-columns: 1fr;
+	gap: var(--space-4);
+}
+
+@media (min-width: 768px) {
+	.cards-grid {
+		grid-template-columns: repeat(2, 1fr);
+	}
+}
+
+@media (min-width: 1024px) {
+	.cards-grid {
+		grid-template-columns: repeat(3, 1fr);
+	}
+}

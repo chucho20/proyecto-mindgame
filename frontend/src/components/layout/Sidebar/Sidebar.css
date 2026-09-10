@@ -1,0 +1,123 @@
+.sidebar {
+	width: 240px;
+	flex-shrink: 0;
+	min-height: 100vh;
+	display: flex;
+	flex-direction: column;
+	padding: var(--space-6) var(--space-4);
+	box-sizing: border-box;
+	position: sticky;
+	top: 0;
+}
+
+.sidebar--light {
+	background: #ffffff;
+	border-right: 1px solid var(--color-slate-200);
+	color: var(--color-slate-700);
+}
+
+.sidebar--dark {
+	background: var(--color-sidebar-bg);
+	color: var(--color-sidebar-text);
+}
+
+.sidebar__brand {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	margin-bottom: var(--space-8);
+	padding: 0 var(--space-2);
+}
+
+.sidebar__brand-badge {
+	width: 32px;
+	height: 32px;
+	border-radius: var(--radius-sm);
+	background: var(--color-primary-600);
+	color: #fff;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-family: var(--font-heading);
+	font-weight: 700;
+	font-size: 0.8rem;
+	flex-shrink: 0;
+}
+
+.sidebar__brand-title {
+	font-family: var(--font-heading);
+	font-weight: 700;
+	font-size: 1rem;
+}
+
+.sidebar--light .sidebar__brand-title {
+	color: var(--color-slate-800);
+}
+
+.sidebar--dark .sidebar__brand-title {
+	color: #fff;
+}
+
+.sidebar__nav {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1);
+	flex: 1;
+}
+
+.sidebar__link {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	padding: 0.65rem var(--space-3);
+	border-radius: var(--radius-sm);
+	font-size: 0.9rem;
+	font-weight: 600;
+	transition:
+		background-color var(--transition-base),
+		color var(--transition-base);
+}
+
+.sidebar--light .sidebar__link {
+	color: var(--color-slate-600);
+}
+
+.sidebar--light .sidebar__link:hover {
+	background: var(--color-slate-100);
+	color: var(--color-slate-800);
+}
+
+.sidebar--light .sidebar__link--active {
+	background: var(--color-primary-50);
+	color: var(--color-primary-700);
+}
+
+.sidebar--dark .sidebar__link {
+	color: var(--color-sidebar-text);
+}
+
+.sidebar--dark .sidebar__link:hover {
+	background: rgba(255, 255, 255, 0.06);
+	color: #fff;
+}
+
+.sidebar--dark .sidebar__link--active {
+	background: var(--color-sidebar-active-bg);
+	color: #fff;
+}
+
+.sidebar__link--disabled {
+	opacity: 0.45;
+	cursor: not-allowed;
+}
+
+.sidebar__icon {
+	display: inline-flex;
+	font-size: 1.05rem;
+}
+
+.sidebar__footer {
+	margin-top: auto;
+	padding-top: var(--space-4);
+	border-top: 1px solid rgba(148, 163, 184, 0.25);
+}

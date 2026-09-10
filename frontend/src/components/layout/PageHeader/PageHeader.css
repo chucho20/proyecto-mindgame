@@ -1,0 +1,27 @@
+.page-header {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: var(--space-3);
+	margin-bottom: var(--space-6);
+}
+
+.page-header__title {
+	margin: 0 0 0.3rem;
+	font-size: 1.4rem;
+	color: var(--color-slate-800);
+}
+
+.page-header__description {
+	margin: 0;
+	font-size: 0.9rem;
+	color: var(--color-slate-500);
+	max-width: 60ch;
+}
+
+.page-header__actions {
+	display: flex;
+	gap: var(--space-2);
+	flex-wrap: wrap;
+}

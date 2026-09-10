@@ -1,0 +1,8 @@
+.missions-page__status {
+	color: var(--color-slate-500);
+	font-size: 0.9rem;
+}
+
+.missions-page__status--error {
+	color: var(--color-error-700);
+}

@@ -1,0 +1,78 @@
+.mission-form {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-3);
+}
+
+.mission-form__field {
+	display: flex;
+	flex-direction: column;
+	gap: 0.35rem;
+}
+
+.mission-form__field label {
+	font-size: 0.85rem;
+	font-weight: 600;
+	color: var(--color-slate-700);
+}
+
+.mission-form__field input,
+.mission-form__field textarea {
+	padding: 0.6rem 0.8rem;
+	border: 1px solid var(--color-slate-300);
+	border-radius: var(--radius-sm);
+	font-size: 0.9rem;
+	font-family: inherit;
+	box-sizing: border-box;
+	resize: vertical;
+}
+
+.mission-form__field input:focus,
+.mission-form__field textarea:focus {
+	outline: none;
+	border-color: var(--color-primary-600);
+	box-shadow: var(--shadow-focus);
+}
+
+.mission-form__actions {
+	display: flex;
+	justify-content: flex-end;
+	gap: var(--space-2);
+	margin-top: var(--space-2);
+}
+
+.mission-form__submit {
+	padding: 0.6rem 1.1rem;
+	border: none;
+	border-radius: var(--radius-sm);
+	background: var(--color-primary-600);
+	color: #fff;
+	font-weight: 700;
+	font-size: 0.85rem;
+	cursor: pointer;
+}
+
+.mission-form__submit:disabled {
+	opacity: 0.7;
+	cursor: not-allowed;
+}
+
+.mission-form__cancel {
+	padding: 0.6rem 1.1rem;
+	border: 1px solid var(--color-slate-300);
+	border-radius: var(--radius-sm);
+	background: #fff;
+	color: var(--color-slate-700);
+	font-weight: 600;
+	font-size: 0.85rem;
+	cursor: pointer;
+}
+
+.mission-form__error {
+	background: var(--color-error-50);
+	color: var(--color-error-700);
+	border: 1px solid var(--color-error-200);
+	border-radius: var(--radius-sm);
+	padding: 0.6rem 0.8rem;
+	font-size: 0.85rem;
+}
