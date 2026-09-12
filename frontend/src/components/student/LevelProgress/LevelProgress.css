@@ -1,0 +1,134 @@
+.level-progress {
+	width: 100%;
+	box-sizing: border-box;
+	padding: var(--space-5);
+	background: var(--color-bg);
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius-lg);
+	box-shadow: var(--shadow-card);
+	font-family: var(--font-body);
+}
+
+.level-progress__levels {
+	display: grid;
+	grid-template-columns: auto 1fr auto;
+	align-items: center;
+	gap: var(--space-4);
+}
+
+.level-progress__level {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: var(--space-1);
+	min-width: 72px;
+	text-align: center;
+}
+
+.level-progress__eyebrow {
+	font-size: 0.75rem;
+	font-weight: 600;
+	color: var(--color-slate-500);
+}
+
+.level-progress__number {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 48px;
+	height: 48px;
+	border-radius: var(--radius-full);
+	font-family: var(--font-heading);
+	font-size: 1.125rem;
+	font-weight: 700;
+}
+
+.level-progress__level--current .level-progress__number {
+	color: var(--color-primary-700);
+	background: var(--color-primary-50);
+	border: 2px solid var(--color-primary-600);
+}
+
+.level-progress__level--next .level-progress__number {
+	color: var(--color-slate-600);
+	background: var(--color-slate-100);
+	border: 2px solid var(--color-slate-300);
+}
+
+.level-progress__line {
+	position: relative;
+	height: 10px;
+	overflow: hidden;
+	background: var(--color-slate-200);
+	border-radius: var(--radius-sm);
+}
+
+.level-progress__line-fill {
+	height: 100%;
+	background: var(--color-primary-600);
+	border-radius: inherit;
+	transition: width var(--transition-base);
+}
+
+.level-progress__xp {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--space-4);
+	margin-top: var(--space-4);
+	font-size: 0.875rem;
+	color: var(--color-slate-600);
+}
+
+.level-progress__xp strong {
+	color: var(--color-slate-800);
+}
+
+.level-progress__remaining {
+	color: var(--color-slate-500);
+	text-align: right;
+}
+
+@media (max-width: 767px) {
+	.level-progress {
+		padding: var(--space-4);
+	}
+
+	.level-progress__levels {
+		gap: var(--space-2);
+	}
+
+	.level-progress__level {
+		min-width: 60px;
+	}
+
+	.level-progress__eyebrow {
+		font-size: 0.6875rem;
+	}
+
+	.level-progress__number {
+		width: 42px;
+		height: 42px;
+		font-size: 1rem;
+	}
+
+	.level-progress__line {
+		height: 8px;
+	}
+
+	.level-progress__xp {
+		align-items: flex-start;
+		flex-direction: column;
+		gap: var(--space-1);
+	}
+
+	.level-progress__remaining {
+		text-align: left;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.level-progress__line-fill {
+		transition: none;
+	}
+}

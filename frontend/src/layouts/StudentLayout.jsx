@@ -11,7 +11,7 @@ const NAV_ITEMS = [
 	{ label: "Misiones", to: "/estudiante/misiones", icon: "🗺️" },
 	{ label: "Retos", icon: "🧩", disabled: true },
 	{ label: "Actividades", icon: "🎲", disabled: true },
-	{ label: "Mi progreso", icon: "📈", disabled: true },
+	{ label: "Mi progreso", icon: "📈", disabled: false },
 	{ label: "Logros", icon: "🏆", disabled: true },
 	{ label: "Convivencia", icon: "🤝", disabled: true },
 	{ label: "Mi perfil", to: "/perfil", icon: "👤" },

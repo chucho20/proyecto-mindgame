@@ -16,6 +16,7 @@ import MissionsAdminPage from "../pages/admin/MissionsAdminPage.jsx";
 import ChallengesAdminPage from "../pages/admin/ChallengesAdminPage.jsx";
 import ActivitiesAdminPage from "../pages/admin/ActivitiesAdminPage.jsx";
 import ContentAdminPage from "../pages/admin/ContentAdminPage.jsx";
+import ProgressPage from "../pages/student/ProgressPage.jsx";
 
 // Placeholder temporal de las secciones por rol: los dashboards completos
 // (estudiante RF-0xx, docente RF-022/023, admin) se construyen en sprints
@@ -49,6 +50,7 @@ function AppRoutes() {
 					<Route path="/estudiante" element={<RoleHomePlaceholder label="Panel de estudiante" />} />
 					<Route path="/estudiante/misiones" element={<MissionsPage />} />
 					<Route path="/estudiante/misiones/:id" element={<MissionDetailPage />} />
+				<Route path="/estudiante/progreso" element={<ProgressPage />} />
 				</Route>
 			</Route>
 
