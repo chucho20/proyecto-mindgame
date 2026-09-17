@@ -50,7 +50,7 @@ function AppRoutes() {
 					<Route path="/estudiante" element={<RoleHomePlaceholder label="Panel de estudiante" />} />
 					<Route path="/estudiante/misiones" element={<MissionsPage />} />
 					<Route path="/estudiante/misiones/:id" element={<MissionDetailPage />} />
-				<Route path="/estudiante/progreso" element={<ProgressPage />} />
+					<Route path="/estudiante/progreso" element={<ProgressPage />} />
 				</Route>
 			</Route>
 
