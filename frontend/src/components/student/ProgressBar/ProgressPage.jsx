@@ -26,10 +26,7 @@ function ProgressPage() {
 				}
 			} catch (err) {
 				if (!cancelled) {
-					setError(
-						err.response?.data?.message ||
-							"No pudimos cargar tu progreso.",
-					);
+					setError(err.response?.data?.message || "No pudimos cargar tu progreso.");
 				}
 			} finally {
 				if (!cancelled) {
@@ -50,33 +47,16 @@ function ProgressPage() {
 			return null;
 		}
 
-		const nivel = Number(
-			progress.nivel ??
-				progress.level ??
-				progress.nivel_actual ??
-				1,
-		);
+		const nivel = Number(progress.nivel ?? progress.level ?? progress.nivel_actual ?? 1);
 
-		const puntos = Number(
-			progress.puntos ??
-				progress.xp ??
-				progress.experiencia ??
-				progress.currentXp ??
-				0,
-		);
+		const puntos = Number(progress.puntos ?? progress.xp ?? progress.experiencia ?? progress.currentXp ?? 0);
 
 		const siguienteNivel = Number(
-			progress.siguiente_nivel ??
-				progress.nextLevel ??
-				progress.nivel_siguiente ??
-				nivel + 1,
+			progress.siguiente_nivel ?? progress.nextLevel ?? progress.nivel_siguiente ?? nivel + 1,
 		);
 
 		const puntosSiguienteNivel = Number(
-			progress.puntos_siguiente_nivel ??
-				progress.nextLevelXp ??
-				progress.xp_siguiente_nivel ??
-				0,
+			progress.puntos_siguiente_nivel ?? progress.nextLevelXp ?? progress.xp_siguiente_nivel ?? 0,
 		);
 
 		const misiones = Array.isArray(progress.misiones_completadas)
@@ -102,11 +82,7 @@ function ProgressPage() {
 	}, [progress]);
 
 	if (loading) {
-		return (
-			<p className="progress-page__status">
-				Cargando tu progreso...
-			</p>
-		);
+		return <p className="progress-page__status">Cargando tu progreso...</p>;
 	}
 
 	if (error || !datos) {
@@ -126,43 +102,25 @@ function ProgressPage() {
 
 			<section className="progress-page__summary" aria-label="Resumen de progreso">
 				<article className="progress-page__stat">
-					<span className="progress-page__stat-label">
-						Nivel actual
-					</span>
-					<strong className="progress-page__stat-value">
-						{datos.nivel}
-					</strong>
+					<span className="progress-page__stat-label">Nivel actual</span>
+					<strong className="progress-page__stat-value">{datos.nivel}</strong>
 				</article>
 
 				<article className="progress-page__stat">
-					<span className="progress-page__stat-label">
-						Puntos
-					</span>
-					<strong className="progress-page__stat-value">
-						{datos.puntos}
-					</strong>
+					<span className="progress-page__stat-label">Puntos</span>
+					<strong className="progress-page__stat-value">{datos.puntos}</strong>
 				</article>
 
 				<article className="progress-page__stat">
-					<span className="progress-page__stat-label">
-						Misiones completadas
-					</span>
-					<strong className="progress-page__stat-value">
-						{datos.misiones.length}
-					</strong>
+					<span className="progress-page__stat-label">Misiones completadas</span>
+					<strong className="progress-page__stat-value">{datos.misiones.length}</strong>
 				</article>
 			</section>
 
 			<section className="progress-page__section">
-				<h2 className="progress-page__section-title">
-					Avance de nivel
-				</h2>
+				<h2 className="progress-page__section-title">Avance de nivel</h2>
 
-				<XpBar
-					level={datos.nivel}
-					currentXp={datos.puntos}
-					nextLevelXp={datos.puntosSiguienteNivel}
-				/>
+				<XpBar level={datos.nivel} currentXp={datos.puntos} nextLevelXp={datos.puntosSiguienteNivel} />
 
 				<LevelProgress
 					level={datos.nivel}
@@ -175,55 +133,33 @@ function ProgressPage() {
 			<section className="progress-page__section">
 				<div className="progress-page__section-heading">
 					<div>
-						<h2 className="progress-page__section-title">
-							Misiones completadas
-						</h2>
-						<p className="progress-page__section-description">
-							Estas son las misiones que ya has terminado.
-						</p>
+						<h2 className="progress-page__section-title">Misiones completadas</h2>
+						<p className="progress-page__section-description">Estas son las misiones que ya has terminado.</p>
 					</div>
 
-					<span className="progress-page__mission-count">
-						{datos.misiones.length}
-					</span>
+					<span className="progress-page__mission-count">{datos.misiones.length}</span>
 				</div>
 
 				{datos.misiones.length === 0 ? (
 					<div className="progress-page__empty">
 						<p>Aún no has completado ninguna misión.</p>
-						<span>
-							Completa una misión para comenzar a registrar tu avance.
-						</span>
+						<span>Completa una misión para comenzar a registrar tu avance.</span>
 					</div>
 				) : (
 					<ul className="progress-page__missions">
 						{datos.misiones.map((mision, index) => (
-							<li
-								key={mision.id ?? mision.mision_id ?? index}
-								className="progress-page__mission"
-							>
-								<span
-									className="progress-page__mission-icon"
-									aria-hidden="true"
-								>
+							<li key={mision.id ?? mision.mision_id ?? index} className="progress-page__mission">
+								<span className="progress-page__mission-icon" aria-hidden="true">
 									✓
 								</span>
 
 								<div className="progress-page__mission-content">
-									<h3>
-										{mision.titulo ??
-											mision.nombre ??
-											`Misión ${mision.id ?? index + 1}`}
-									</h3>
+									<h3>{mision.titulo ?? mision.nombre ?? `Misión ${mision.id ?? index + 1}`}</h3>
 
-									{mision.descripcion ? (
-										<p>{mision.descripcion}</p>
-									) : null}
+									{mision.descripcion ? <p>{mision.descripcion}</p> : null}
 								</div>
 
-								<span className="progress-page__mission-status">
-									Completada
-								</span>
+								<span className="progress-page__mission-status">Completada</span>
 							</li>
 						))}
 					</ul>

@@ -1,18 +1,10 @@
-import React from "react";
 import "./XpBar.css";
 
-const XpBar = ({
-	currentXp = 0,
-	nextLevelXp = 0,
-	level,
-	label = "Progreso al siguiente nivel",
-}) => {
+const XpBar = ({ currentXp = 0, nextLevelXp = 0, level, label = "Progreso al siguiente nivel" }) => {
 	const current = Math.max(Number(currentXp) || 0, 0);
 	const next = Math.max(Number(nextLevelXp) || 0, 0);
 
-	const progress = next > 0
-		? Math.min((current / next) * 100, 100)
-		: 0;
+	const progress = next > 0 ? Math.min((current / next) * 100, 100) : 0;
 
 	const remaining = Math.max(next - current, 0);
 
@@ -21,9 +13,7 @@ const XpBar = ({
 			<div className="xp-bar__header">
 				<div className="xp-bar__title">
 					{level !== undefined && level !== null ? (
-						<span className="xp-bar__level">
-							Nivel {level}
-						</span>
+						<span className="xp-bar__level">Nivel {level}</span>
 					) : null}
 
 					<span className="xp-bar__label">{label}</span>
@@ -42,10 +32,7 @@ const XpBar = ({
 				aria-valuemax={next}
 				aria-label={`${current} de ${next} XP`}
 			>
-				<div
-					className="xp-bar__fill"
-					style={{ width: `${progress}%` }}
-				/>
+				<div className="xp-bar__fill" style={{ width: `${progress}%` }} />
 			</div>
 
 			<p className="xp-bar__remaining">
