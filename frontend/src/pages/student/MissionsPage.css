@@ -1,8 +1,62 @@
-.missions-page__status {
-	color: var(--color-slate-500);
-	font-size: 0.9rem;
+.missions-page__tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin: 1.5rem 0;
+  border-bottom: 1px solid #e5e7eb;
 }
 
-.missions-page__status--error {
-	color: var(--color-error-700);
+.missions-page__tab {
+  padding: 0.75rem 1.25rem;
+  border: none;
+  border-bottom: 3px solid transparent;
+  background: transparent;
+  color: #6b7280;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    color 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.missions-page__tab:hover {
+  color: #374151;
+}
+
+.missions-page__tab--active {
+  color: #2563eb;
+  border-bottom-color: #2563eb;
+}
+
+.missions-page__tab:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+
+.missions-page__status,
+.missions-page__error {
+  padding: 1rem;
+  text-align: center;
+}
+
+.missions-page__error {
+  color: #b91c1c;
+}
+
+@media (max-width: 639px) {
+  .missions-page__tabs {
+    width: 100%;
+  }
+
+  .missions-page__tab {
+    flex: 1;
+    padding: 0.7rem 0.75rem;
+    font-size: 0.9rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .missions-page__tab {
+    transition: none;
+  }
 }

@@ -112,3 +112,10 @@
 	font-weight: 700;
 	font-size: 0.8rem;
 }
+.mission-detail__feedback {
+	margin-top: 1.5rem;
+}
+
+.mission-detail__feedback .positive-message {
+	width: 100%;
+}

@@ -1,0 +1,178 @@
+
+.positive-message {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+
+  padding: 1rem 1.25rem;
+
+  border: 1px solid transparent;
+  border-radius: 1rem;
+
+  box-sizing: border-box;
+
+  animation: positive-message-enter 0.3s ease-out;
+}
+
+.positive-message--success {
+  background-color: #ecfdf3;
+  border-color: #a7f3d0;
+  color: #065f46;
+}
+
+.positive-message--info {
+  background-color: #eff6ff;
+  border-color: #bfdbfe;
+  color: #1e40af;
+}
+
+.positive-message--achievement {
+  background-color: #fffbeb;
+  border-color: #fde68a;
+  color: #92400e;
+}
+
+.positive-message__icon {
+  width: 2.75rem;
+  height: 2.75rem;
+
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  background-color: currentColor;
+  color: #ffffff;
+
+  font-size: 1.35rem;
+  font-weight: 700;
+}
+
+.positive-message__content {
+  min-width: 0;
+  flex: 1;
+}
+
+.positive-message__title {
+  margin: 0 0 0.25rem;
+
+  font-size: 1rem;
+  line-height: 1.4;
+  font-weight: 700;
+}
+
+.positive-message__text {
+  margin: 0;
+
+  font-size: 0.95rem;
+  line-height: 1.5;
+
+  overflow-wrap: anywhere;
+}
+
+.positive-message__close {
+  width: 2rem;
+  height: 2rem;
+
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: none;
+  border-radius: 50%;
+
+  background: transparent;
+  color: currentColor;
+
+  font-size: 1.5rem;
+  line-height: 1;
+
+  cursor: pointer;
+
+  transition:
+    background-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.positive-message__close:hover {
+  background-color: rgba(0, 0, 0, 0.08);
+  transform: scale(1.05);
+}
+
+.positive-message__close:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
+@keyframes positive-message-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Tablet */
+@media (min-width: 640px) {
+  .positive-message {
+    padding: 1.1rem 1.35rem;
+  }
+
+  .positive-message__title {
+    font-size: 1.05rem;
+  }
+
+  .positive-message__text {
+    font-size: 1rem;
+  }
+}
+
+/* Móvil */
+@media (max-width: 639px) {
+  .positive-message {
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 0.9rem 1rem;
+    border-radius: 0.85rem;
+  }
+
+  .positive-message__icon {
+    width: 2.25rem;
+    height: 2.25rem;
+    font-size: 1.1rem;
+  }
+
+  .positive-message__title {
+    font-size: 0.95rem;
+  }
+
+  .positive-message__text {
+    font-size: 0.9rem;
+  }
+
+  .positive-message__close {
+    width: 1.75rem;
+    height: 1.75rem;
+    font-size: 1.3rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .positive-message {
+    animation: none;
+  }
+
+  .positive-message__close {
+    transition: none;
+  }
+}
