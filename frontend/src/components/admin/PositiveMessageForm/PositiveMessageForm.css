@@ -1,0 +1,205 @@
+.positive-message-form {
+  width: 100%;
+  max-width: 680px;
+  padding: 1.5rem;
+
+  background: var(--color-white, #ffffff);
+  border: 1px solid var(--color-slate-200, #e2e8f0);
+  border-radius: 0.875rem;
+
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
+}
+
+/* Header */
+
+.positive-message-form__header {
+  margin-bottom: 1.5rem;
+}
+
+.positive-message-form__header h2 {
+  margin: 0;
+
+  color: var(--color-slate-700, #334155);
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.positive-message-form__header p {
+  margin: 0.4rem 0 0;
+
+  color: var(--color-slate-500, #64748b);
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+/* Campos */
+
+.positive-message-form__fields {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.positive-message-form__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.positive-message-form__field label {
+  color: var(--color-slate-700, #334155);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.positive-message-form__field label span {
+  color: #dc2626;
+}
+
+.positive-message-form__field input,
+.positive-message-form__field textarea {
+  width: 100%;
+  padding: 0.7rem 0.8rem;
+
+  color: var(--color-slate-700, #334155);
+  background: var(--color-white, #ffffff);
+
+  border: 1px solid var(--color-slate-300, #cbd5e1);
+  border-radius: 0.5rem;
+
+  font: inherit;
+  font-size: 0.875rem;
+
+  outline: none;
+
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.positive-message-form__field input {
+  height: 42px;
+}
+
+.positive-message-form__field textarea {
+  min-height: 120px;
+  resize: vertical;
+  line-height: 1.5;
+}
+
+.positive-message-form__field input::placeholder,
+.positive-message-form__field textarea::placeholder {
+  color: var(--color-slate-500, #64748b);
+  opacity: 0.75;
+}
+
+.positive-message-form__field input:focus,
+.positive-message-form__field textarea:focus {
+  border-color: var(--color-primary-600, #4f46e5);
+
+  box-shadow: 0 0 0 3px var(--color-primary-50, #eef2ff);
+}
+
+.positive-message-form__field input:disabled,
+.positive-message-form__field textarea:disabled {
+  cursor: not-allowed;
+  background: var(--color-slate-50, #f8fafc);
+}
+
+/* Ayuda y errores */
+
+.positive-message-form__help {
+  color: var(--color-slate-500, #64748b);
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+
+.positive-message-form__error {
+  color: #dc2626;
+  font-size: 0.75rem;
+}
+
+.positive-message-form__field
+  input[aria-invalid="true"],
+.positive-message-form__field
+  textarea[aria-invalid="true"] {
+  border-color: #dc2626;
+}
+
+/* Acciones */
+
+.positive-message-form__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+
+  margin-top: 1.5rem;
+  padding-top: 1.25rem;
+
+  border-top: 1px solid var(--color-slate-200, #e2e8f0);
+}
+
+.positive-message-form__button {
+  min-width: 120px;
+  padding: 0.7rem 1rem;
+
+  border: 0;
+  border-radius: 0.5rem;
+
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition:
+    background-color 0.2s ease,
+    transform 0.1s ease;
+}
+
+.positive-message-form__button:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.positive-message-form__button:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.positive-message-form__button--cancel {
+  color: var(--color-slate-600, #475569);
+  background: var(--color-slate-100, #f1f5f9);
+}
+
+.positive-message-form__button--cancel:hover:not(:disabled) {
+  background: var(--color-slate-200, #e2e8f0);
+}
+
+.positive-message-form__button--submit {
+  color: #ffffff;
+  background: var(--color-primary-600, #4f46e5);
+}
+
+.positive-message-form__button--submit:hover:not(:disabled) {
+  background: var(--color-primary-700, #4338ca);
+}
+
+/* Responsive */
+
+@media (max-width: 640px) {
+  .positive-message-form {
+    padding: 1rem;
+  }
+
+  .positive-message-form__header h2 {
+    font-size: 1.1rem;
+  }
+
+  .positive-message-form__actions {
+    flex-direction: column-reverse;
+  }
+
+  .positive-message-form__button {
+    width: 100%;
+  }
+}

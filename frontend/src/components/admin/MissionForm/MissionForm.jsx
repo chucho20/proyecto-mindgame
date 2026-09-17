@@ -2,7 +2,12 @@ import { useState } from "react";
 
 import "./MissionForm.css";
 
-const EMPTY_FORM = { titulo: "", descripcion: "", orden: 0 };
+const EMPTY_FORM = {
+	titulo: "",
+	descripcion: "",
+	orden: 0,
+	categoria: "historica",
+};
 
 /**
  * Formulario de creación/edición de misiones (RF-024). `initialValues` viene
@@ -13,6 +18,7 @@ function MissionForm({ initialValues, onSubmit, onCancel, submitting }) {
 		titulo: initialValues?.titulo || EMPTY_FORM.titulo,
 		descripcion: initialValues?.descripcion || EMPTY_FORM.descripcion,
 		orden: initialValues?.orden ?? EMPTY_FORM.orden,
+		categoria: initialValues?.categoria || EMPTY_FORM.categoria,
 	});
 	const [error, setError] = useState("");
 
@@ -25,7 +31,10 @@ function MissionForm({ initialValues, onSubmit, onCancel, submitting }) {
 		setError("");
 
 		try {
-			await onSubmit({ ...form, orden: Number(form.orden) || 0 });
+			await onSubmit({
+				...form,
+				orden: Number(form.orden) || 0,
+			});
 		} catch (err) {
 			const details = err.response?.data?.details;
 			setError(
@@ -57,7 +66,9 @@ function MissionForm({ initialValues, onSubmit, onCancel, submitting }) {
 					id="mission-descripcion"
 					rows={3}
 					value={form.descripcion}
-					onChange={(event) => updateField("descripcion", event.target.value)}
+					onChange={(event) =>
+						updateField("descripcion", event.target.value)
+					}
 				/>
 			</div>
 
@@ -71,11 +82,35 @@ function MissionForm({ initialValues, onSubmit, onCancel, submitting }) {
 				/>
 			</div>
 
+			<div className="mission-form__field">
+				<label htmlFor="mission-categoria">Categoría</label>
+				<select
+					id="mission-categoria"
+					value={form.categoria}
+					onChange={(event) =>
+						updateField("categoria", event.target.value)
+					}
+					required
+				>
+					<option value="historica">Histórica</option>
+					<option value="convivencia">Convivencia</option>
+				</select>
+			</div>
+
 			<div className="mission-form__actions">
-				<button type="button" className="mission-form__cancel" onClick={onCancel} disabled={submitting}>
+				<button
+					type="button"
+					className="mission-form__cancel"
+					onClick={onCancel}
+					disabled={submitting}
+				>
 					Cancelar
 				</button>
-				<button type="submit" className="mission-form__submit" disabled={submitting}>
+				<button
+					type="submit"
+					className="mission-form__submit"
+					disabled={submitting}
+				>
 					{submitting ? "Guardando..." : "Guardar"}
 				</button>
 			</div>

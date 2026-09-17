@@ -119,3 +119,24 @@ export async function setActivityStatus(id, estado) {
 export async function deleteActivity(id) {
 	await api.delete(`/admin/actividades/${id}`);
 }
+
+// --- Mensajes positivos ---
+
+export async function listPositiveMessages() {
+	const { data } = await api.get("/admin/mensajes-positivos");
+	return data;
+}
+
+export async function createPositiveMessage(payload) {
+	const { data } = await api.post("/admin/mensajes-positivos", payload);
+	return data;
+}
+
+export async function updatePositiveMessage(id, payload) {
+	const { data } = await api.put(`/admin/mensajes-positivos/${id}`, payload);
+	return data;
+}
+
+export async function deletePositiveMessage(id) {
+	await api.delete(`/admin/mensajes-positivos/${id}`);
+}

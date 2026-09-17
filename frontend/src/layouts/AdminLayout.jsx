@@ -13,7 +13,7 @@ const NAV_ITEMS = [
 	{ label: "Actividades", to: "/admin/actividades", icon: "🎲" },
 	{ label: "Contenidos", to: "/admin/contenidos", icon: "📖" },
 	{ label: "Usuarios", icon: "👥", disabled: true },
-	{ label: "Convivencia", icon: "🤝", disabled: true },
+	{ label: "Convivencia", to: "/admin/mensajes-positivos", icon: "🤝" },
 	{ label: "Progresión", icon: "📈", disabled: true },
 	{ label: "Mi perfil", to: "/perfil", icon: "👤" },
 ];
@@ -21,10 +21,11 @@ const NAV_ITEMS = [
 /**
  * Layout compartido de las pantallas de administrador: sidebar oscuro
  * (variant="dark", igual que los mockups de admin/docente) en desktop/tablet,
- * navegación inferior en mobile. "Dashboard", "Misiones", "Retos",
- * "Actividades", "Contenidos", "Mi perfil" y "Cerrar sesión" están
- * habilitados este sprint — "Usuarios", "Convivencia" y "Progresión"
- * muestran la misma leyenda honesta que el resto del proyecto.
+ * navegación inferior en mobile.
+ *
+ * Las secciones disponibles incluyen Dashboard, Misiones, Retos,
+ * Actividades, Contenidos, Convivencia y Mi perfil.
+ * Usuarios y Progresión permanecen deshabilitadas temporalmente.
  */
 function AdminLayout() {
 	const { user, logout } = useAuth();
@@ -60,7 +61,11 @@ function AdminLayout() {
 			</div>
 
 			<div className="app-layout__content">
-				<Header user={user} onLogout={handleLogout} loggingOut={loggingOut} />
+				<Header
+					user={user}
+					onLogout={handleLogout}
+					loggingOut={loggingOut}
+				/>
 				<main className="app-layout__main">
 					<Outlet />
 				</main>
