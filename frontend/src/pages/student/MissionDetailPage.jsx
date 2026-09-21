@@ -93,8 +93,7 @@ function MissionDetailPage() {
 	 * Se contemplan las dos convenciones más habituales:
 	 * "convivencia" y "Convivencia".
 	 */
-	const esMisionDeConvivencia =
-		String(mision?.categoria || "").toLowerCase() === "convivencia";
+	const esMisionDeConvivencia = String(mision?.categoria || "").toLowerCase() === "convivencia";
 
 	/**
 	 * Guarda el mensaje positivo devuelto por el backend.
@@ -113,10 +112,7 @@ function MissionDetailPage() {
 			return;
 		}
 
-		const message =
-			response?.positiveMessage ??
-			response?.positive_message ??
-			null;
+		const message = response?.positiveMessage ?? response?.positive_message ?? null;
 
 		setPositiveMessage(message);
 	};
@@ -125,11 +121,7 @@ function MissionDetailPage() {
 		await missionsApi.completeStory(historiaId);
 
 		setHistorias((prev) =>
-			prev.map((historia) =>
-				historia.id === historiaId
-					? { ...historia, completada: true }
-					: historia,
-			),
+			prev.map((historia) => (historia.id === historiaId ? { ...historia, completada: true } : historia)),
 		);
 
 		await refrescarMision();
@@ -151,9 +143,7 @@ function MissionDetailPage() {
 
 		setActividades((prev) =>
 			prev.map((actividad) =>
-				actividad.id === actividadId
-					? { ...actividad, completada: true }
-					: actividad,
+				actividad.id === actividadId ? { ...actividad, completada: true } : actividad,
 			),
 		);
 
@@ -184,9 +174,7 @@ function MissionDetailPage() {
 				title={mision.titulo}
 				description={mision.descripcion}
 				actions={
-					<span
-						className={`mission-detail__progress mission-detail__progress--${mision.progreso}`}
-					>
+					<span className={`mission-detail__progress mission-detail__progress--${mision.progreso}`}>
 						{PROGRESO_LABEL[mision.progreso] || mision.progreso}
 					</span>
 				}
@@ -198,9 +186,7 @@ function MissionDetailPage() {
 						key={item.id}
 						type="button"
 						className={
-							tab === item.id
-								? "mission-detail__tab mission-detail__tab--active"
-								: "mission-detail__tab"
+							tab === item.id ? "mission-detail__tab mission-detail__tab--active" : "mission-detail__tab"
 						}
 						onClick={() => setTab(item.id)}
 					>
@@ -212,30 +198,21 @@ function MissionDetailPage() {
 			{tab === "historia" ? (
 				<div className="mission-detail__section">
 					{historias.length === 0 ? (
-						<p className="mission-detail__empty">
-							Esta misión no tiene historia todavía.
-						</p>
+						<p className="mission-detail__empty">Esta misión no tiene historia todavía.</p>
 					) : null}
 
 					{historias.map((historia) => (
-						<article
-							key={historia.id}
-							className="mission-detail__story"
-						>
+						<article key={historia.id} className="mission-detail__story">
 							<h2>{historia.titulo}</h2>
 							<p>{historia.contenido}</p>
 
 							{historia.completada ? (
-								<span className="mission-detail__story-done">
-									✓ Leída
-								</span>
+								<span className="mission-detail__story-done">✓ Leída</span>
 							) : (
 								<button
 									type="button"
 									className="mission-detail__story-button"
-									onClick={() =>
-										handleLeerHistoria(historia.id)
-									}
+									onClick={() => handleLeerHistoria(historia.id)}
 								>
 									Marcar como leída
 								</button>
@@ -248,37 +225,21 @@ function MissionDetailPage() {
 			{tab === "retos" ? (
 				<div className="mission-detail__section">
 					{retos.length === 0 ? (
-						<p className="mission-detail__empty">
-							Esta misión no tiene retos todavía.
-						</p>
+						<p className="mission-detail__empty">Esta misión no tiene retos todavía.</p>
 					) : null}
 
 					{retos.map((reto) => (
-						<ChallengeCard
-							key={reto.id}
-							reto={reto}
-							onResponder={handleResponderReto}
-						/>
+						<ChallengeCard key={reto.id} reto={reto} onResponder={handleResponderReto} />
 					))}
 
 					{resultado && esMisionDeConvivencia && positiveMessage ? (
 						<div className="mission-detail__feedback">
 							<PositiveMessage
-								message={
-									typeof positiveMessage === "string"
-										? positiveMessage
-										: positiveMessage.message
-								}
+								message={typeof positiveMessage === "string" ? positiveMessage : positiveMessage.message}
 								title={
-									typeof positiveMessage === "object"
-										? positiveMessage.title || "¡Muy bien!"
-										: "¡Muy bien!"
+									typeof positiveMessage === "object" ? positiveMessage.title || "¡Muy bien!" : "¡Muy bien!"
 								}
-								type={
-									typeof positiveMessage === "object"
-										? positiveMessage.type || "success"
-										: "success"
-								}
+								type={typeof positiveMessage === "object" ? positiveMessage.type || "success" : "success"}
 							/>
 						</div>
 					) : null}
@@ -288,37 +249,21 @@ function MissionDetailPage() {
 			{tab === "actividades" ? (
 				<div className="mission-detail__section">
 					{actividades.length === 0 ? (
-						<p className="mission-detail__empty">
-							Esta misión no tiene actividades todavía.
-						</p>
+						<p className="mission-detail__empty">Esta misión no tiene actividades todavía.</p>
 					) : null}
 
 					{actividades.map((actividad) => (
-						<ActivityCard
-							key={actividad.id}
-							actividad={actividad}
-							onCompletar={handleCompletarActividad}
-						/>
+						<ActivityCard key={actividad.id} actividad={actividad} onCompletar={handleCompletarActividad} />
 					))}
 
 					{resultado && esMisionDeConvivencia && positiveMessage ? (
 						<div className="mission-detail__feedback">
 							<PositiveMessage
-								message={
-									typeof positiveMessage === "string"
-										? positiveMessage
-										: positiveMessage.message
-								}
+								message={typeof positiveMessage === "string" ? positiveMessage : positiveMessage.message}
 								title={
-									typeof positiveMessage === "object"
-										? positiveMessage.title || "¡Muy bien!"
-										: "¡Muy bien!"
+									typeof positiveMessage === "object" ? positiveMessage.title || "¡Muy bien!" : "¡Muy bien!"
 								}
-								type={
-									typeof positiveMessage === "object"
-										? positiveMessage.type || "success"
-										: "success"
-								}
+								type={typeof positiveMessage === "object" ? positiveMessage.type || "success" : "success"}
 							/>
 						</div>
 					) : null}
