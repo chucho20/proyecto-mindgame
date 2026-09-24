@@ -1,0 +1,211 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+model Usuario {
+  id                     Int                    @id @default(autoincrement())
+  nombreCompleto         String                 @map("nombre_completo") @db.VarChar(150)
+  correo                 String                 @unique(map: "uq_usuarios_correo") @db.VarChar(150)
+  nombreUsuario          String                 @unique(map: "uq_usuarios_nombre_usuario") @map("nombre_usuario") @db.VarChar(50)
+  passwordHash           String                 @map("password_hash") @db.VarChar(255)
+  edad                   Int?
+  gradoCurso             String?                @map("grado_curso") @db.VarChar(50)
+  rol                    RolUsuario
+  avatar                 String?                @db.VarChar(100)
+  aceptaTratamientoDatos Boolean                @map("acepta_tratamiento_datos")
+  createdAt              DateTime               @default(now()) @map("created_at") @db.DateTime(0)
+  updatedAt              DateTime               @default(now()) @map("updated_at") @db.DateTime(0)
+  actividadesCompletadas ActividadCompletada[]
+  historiasCompletadas   HistoriaCompletada[]
+  intentosRetos          IntentoReto[]
+  passwordResets         PasswordReset[]
+  progresoMisiones       ProgresoMision[]
+
+  @@map("usuarios")
+}
+
+model PasswordReset {
+  id        Int      @id @default(autoincrement())
+  usuarioId Int      @map("usuario_id")
+  tokenHash String   @map("token_hash") @db.VarChar(255)
+  expiraEn  DateTime @map("expira_en") @db.DateTime(0)
+  usado     Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at") @db.DateTime(0)
+  usuario   Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_password_resets_usuario")
+
+  @@index([usuarioId], map: "fk_password_resets_usuario")
+  @@index([tokenHash], map: "idx_password_resets_token_hash")
+  @@map("password_resets")
+}
+
+model Mision {
+  id               Int              @id @default(autoincrement())
+  titulo           String           @db.VarChar(150)
+  descripcion      String?          @db.Text
+  orden            Int              @default(0)
+  estado           EstadoMision     @default(activa)
+  createdAt        DateTime         @default(now()) @map("created_at") @db.DateTime(0)
+  updatedAt        DateTime         @default(now()) @map("updated_at") @db.DateTime(0)
+  actividades      Actividad[]
+  historias        Historia[]
+  progresoMisiones ProgresoMision[]
+  retos            Reto[]
+
+  @@index([estado], map: "idx_misiones_estado")
+  @@map("misiones")
+}
+
+model Historia {
+  id                   Int                  @id @default(autoincrement())
+  misionId             Int                  @map("mision_id")
+  titulo               String               @db.VarChar(150)
+  contenido            String               @db.Text
+  orden                Int                  @default(0)
+  estado               EstadoHistoria       @default(activa)
+  createdAt            DateTime             @default(now()) @map("created_at") @db.DateTime(0)
+  updatedAt            DateTime             @default(now()) @map("updated_at") @db.DateTime(0)
+  mision               Mision               @relation(fields: [misionId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_historias_mision")
+  historiasCompletadas HistoriaCompletada[]
+
+  @@index([misionId], map: "idx_historias_mision_id")
+  @@map("historias")
+}
+
+model HistoriaCompletada {
+  id           Int      @id @default(autoincrement())
+  usuarioId    Int      @map("usuario_id")
+  historiaId   Int      @map("historia_id")
+  completadaEn DateTime @default(now()) @map("completada_en") @db.DateTime(0)
+  historia     Historia @relation(fields: [historiaId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_historias_completadas_historia")
+  usuario      Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_historias_completadas_usuario")
+
+  @@unique([usuarioId, historiaId], map: "uq_historias_completadas_usuario_historia")
+  @@index([historiaId], map: "fk_historias_completadas_historia")
+  @@map("historias_completadas")
+}
+
+model Reto {
+  id                Int           @id @default(autoincrement())
+  misionId          Int           @map("mision_id")
+  tipo              TipoReto
+  enunciado         String        @db.Text
+  opciones          Json?
+  respuestaCorrecta Json          @map("respuesta_correcta")
+  puntos            Int           @default(10)
+  orden             Int           @default(0)
+  estado            EstadoReto    @default(activo)
+  createdAt         DateTime      @default(now()) @map("created_at") @db.DateTime(0)
+  updatedAt         DateTime      @default(now()) @map("updated_at") @db.DateTime(0)
+  intentosRetos     IntentoReto[]
+  mision            Mision        @relation(fields: [misionId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_retos_mision")
+
+  @@index([misionId], map: "idx_retos_mision_id")
+  @@map("retos")
+}
+
+model IntentoReto {
+  id              Int      @id @default(autoincrement())
+  usuarioId       Int      @map("usuario_id")
+  retoId          Int      @map("reto_id")
+  respuestaDada   Json     @map("respuesta_dada")
+  esCorrecto      Boolean  @map("es_correcto")
+  puntosObtenidos Int      @default(0) @map("puntos_obtenidos")
+  resueltoEn      DateTime @default(now()) @map("resuelto_en") @db.DateTime(0)
+  reto            Reto     @relation(fields: [retoId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_intentos_retos_reto")
+  usuario         Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_intentos_retos_usuario")
+
+  @@index([retoId], map: "fk_intentos_retos_reto")
+  @@index([usuarioId, retoId], map: "idx_intentos_retos_usuario_reto")
+  @@map("intentos_retos")
+}
+
+model Actividad {
+  id                     Int                    @id @default(autoincrement())
+  misionId               Int?                   @map("mision_id")
+  titulo                 String                 @db.VarChar(150)
+  descripcion            String?                @db.Text
+  tipo                   String                 @db.VarChar(50)
+  orden                  Int                    @default(0)
+  estado                 EstadoActividad        @default(activa)
+  createdAt              DateTime               @default(now()) @map("created_at") @db.DateTime(0)
+  updatedAt              DateTime               @default(now()) @map("updated_at") @db.DateTime(0)
+  mision                 Mision?                @relation(fields: [misionId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_actividades_mision")
+  actividadesCompletadas ActividadCompletada[]
+
+  @@index([misionId], map: "idx_actividades_mision_id")
+  @@map("actividades")
+}
+
+model ActividadCompletada {
+  id           Int       @id @default(autoincrement())
+  usuarioId    Int       @map("usuario_id")
+  actividadId  Int       @map("actividad_id")
+  completadaEn DateTime  @default(now()) @map("completada_en") @db.DateTime(0)
+  actividad    Actividad @relation(fields: [actividadId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_actividades_completadas_actividad")
+  usuario      Usuario   @relation(fields: [usuarioId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_actividades_completadas_usuario")
+
+  @@unique([usuarioId, actividadId], map: "uq_actividades_completadas_usuario_actividad")
+  @@index([actividadId], map: "fk_actividades_completadas_actividad")
+  @@map("actividades_completadas")
+}
+
+model ProgresoMision {
+  id           Int            @id @default(autoincrement())
+  usuarioId    Int            @map("usuario_id")
+  misionId     Int            @map("mision_id")
+  estado       EstadoProgreso @default(en_progreso)
+  iniciadaEn   DateTime?      @map("iniciada_en") @db.DateTime(0)
+  completadaEn DateTime?      @map("completada_en") @db.DateTime(0)
+  createdAt    DateTime       @default(now()) @map("created_at") @db.DateTime(0)
+  updatedAt    DateTime       @default(now()) @map("updated_at") @db.DateTime(0)
+  mision       Mision         @relation(fields: [misionId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_progreso_misiones_mision")
+  usuario      Usuario        @relation(fields: [usuarioId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_progreso_misiones_usuario")
+
+  @@unique([usuarioId, misionId], map: "uq_progreso_misiones_usuario_mision")
+  @@index([misionId], map: "fk_progreso_misiones_mision")
+  @@map("progreso_misiones")
+}
+
+enum TipoReto {
+  seleccion_multiple
+  verdadero_falso
+  relacion_elementos
+  orden_cronologico
+}
+
+enum EstadoProgreso {
+  disponible
+  en_progreso
+  completada
+}
+
+enum EstadoMision {
+  activa
+  inactiva
+}
+
+enum EstadoHistoria {
+  activa
+  inactiva
+}
+
+enum EstadoActividad {
+  activa
+  inactiva
+}
+
+enum RolUsuario {
+  estudiante
+  docente
+  administrador
+}
+
+enum EstadoReto {
+  activo
+  inactivo
+}

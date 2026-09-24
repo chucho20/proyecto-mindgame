@@ -1,5 +1,11 @@
 .atl/
 .claude/
+.windsurf/
+.agents/
 node_modules/
 
 .env
+
+# Cliente Prisma generado (backend/src/generated/prisma) - se regenera con
+# `npx prisma generate`, no hace falta versionarlo.
+backend/src/generated/prisma/
