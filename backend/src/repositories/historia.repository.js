@@ -1,75 +1,115 @@
-import pool from "../config/db.js";
+import prisma from "../config/prisma.js";
 
-export async function findByMisionId(misionId, { onlyActive = false } = {}) {
-	const sql = onlyActive
-		? "SELECT * FROM historias WHERE mision_id = ? AND estado = 'activa' ORDER BY orden ASC, id ASC"
-		: "SELECT * FROM historias WHERE mision_id = ? ORDER BY orden ASC, id ASC";
-	const [rows] = await pool.query(sql, [misionId]);
-	return rows;
+export async function findByMisionId(
+	misionId,
+	{ onlyActive = false } = {},
+) {
+	return prisma.historia.findMany({
+		where: {
+			misionId: Number(misionId),
+			estado: onlyActive ? "activa" : undefined,
+		},
+		orderBy: [
+			{ orden: "asc" },
+			{ id: "asc" },
+		],
+	});
 }
 
 export async function findAllAdmin({ misionId } = {}) {
 	if (misionId) {
-		const [rows] = await pool.query(
-			"SELECT * FROM historias WHERE mision_id = ? ORDER BY orden ASC, id ASC",
-			[misionId],
-		);
-		return rows;
+		return prisma.historia.findMany({
+			where: {
+				misionId: Number(misionId),
+			},
+			orderBy: [
+				{ orden: "asc" },
+				{ id: "asc" },
+			],
+		});
 	}
 
-	const [rows] = await pool.query("SELECT * FROM historias ORDER BY mision_id ASC, orden ASC, id ASC");
-	return rows;
+	return prisma.historia.findMany({
+		orderBy: [
+			{ misionId: "asc" },
+			{ orden: "asc" },
+			{ id: "asc" },
+		],
+	});
 }
 
 export async function findById(id) {
-	const [rows] = await pool.query("SELECT * FROM historias WHERE id = ? LIMIT 1", [id]);
-	return rows[0] || null;
+	return prisma.historia.findUnique({
+		where: {
+			id: Number(id),
+		},
+	});
 }
 
-export async function create({ misionId, titulo, contenido, orden, estado }) {
-	const [result] = await pool.query(
-		"INSERT INTO historias (mision_id, titulo, contenido, orden, estado) VALUES (?, ?, ?, ?, ?)",
-		[misionId, titulo, contenido, orden ?? 0, estado || "activa"],
-	);
-	return findById(result.insertId);
+export async function create({
+	misionId,
+	titulo,
+	contenido,
+	orden,
+	estado,
+}) {
+	return prisma.historia.create({
+		data: {
+			misionId: Number(misionId),
+			titulo,
+			contenido,
+			orden: orden ?? 0,
+			estado: estado || "activa",
+		},
+	});
 }
 
 export async function update(id, { titulo, contenido, orden }) {
-	const setClauses = [];
-	const values = [];
+	const data = {};
 
 	if (titulo !== undefined) {
-		setClauses.push("titulo = ?");
-		values.push(titulo);
-	}
-	if (contenido !== undefined) {
-		setClauses.push("contenido = ?");
-		values.push(contenido);
-	}
-	if (orden !== undefined) {
-		setClauses.push("orden = ?");
-		values.push(orden);
+		data.titulo = titulo;
 	}
 
-	if (setClauses.length === 0) {
+	if (contenido !== undefined) {
+		data.contenido = contenido;
+	}
+
+	if (orden !== undefined) {
+		data.orden = orden;
+	}
+
+	if (Object.keys(data).length === 0) {
 		return findById(id);
 	}
 
-	values.push(id);
-	await pool.query(`UPDATE historias SET ${setClauses.join(", ")} WHERE id = ?`, values);
-	return findById(id);
+	return prisma.historia.update({
+		where: {
+			id: Number(id),
+		},
+		data,
+	});
 }
 
 export async function setEstado(id, estado) {
-	await pool.query("UPDATE historias SET estado = ? WHERE id = ?", [estado, id]);
-	return findById(id);
+	return prisma.historia.update({
+		where: {
+			id: Number(id),
+		},
+		data: {
+			estado,
+		},
+	});
 }
 
 export async function remove(id) {
-	await pool.query("DELETE FROM historias WHERE id = ?", [id]);
+	await prisma.historia.delete({
+		where: {
+			id: Number(id),
+		},
+	});
 }
 
 export async function countAll() {
-	const [rows] = await pool.query("SELECT COUNT(*) AS total FROM historias");
-	return rows[0].total;
+	return prisma.historia.count();
 }
