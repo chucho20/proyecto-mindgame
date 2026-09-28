@@ -1,66 +1,91 @@
-import pool from "../config/db.js";
+import prisma from "../config/prisma.js";
 
 export async function findAllActivas() {
-	const [rows] = await pool.query(
-		"SELECT * FROM misiones WHERE estado = 'activa' ORDER BY orden ASC, id ASC",
-	);
-	return rows;
+	return prisma.mision.findMany({
+		where: {
+			estado: "activa",
+		},
+		orderBy: [
+			{ orden: "asc" },
+			{ id: "asc" },
+		],
+	});
 }
 
 export async function findAllAdmin() {
-	const [rows] = await pool.query("SELECT * FROM misiones ORDER BY orden ASC, id ASC");
-	return rows;
+	return prisma.mision.findMany({
+		orderBy: [
+			{ orden: "asc" },
+			{ id: "asc" },
+		],
+	});
 }
 
 export async function findById(id) {
-	const [rows] = await pool.query("SELECT * FROM misiones WHERE id = ? LIMIT 1", [id]);
-	return rows[0] || null;
+	return prisma.mision.findUnique({
+		where: {
+			id: Number(id),
+		},
+	});
 }
 
 export async function create({ titulo, descripcion, orden, estado }) {
-	const [result] = await pool.query(
-		"INSERT INTO misiones (titulo, descripcion, orden, estado) VALUES (?, ?, ?, ?)",
-		[titulo, descripcion ?? null, orden ?? 0, estado || "activa"],
-	);
-	return findById(result.insertId);
+	return prisma.mision.create({
+		data: {
+			titulo,
+			descripcion: descripcion ?? null,
+			orden: orden ?? 0,
+			estado: estado || "activa",
+		},
+	});
 }
 
 export async function update(id, { titulo, descripcion, orden }) {
-	const setClauses = [];
-	const values = [];
+	const data = {};
 
 	if (titulo !== undefined) {
-		setClauses.push("titulo = ?");
-		values.push(titulo);
-	}
-	if (descripcion !== undefined) {
-		setClauses.push("descripcion = ?");
-		values.push(descripcion);
-	}
-	if (orden !== undefined) {
-		setClauses.push("orden = ?");
-		values.push(orden);
+		data.titulo = titulo;
 	}
 
-	if (setClauses.length === 0) {
+	if (descripcion !== undefined) {
+		data.descripcion = descripcion;
+	}
+
+	if (orden !== undefined) {
+		data.orden = orden;
+	}
+
+	if (Object.keys(data).length === 0) {
 		return findById(id);
 	}
 
-	values.push(id);
-	await pool.query(`UPDATE misiones SET ${setClauses.join(", ")} WHERE id = ?`, values);
-	return findById(id);
+	return prisma.mision.update({
+		where: {
+			id: Number(id),
+		},
+		data,
+	});
 }
 
 export async function setEstado(id, estado) {
-	await pool.query("UPDATE misiones SET estado = ? WHERE id = ?", [estado, id]);
-	return findById(id);
+	return prisma.mision.update({
+		where: {
+			id: Number(id),
+		},
+		data: {
+			estado,
+		},
+	});
 }
 
 export async function remove(id) {
-	await pool.query("DELETE FROM misiones WHERE id = ?", [id]);
+	await prisma.mision.delete({
+		where: {
+			id: Number(id),
+		},
+	});
 }
 
 export async function countAll() {
-	const [rows] = await pool.query("SELECT COUNT(*) AS total FROM misiones");
-	return rows[0].total;
+	return prisma.mision.count();
 }
