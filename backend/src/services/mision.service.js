@@ -1,3 +1,4 @@
+
 import AppError from "../utils/AppError.js";
 import * as misionRepository from "../repositories/mision.repository.js";
 import * as historiaRepository from "../repositories/historia.repository.js";
@@ -11,17 +12,29 @@ function construirMisionConProgreso(mision, progreso) {
 	return {
 		...mision,
 		progreso: progreso ? progreso.estado : "disponible",
-		iniciada_en: progreso ? progreso.iniciada_en : null,
-		completada_en: progreso ? progreso.completada_en : null,
+		iniciadaEn: progreso ? progreso.iniciadaEn : null,
+		completadaEn: progreso ? progreso.completadaEn : null,
 	};
 }
 
 export async function listar(usuarioId) {
 	const misiones = await misionRepository.findAllActivas();
-	const progresos = await progresoMisionRepository.findAllByUsuario(usuarioId);
-	const progresoPorMision = new Map(progresos.map((progreso) => [progreso.mision_id, progreso]));
+	const progresos =
+		await progresoMisionRepository.findAllByUsuario(usuarioId);
 
-	return misiones.map((mision) => construirMisionConProgreso(mision, progresoPorMision.get(mision.id)));
+	const progresoPorMision = new Map(
+		progresos.map((progreso) => [
+			progreso.misionId,
+			progreso,
+		]),
+	);
+
+	return misiones.map((mision) =>
+		construirMisionConProgreso(
+			mision,
+			progresoPorMision.get(mision.id),
+		),
+	);
 }
 
 export async function obtener(id, usuarioId) {
@@ -31,7 +44,12 @@ export async function obtener(id, usuarioId) {
 		throw new AppError("Misión no encontrada.", 404);
 	}
 
-	const progreso = await progresoMisionRepository.findByUsuarioYMision(usuarioId, id);
+	const progreso =
+		await progresoMisionRepository.findByUsuarioYMision(
+			usuarioId,
+			id,
+		);
+
 	return construirMisionConProgreso(mision, progreso);
 }
 
@@ -42,51 +60,66 @@ export async function iniciar(id, usuarioId) {
 		throw new AppError("Misión no encontrada.", 404);
 	}
 
-	const existente = await progresoMisionRepository.findByUsuarioYMision(usuarioId, id);
+	const existente =
+		await progresoMisionRepository.findByUsuarioYMision(
+			usuarioId,
+			id,
+		);
+
 	if (existente) {
 		return existente;
 	}
 
 	try {
-		return await progresoMisionRepository.create(usuarioId, id, "en_progreso");
+		return await progresoMisionRepository.create(
+			usuarioId,
+			id,
+			"en_progreso",
+		);
 	} catch (error) {
-		// Carrera entre dos requests iniciando la misma misión al mismo tiempo:
-		// el UNIQUE (usuario_id, mision_id) rechaza al segundo insert. Devolvemos
-		// el registro existente en vez de un 500 (mismo patrón que el registro
-		// de usuarios en Sprint 1 con el UNIQUE de correo).
-		if (error && error.code === "ER_DUP_ENTRY") {
-			return progresoMisionRepository.findByUsuarioYMision(usuarioId, id);
+		// Prisma usa P2002 cuando se viola una restricción UNIQUE.
+		if (error?.code === "P2002") {
+			return progresoMisionRepository.findByUsuarioYMision(
+				usuarioId,
+				id,
+			);
 		}
+
 		throw error;
 	}
 }
 
 /**
- * Recalcula si la misión quedó completa para el usuario (todos los retos
- * activos respondidos correctamente al menos una vez + todas las actividades
- * activas completadas) y, si corresponde, marca progreso_misiones como
- * 'completada'. Se llama después de responder un reto correctamente o de
- * completar una actividad.
- *
- * Nota de diseño: esto NO es el sistema de puntos/niveles de Sprint 3
- * (ServicioDeProgreso) — es solo el estado mínimo de avance por misión que
- * pide RF-007/008 ("diferenciar actividades disponibles y completadas").
+ * Recalcula si la misión quedó completa para el usuario:
+ * todos los retos activos respondidos correctamente al menos
+ * una vez + todas las actividades activas completadas.
  */
-export async function actualizarProgresoSiCompleta(misionId, usuarioId) {
-	let progreso = await progresoMisionRepository.findByUsuarioYMision(usuarioId, misionId);
+export async function actualizarProgresoSiCompleta(
+	misionId,
+	usuarioId,
+) {
+	let progreso =
+		await progresoMisionRepository.findByUsuarioYMision(
+			usuarioId,
+			misionId,
+		);
 
-	// Si el cliente respondió un reto o completó una actividad sin pasar antes
-	// por POST /misiones/:id/iniciar (el frontend siempre lo hace, pero no hay
-	// que asumirlo), no existe fila de progreso todavía — la creamos acá para
-	// no perder el avance silenciosamente.
+	// Si no existe progreso, se crea automáticamente.
 	if (!progreso) {
 		try {
-			progreso = await progresoMisionRepository.create(usuarioId, misionId, "en_progreso");
+			progreso =
+				await progresoMisionRepository.create(
+					usuarioId,
+					misionId,
+					"en_progreso",
+				);
 		} catch (error) {
-			// Misma carrera que en iniciar(): otra request pudo haber creado la
-			// fila justo antes que esta.
-			if (error && error.code === "ER_DUP_ENTRY") {
-				progreso = await progresoMisionRepository.findByUsuarioYMision(usuarioId, misionId);
+			if (error?.code === "P2002") {
+				progreso =
+					await progresoMisionRepository.findByUsuarioYMision(
+						usuarioId,
+						misionId,
+					);
 			} else {
 				throw error;
 			}
@@ -97,19 +130,45 @@ export async function actualizarProgresoSiCompleta(misionId, usuarioId) {
 		return progreso;
 	}
 
-	const [totalRetos, retosCorrectos, totalActividades, actividadesCompletadas] = await Promise.all([
-		retoRepository.countByMisionId(misionId, { onlyActive: true }),
-		intentoRetoRepository.countRetosCorrectosPorMision(usuarioId, misionId),
-		actividadRepository.countByMisionId(misionId, { onlyActive: true }),
-		actividadCompletadaRepository.countCompletadasPorMision(usuarioId, misionId),
+	const [
+		totalRetos,
+		retosCorrectos,
+		totalActividades,
+		actividadesCompletadas,
+	] = await Promise.all([
+		retoRepository.countByMisionId(misionId, {
+			onlyActive: true,
+		}),
+
+		intentoRetoRepository.countRetosCorrectosPorMision(
+			usuarioId,
+			misionId,
+		),
+
+		actividadRepository.countByMisionId(misionId, {
+			onlyActive: true,
+		}),
+
+		actividadCompletadaRepository.countCompletadasPorMision(
+			usuarioId,
+			misionId,
+		),
 	]);
 
-	const hayContenidoEvaluable = totalRetos > 0 || totalActividades > 0;
+	const hayContenidoEvaluable =
+		totalRetos > 0 || totalActividades > 0;
+
 	const estaCompleta =
-		hayContenidoEvaluable && retosCorrectos >= totalRetos && actividadesCompletadas >= totalActividades;
+		hayContenidoEvaluable &&
+		retosCorrectos >= totalRetos &&
+		actividadesCompletadas >= totalActividades;
 
 	if (estaCompleta) {
-		return progresoMisionRepository.updateEstado(usuarioId, misionId, "completada");
+		return progresoMisionRepository.updateEstado(
+			usuarioId,
+			misionId,
+			"completada",
+		);
 	}
 
 	return progreso;
@@ -135,12 +194,19 @@ function validarMision(data, { esCreacion }) {
 	const errors = [];
 
 	if (esCreacion || data.titulo !== undefined) {
-		if (typeof data.titulo !== "string" || data.titulo.trim().length === 0) {
+		if (
+			typeof data.titulo !== "string" ||
+			data.titulo.trim().length === 0
+		) {
 			errors.push("El título es obligatorio.");
 		}
 	}
 
-	if (data.orden !== undefined && data.orden !== null && !Number.isFinite(Number(data.orden))) {
+	if (
+		data.orden !== undefined &&
+		data.orden !== null &&
+		!Number.isFinite(Number(data.orden))
+	) {
 		errors.push("El orden debe ser un número.");
 	}
 
@@ -148,16 +214,25 @@ function validarMision(data, { esCreacion }) {
 }
 
 export async function crear(data) {
-	const errors = validarMision(data, { esCreacion: true });
+	const errors = validarMision(data, {
+		esCreacion: true,
+	});
 
 	if (errors.length > 0) {
-		throw new AppError("Datos de misión inválidos.", 400, errors);
+		throw new AppError(
+			"Datos de misión inválidos.",
+			400,
+			errors,
+		);
 	}
 
 	return misionRepository.create({
 		titulo: data.titulo.trim(),
 		descripcion: data.descripcion || null,
-		orden: data.orden !== undefined ? Number(data.orden) : 0,
+		orden:
+			data.orden !== undefined
+				? Number(data.orden)
+				: 0,
 		estado: "activa",
 	});
 }
@@ -165,24 +240,43 @@ export async function crear(data) {
 export async function actualizar(id, data) {
 	await obtenerAdmin(id);
 
-	const errors = validarMision(data, { esCreacion: false });
+	const errors = validarMision(data, {
+		esCreacion: false,
+	});
+
 	if (errors.length > 0) {
-		throw new AppError("Datos de misión inválidos.", 400, errors);
+		throw new AppError(
+			"Datos de misión inválidos.",
+			400,
+			errors,
+		);
 	}
 
 	return misionRepository.update(id, {
-		titulo: data.titulo !== undefined ? data.titulo.trim() : undefined,
+		titulo:
+			data.titulo !== undefined
+				? data.titulo.trim()
+				: undefined,
+
 		descripcion: data.descripcion,
-		orden: data.orden !== undefined ? Number(data.orden) : undefined,
+
+		orden:
+			data.orden !== undefined
+				? Number(data.orden)
+				: undefined,
 	});
 }
 
 export async function cambiarEstado(id, estado) {
 	if (!["activa", "inactiva"].includes(estado)) {
-		throw new AppError("Estado inválido. Debe ser 'activa' o 'inactiva'.", 400);
+		throw new AppError(
+			"Estado inválido. Debe ser 'activa' o 'inactiva'.",
+			400,
+		);
 	}
 
 	await obtenerAdmin(id);
+
 	return misionRepository.setEstado(id, estado);
 }
 
@@ -192,17 +286,26 @@ export async function eliminar(id) {
 }
 
 /**
- * Conteos reales para la landing del dashboard admin (GET /admin/stats).
- * A propósito no inventa métricas que todavía no existen (usuarios,
- * convivencia) — solo lo que este sprint efectivamente modela.
+ * Conteos reales para la landing del dashboard admin.
  */
 export async function obtenerStatsAdmin() {
-	const [misiones, historias, retos, actividades] = await Promise.all([
+	const [
+		misiones,
+		historias,
+		retos,
+		actividades,
+	] = await Promise.all([
 		misionRepository.countAll(),
 		historiaRepository.countAll(),
 		retoRepository.countAll(),
 		actividadRepository.countAll(),
 	]);
 
-	return { misiones, historias, retos, actividades };
+	return {
+		misiones,
+		historias,
+		retos,
+		actividades,
+	};
 }
+
