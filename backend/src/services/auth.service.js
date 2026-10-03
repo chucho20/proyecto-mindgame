@@ -1,3 +1,4 @@
+
 import crypto from "node:crypto";
 
 import env from "../config/env.js";
@@ -19,7 +20,7 @@ function sanitizeUser(usuario) {
 		return null;
 	}
 
-	const { password_hash: _passwordHash, ...safeUser } = usuario;
+	const { passwordHash: _passwordHash, ...safeUser } = usuario;
 	return safeUser;
 }
 
@@ -30,10 +31,14 @@ function hashToken(token) {
 // Hash de referencia para comparar contra una cuenta inexistente y así no filtrar
 // por tiempo de respuesta si el correo está o no registrado (RF-002).
 let dummyHashPromise;
+
 function getDummyHash() {
 	if (!dummyHashPromise) {
-		dummyHashPromise = hashPassword(crypto.randomBytes(32).toString("hex"));
+		dummyHashPromise = hashPassword(
+			crypto.randomBytes(32).toString("hex"),
+		);
 	}
+
 	return dummyHashPromise;
 }
 
@@ -47,19 +52,30 @@ export async function register(data) {
 	const correo = data.correo.trim().toLowerCase();
 	const nombreUsuario = data.nombreUsuario.trim();
 
-	const existingByEmail = await usuarioRepository.findByEmail(correo);
+	const existingByEmail =
+		await usuarioRepository.findByEmail(correo);
+
 	if (existingByEmail) {
-		throw new AppError("Ya existe una cuenta registrada con ese correo.", 409);
+		throw new AppError(
+			"Ya existe una cuenta registrada con ese correo.",
+			409,
+		);
 	}
 
-	const existingByUsername = await usuarioRepository.findByUsername(nombreUsuario);
+	const existingByUsername =
+		await usuarioRepository.findByUsername(nombreUsuario);
+
 	if (existingByUsername) {
-		throw new AppError("Ese nombre de usuario ya está en uso.", 409);
+		throw new AppError(
+			"Ese nombre de usuario ya está en uso.",
+			409,
+		);
 	}
 
 	const passwordHash = await hashPassword(data.password);
 
 	let usuario;
+
 	try {
 		usuario = await usuarioRepository.create({
 			nombreCompleto: data.nombreCompleto.trim(),
@@ -73,12 +89,14 @@ export async function register(data) {
 			aceptaTratamientoDatos: true,
 		});
 	} catch (error) {
-		// Cubre la carrera entre la verificación previa y el INSERT: si dos
-		// registros concurrentes usan el mismo correo/usuario, el UNIQUE de la
-		// base de datos rechaza al segundo — lo mapeamos a 409, no a un 500 genérico.
-		if (error && error.code === "ER_DUP_ENTRY") {
-			throw new AppError("Ya existe una cuenta registrada con ese correo o nombre de usuario.", 409);
+		// Prisma usa P2002 para violaciones de restricciones UNIQUE.
+		if (error?.code === "P2002") {
+			throw new AppError(
+				"Ya existe una cuenta registrada con ese correo o nombre de usuario.",
+				409,
+			);
 		}
+
 		throw error;
 	}
 
@@ -89,26 +107,46 @@ export async function login(correo, password) {
 	const errors = validateLogin({ correo, password });
 
 	if (errors.length > 0) {
-		throw new AppError("Datos de inicio de sesión inválidos.", 400, errors);
+		throw new AppError(
+			"Datos de inicio de sesión inválidos.",
+			400,
+			errors,
+		);
 	}
 
-	const usuario = await usuarioRepository.findByEmail(correo.trim().toLowerCase());
+	const usuario = await usuarioRepository.findByEmail(
+		correo.trim().toLowerCase(),
+	);
 
 	// Mensaje genérico: no revela si falló el correo o la contraseña (RF-002).
-	const invalidCredentialsError = new AppError("Correo o contraseña incorrectos.", 401);
+	const invalidCredentialsError = new AppError(
+		"Correo o contraseña incorrectos.",
+		401,
+	);
 
-	// Comparamos siempre contra un hash (real o de referencia) para que el tiempo
-	// de respuesta no delate si la cuenta existe.
-	const passwordHash = usuario ? usuario.password_hash : await getDummyHash();
-	const passwordMatches = await comparePassword(password, passwordHash);
+	// Comparamos siempre contra un hash real o de referencia.
+	const passwordHash = usuario
+		? usuario.passwordHash
+		: await getDummyHash();
+
+	const passwordMatches = await comparePassword(
+		password,
+		passwordHash,
+	);
 
 	if (!usuario || !passwordMatches) {
 		throw invalidCredentialsError;
 	}
 
-	const token = signToken({ id: usuario.id, rol: usuario.rol });
+	const token = signToken({
+		id: usuario.id,
+		rol: usuario.rol,
+	});
 
-	return { token, user: sanitizeUser(usuario) };
+	return {
+		token,
+		user: sanitizeUser(usuario),
+	};
 }
 
 export async function forgotPassword(correo) {
@@ -118,13 +156,18 @@ export async function forgotPassword(correo) {
 		throw new AppError("Datos inválidos.", 400, errors);
 	}
 
-	const usuario = await usuarioRepository.findByEmail(correo.trim().toLowerCase());
+	const usuario = await usuarioRepository.findByEmail(
+		correo.trim().toLowerCase(),
+	);
 
 	// No confirmamos ni negamos la existencia de la cuenta (RF-003).
 	if (usuario) {
 		const plainToken = crypto.randomBytes(32).toString("hex");
 		const tokenHash = hashToken(plainToken);
-		const expiraEn = new Date(Date.now() + env.resetTokenExpiresMin * 60 * 1000);
+
+		const expiraEn = new Date(
+			Date.now() + env.resetTokenExpiresMin * 60 * 1000,
+		);
 
 		await passwordResetRepository.create({
 			usuarioId: usuario.id,
@@ -132,13 +175,19 @@ export async function forgotPassword(correo) {
 			expiraEn,
 		});
 
-		const resetLink = `${env.frontendUrl}/reset-password/${plainToken}`;
+		const resetLink =
+			`${env.frontendUrl}/reset-password/${plainToken}`;
 
-		// No esperamos el envío del correo: el tiempo de red del SMTP no debe
-		// filtrar si la cuenta existe (RF-003). Los errores de envío solo se logean.
-		sendPasswordResetEmail(usuario.correo, resetLink).catch((error) => {
-			console.error("Error enviando correo de restablecimiento:", error);
-		});
+		// No esperamos el envío del correo para evitar filtrar
+		// información mediante el tiempo de respuesta.
+		sendPasswordResetEmail(usuario.correo, resetLink).catch(
+			(error) => {
+				console.error(
+					"Error enviando correo de restablecimiento:",
+					error,
+				);
+			},
+		);
 	}
 
 	return {
@@ -148,23 +197,36 @@ export async function forgotPassword(correo) {
 }
 
 export async function resetPassword(token, newPassword) {
-	const errors = validateResetPassword({ token, password: newPassword });
+	const errors = validateResetPassword({
+		token,
+		password: newPassword,
+	});
 
 	if (errors.length > 0) {
 		throw new AppError("Datos inválidos.", 400, errors);
 	}
 
 	const tokenHash = hashToken(token);
-	const resetRecord = await passwordResetRepository.findValidByTokenHash(tokenHash);
+
+	const resetRecord =
+		await passwordResetRepository.findValidByTokenHash(tokenHash);
 
 	if (!resetRecord) {
-		throw new AppError("El enlace de restablecimiento es inválido o expiró.", 400);
+		throw new AppError(
+			"El enlace de restablecimiento es inválido o expiró.",
+			400,
+		);
 	}
 
 	const passwordHash = await hashPassword(newPassword);
 
-	await usuarioRepository.updatePassword(resetRecord.usuario_id, passwordHash);
+	await usuarioRepository.updatePassword(
+		resetRecord.usuarioId,
+		passwordHash,
+	);
+
 	await passwordResetRepository.markAsUsed(resetRecord.id);
 
-	return { message: "Contraseña restablecida correctamente." };
-}
+	return {
+		message: "Contraseña restablecida correctamente.",
+	};
