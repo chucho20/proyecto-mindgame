@@ -1,3 +1,4 @@
+
 import AppError from "../utils/AppError.js";
 import { validateProfileUpdate } from "../utils/validators.js";
 import * as usuarioRepository from "../repositories/usuario.repository.js";
@@ -7,7 +8,7 @@ function sanitizeUser(usuario) {
 		return null;
 	}
 
-	const { password_hash: _passwordHash, ...safeUser } = usuario;
+	const { passwordHash: _passwordHash, ...safeUser } = usuario;
 	return safeUser;
 }
 
@@ -25,7 +26,11 @@ export async function updateProfile(userId, data) {
 	const errors = validateProfileUpdate(data);
 
 	if (errors.length > 0) {
-		throw new AppError("Datos de perfil inválidos.", 400, errors);
+		throw new AppError(
+			"Datos de perfil inválidos.",
+			400,
+			errors,
+		);
 	}
 
 	const usuario = await usuarioRepository.findById(userId);
@@ -35,8 +40,12 @@ export async function updateProfile(userId, data) {
 	}
 
 	let edad = data.edad;
+
 	if (edad !== undefined) {
-		edad = edad === null || edad === "" ? null : Number(edad);
+		edad =
+			edad === null || edad === ""
+				? null
+				: Number(edad);
 	}
 
 	const updated = await usuarioRepository.update(userId, {
