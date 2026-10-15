@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 
 import * as adminApi from "../../api/admin.api.js";
@@ -6,10 +7,8 @@ import PageHeader from "../../components/layout/PageHeader/PageHeader.jsx";
 import "./AdminDashboardPage.css";
 
 /**
- * Landing del panel admin (RF-024/025): conteos reales de GET /admin/stats.
- * A propósito no muestra métricas que este sprint no modela todavía
- * (usuarios, convivencia, progresión) — esas secciones siguen deshabilitadas
- * en el sidebar hasta que tengan datos reales detrás.
+ * Dashboard administrativo de MindGame.
+ * RF-026: incluye estadísticas de progresión.
  */
 function AdminDashboardPage() {
 	const [stats, setStats] = useState(null);
@@ -24,13 +23,18 @@ function AdminDashboardPage() {
 			setError("");
 
 			try {
-				const { stats: data } = await adminApi.getStats();
+				const respuesta = await adminApi.getStats();
+				const data = respuesta?.stats ?? respuesta;
+
 				if (!cancelled) {
 					setStats(data);
 				}
 			} catch (err) {
 				if (!cancelled) {
-					setError(err.response?.data?.message || "No pudimos cargar las estadísticas.");
+					setError(
+						err.response?.data?.message ||
+							"No pudimos cargar las estadísticas."
+					);
 				}
 			} finally {
 				if (!cancelled) {
@@ -48,21 +52,68 @@ function AdminDashboardPage() {
 
 	return (
 		<div className="admin-dashboard-page">
-			<PageHeader title="Dashboard" description="Resumen del contenido educativo cargado en MindGame." />
+			<PageHeader
+				title="Dashboard"
+				description="Resumen del contenido educativo y la progresión de MindGame."
+			/>
 
-			{loading ? <p className="admin-dashboard-page__status">Cargando estadísticas...</p> : null}
-			{error ? (
-				<p className="admin-dashboard-page__status admin-dashboard-page__status--error">{error}</p>
-			) : null}
+			{loading && (
+				<p className="admin-dashboard-page__status">
+					Cargando estadísticas...
+				</p>
+			)}
 
-			{!loading && !error && stats ? (
+			{error && (
+				<p className="admin-dashboard-page__status admin-dashboard-page__status--error">
+					{error}
+				</p>
+			)}
+
+			{!loading && !error && stats && (
 				<div className="stat-cards-grid">
-					<AdminStatCard label="Misiones" value={stats.misiones} icon="🗺️" accent="primary" />
-					<AdminStatCard label="Historias" value={stats.historias} icon="📖" accent="success" />
-					<AdminStatCard label="Retos" value={stats.retos} icon="🧩" accent="accent" />
-					<AdminStatCard label="Actividades" value={stats.actividades} icon="🎲" accent="error" />
+					<AdminStatCard
+						label="Misiones"
+						value={stats.misiones ?? 0}
+						icon="🗺️"
+						accent="primary"
+					/>
+
+					<AdminStatCard
+						label="Historias"
+						value={stats.historias ?? 0}
+						icon="📖"
+						accent="success"
+					/>
+
+					<AdminStatCard
+						label="Retos"
+						value={stats.retos ?? 0}
+						icon="🧩"
+						accent="accent"
+					/>
+
+					<AdminStatCard
+						label="Actividades"
+						value={stats.actividades ?? 0}
+						icon="🎲"
+						accent="error"
+					/>
+
+					<AdminStatCard
+						label="Recompensas activas"
+						value={stats.recompensasActivas ?? 0}
+						icon="🏆"
+						accent="success"
+					/>
+
+					<AdminStatCard
+						label="Logros activos"
+						value={stats.logrosActivos ?? 0}
+						icon="🎖️"
+						accent="primary"
+					/>
 				</div>
-			) : null}
+			)}
 		</div>
 	);
 }
