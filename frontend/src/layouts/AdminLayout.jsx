@@ -14,7 +14,7 @@ const NAV_ITEMS = [
 	{ label: "Contenidos", to: "/admin/contenidos", icon: "📖" },
 	{ label: "Usuarios", icon: "👥", disabled: true },
 	{ label: "Convivencia", icon: "🤝", disabled: true },
-	{ label: "Progresión", icon: "📈", disabled: true },
+{ label: "Progresión", to: "/admin/recompensas", icon: "📈" },
 	{ label: "Mi perfil", to: "/perfil", icon: "👤" },
 ];
 

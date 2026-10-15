@@ -65,6 +65,8 @@ function AppRoutes() {
 					<Route path="/admin/retos" element={<ChallengesAdminPage />} />
 					<Route path="/admin/actividades" element={<ActivitiesAdminPage />} />
 					<Route path="/admin/contenidos" element={<ContentAdminPage />} />
+					<Route path="/admin/recompensas" element={<RewardsAdminPage />} />
+<Route path="/admin/logros" element={<AchievementsAdminPage />} />
 				</Route>
 			</Route>
 
