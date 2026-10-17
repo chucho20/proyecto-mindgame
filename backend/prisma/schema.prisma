@@ -26,6 +26,9 @@ model Usuario {
   passwordResets         PasswordReset[]
   progresoMisiones       ProgresoMision[]
 
+    gruposCreados       Grupo[]           @relation("DocenteGrupos")
+  gruposEstudiante    GrupoEstudiante[] @relation("EstudianteGrupos")
+
   @@map("usuarios")
 }
 
@@ -208,4 +211,35 @@ enum RolUsuario {
 enum EstadoReto {
   activo
   inactivo
+}
+
+
+
+model Grupo {
+  id        Int      @id @default(autoincrement())
+  docenteId Int      @map("docente_id")
+  nombre    String   @db.VarChar(100)
+  codigo    String   @unique(map: "uq_grupos_codigo") @db.VarChar(20)
+  createdAt DateTime @default(now()) @map("created_at") @db.DateTime(0)
+  updatedAt DateTime @default(now()) @map("updated_at") @db.DateTime(0)
+
+  docente     Usuario           @relation("DocenteGrupos", fields: [docenteId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_grupos_docente")
+  estudiantes GrupoEstudiante[]
+
+  @@index([docenteId], map: "idx_grupos_docente_id")
+  @@map("grupos")
+}
+
+model GrupoEstudiante {
+  id           Int      @id @default(autoincrement())
+  grupoId      Int      @map("grupo_id")
+  estudianteId Int      @map("estudiante_id")
+  createdAt    DateTime @default(now()) @map("created_at") @db.DateTime(0)
+
+  grupo      Grupo   @relation(fields: [grupoId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_grupo_estudiantes_grupo")
+  estudiante Usuario @relation("EstudianteGrupos", fields: [estudianteId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_grupo_estudiantes_estudiante")
+
+  @@unique([grupoId, estudianteId], map: "uq_grupo_estudiantes_grupo_estudiante")
+  @@index([estudianteId], map: "idx_grupo_estudiantes_estudiante_id")
+  @@map("grupo_estudiantes")
 }
