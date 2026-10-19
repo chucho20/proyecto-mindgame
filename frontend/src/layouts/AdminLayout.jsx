@@ -13,18 +13,19 @@ const NAV_ITEMS = [
 	{ label: "Actividades", to: "/admin/actividades", icon: "🎲" },
 	{ label: "Contenidos", to: "/admin/contenidos", icon: "📖" },
 	{ label: "Usuarios", icon: "👥", disabled: true },
-	{ label: "Convivencia", icon: "🤝", disabled: true },
-	{ label: "Progresión", icon: "📈", disabled: true },
+	{ label: "Recompensas", to: "/admin/recompensas", icon: "🎁" },
+	{ label: "Logros", to: "/admin/logros", icon: "🏆" },
+	{ label: "Convivencia", to: "/admin/mensajes-positivos", icon: "🤝" },
 	{ label: "Mi perfil", to: "/perfil", icon: "👤" },
 ];
 
 /**
  * Layout compartido de las pantallas de administrador: sidebar oscuro
  * (variant="dark", igual que los mockups de admin/docente) en desktop/tablet,
- * navegación inferior en mobile. "Dashboard", "Misiones", "Retos",
- * "Actividades", "Contenidos", "Mi perfil" y "Cerrar sesión" están
- * habilitados este sprint — "Usuarios", "Convivencia" y "Progresión"
- * muestran la misma leyenda honesta que el resto del proyecto.
+ * navegación inferior en mobile. Están habilitados "Dashboard", "Misiones",
+ * "Retos", "Actividades", "Contenidos", "Recompensas", "Logros", "Convivencia"
+ * (mensajes positivos), "Mi perfil" y "Cerrar sesión" — "Usuarios" muestra la
+ * misma leyenda honesta que el resto del proyecto.
  */
 function AdminLayout() {
 	const { user, logout } = useAuth();
