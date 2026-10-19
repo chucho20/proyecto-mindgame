@@ -8,23 +8,26 @@ function isNonEmptyString(value) {
 }
 
 const INT_MAXIMO = 2147483647;
+const ENTERO_DECIMAL_REGEX = /^-?\d+$/;
 
 /**
  * Indica si `value` es un entero que entra en una columna INT de la base de datos
- * (acepta número o texto numérico, como el resto de validaciones del backend).
+ * (acepta número o texto con un entero decimal simple, como "7" o "-3").
  * Prisma rechaza con un error de runtime los decimales, los no numéricos y los que
  * se salen de rango, y eso terminaría en un 500: acá se corta antes con un 400.
+ * Los textos en otras notaciones que `Number()` sí interpreta ("0x10", "1e3", " 5 ")
+ * y el cero negativo ("-0") se rechazan, para no guardar un valor distinto del escrito.
  */
 export function esEnteroValido(value, { min = -INT_MAXIMO - 1 } = {}) {
-	const esNumeroOTextoNumerico =
-		typeof value === "number" || (typeof value === "string" && value.trim().length > 0);
+	const esNumeroOEnteroDecimal =
+		typeof value === "number" || (typeof value === "string" && ENTERO_DECIMAL_REGEX.test(value));
 
-	if (!esNumeroOTextoNumerico) {
+	if (!esNumeroOEnteroDecimal) {
 		return false;
 	}
 
 	const numero = Number(value);
-	return Number.isInteger(numero) && numero >= min && numero <= INT_MAXIMO;
+	return Number.isInteger(numero) && !Object.is(numero, -0) && numero >= min && numero <= INT_MAXIMO;
 }
 
 // Tope de caracteres para textos largos (columnas TEXT): evita que un body enorme

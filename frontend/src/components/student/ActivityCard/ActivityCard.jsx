@@ -37,24 +37,32 @@ function ActivityCard({ actividad, onCompletar }) {
 				{actividad.descripcion ? <p className="activity-card__description">{actividad.descripcion}</p> : null}
 			</div>
 
-			{completada ? (
-				<span className="activity-card__done">
-					✓ Completada
-					{respuesta?.puntos_obtenidos > 0
-						? ` · +${respuesta.puntos_obtenidos} ${respuesta.puntos_obtenidos === 1 ? "punto" : "puntos"}`
-						: ""}
-				</span>
-			) : (
+			{completada ? null : (
 				<button type="button" className="activity-card__button" onClick={handleCompletar} disabled={enviando}>
 					{enviando ? "Guardando..." : "Marcar como completada"}
 				</button>
 			)}
 
-			{respuesta ? (
-				<ProgressionFeedback progreso={respuesta.progreso} retroalimentacion={respuesta.retroalimentacion} />
-			) : null}
+			{/* La región en vivo existe desde el primer render: así el lector de pantalla anuncia el texto al insertarse. */}
+			<div className="activity-card__live" aria-live="polite">
+				{completada ? (
+					<span className="activity-card__done">
+						✓ Completada
+						{respuesta?.puntos_obtenidos > 0
+							? ` · +${respuesta.puntos_obtenidos} ${respuesta.puntos_obtenidos === 1 ? "punto" : "puntos"}`
+							: ""}
+					</span>
+				) : null}
 
-			{error ? <p className="activity-card__error">{error}</p> : null}
+				{respuesta ? (
+					<ProgressionFeedback
+						progreso={respuesta.progreso}
+						retroalimentacion={respuesta.retroalimentacion}
+					/>
+				) : null}
+
+				{error ? <p className="activity-card__error">{error}</p> : null}
+			</div>
 		</div>
 	);
 }

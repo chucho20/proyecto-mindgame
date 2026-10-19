@@ -47,7 +47,7 @@ function AchievementCard({
       </div>
 
       {obtenido && (
-        <div className="achievement-card__check" aria-label="Logro obtenido">
+        <div className="achievement-card__check" role="img" aria-label="Logro obtenido">
           ✓
         </div>
       )}

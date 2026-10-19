@@ -28,7 +28,7 @@ const LevelProgress = ({ level = 1, nextLevel, currentXp = 0, nextLevelXp = 0, m
 						<>
 							<span className="level-progress__eyebrow">Meta</span>
 
-							<span className="level-progress__number" aria-label="Nivel máximo">
+							<span className="level-progress__number" role="img" aria-label="Nivel máximo">
 								🏆
 							</span>
 						</>
