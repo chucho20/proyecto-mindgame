@@ -4,6 +4,7 @@ import * as actividadRepository from "../repositories/actividad.repository.js";
 import * as actividadCompletadaRepository from "../repositories/actividadCompletada.repository.js";
 import * as misionRepository from "../repositories/mision.repository.js";
 import * as misionService from "./mision.service.js";
+import * as progresoService from "./progreso.service.js";
 
 export async function listar(misionId, usuarioId) {
 	const mision = await misionRepository.findById(misionId);
@@ -29,6 +30,9 @@ export async function completar(actividadId, usuarioId) {
 		throw new AppError("Actividad no encontrada.", 404);
 	}
 
+	// Solo la primera vez que se completa la actividad suma puntos (RF-014).
+	let esPrimeraVez = true;
+
 	try {
 		await actividadCompletadaRepository.create(usuarioId, actividadId);
 	} catch (error) {
@@ -38,13 +42,20 @@ export async function completar(actividadId, usuarioId) {
 		if (!esViolacionUnica(error)) {
 			throw error;
 		}
+		esPrimeraVez = false;
 	}
 
 	if (actividad.mision_id) {
 		await misionService.actualizarProgresoSiCompleta(actividad.mision_id, usuarioId);
 	}
 
-	return { completada: true };
+	// El UNIQUE hace de candado: aunque dos requests lleguen a la vez, solo una
+	// logra insertar la fila y por lo tanto solo una suma los puntos.
+	const puntosObtenidos = esPrimeraVez && actividad.puntos > 0 ? actividad.puntos : 0;
+	const progreso =
+		puntosObtenidos > 0 ? await progresoService.asignarPuntos(usuarioId, puntosObtenidos) : null;
+
+	return { completada: true, puntos_obtenidos: puntosObtenidos, progreso };
 }
 
 // --- Admin CRUD ---

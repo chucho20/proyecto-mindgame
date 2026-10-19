@@ -4,6 +4,7 @@ import * as misionRepository from "../repositories/mision.repository.js";
 import * as intentoRetoRepository from "../repositories/intentoReto.repository.js";
 import { obtenerEvaluador } from "./evaluadores/evaluadorRegistry.js";
 import * as misionService from "./mision.service.js";
+import * as progresoService from "./progreso.service.js";
 
 const TIPOS_VALIDOS = ["seleccion_multiple", "verdadero_falso", "relacion_elementos", "orden_cronologico"];
 
@@ -51,21 +52,34 @@ export async function responder(retoId, usuarioId, respuestaUsuario) {
 		throw new AppError("No hay un evaluador configurado para este tipo de reto.", 500);
 	}
 
-	const { esCorrecto, puntosObtenidos } = evaluador.evaluar(reto, respuestaUsuario);
+	const { esCorrecto, puntosObtenidos: puntosDelReto } = evaluador.evaluar(reto, respuestaUsuario);
 
-	await intentoRetoRepository.create({
+	// Regla de puntos (RF-014): un reto suma puntos SOLO la primera vez que se
+	// responde bien. Los aciertos repetidos y las respuestas incorrectas no
+	// suman, para que no se puedan "farmear" puntos repitiendo el mismo reto.
+	// El repositorio lo decide de forma atómica (ver createConPuntosDelPrimerAcierto).
+	const intento = await intentoRetoRepository.createConPuntosDelPrimerAcierto({
 		usuarioId,
 		retoId,
 		respuestaDada: respuestaUsuario,
 		esCorrecto,
-		puntosObtenidos,
+		puntosPrimerAcierto: puntosDelReto,
 	});
+	const puntosObtenidos = intento.puntos_obtenidos;
+
+	let progreso = null;
 
 	if (esCorrecto) {
 		await misionService.actualizarProgresoSiCompleta(reto.mision_id, usuarioId);
+
+		if (puntosObtenidos > 0) {
+			progreso = await progresoService.asignarPuntos(usuarioId, puntosObtenidos);
+		}
 	}
 
-	return { esCorrecto, puntosObtenidos };
+	// `progreso` (puntos totales, nivel, recompensas y logros nuevos) es null si
+	// esta respuesta no sumó puntos.
+	return { esCorrecto, puntosObtenidos, progreso };
 }
 
 // --- Admin CRUD ---
