@@ -28,6 +28,12 @@ export async function findAllActivas() {
 	return recompensas.map(aFilaRecompensa);
 }
 
+// Todas las recompensas, activas e inactivas (panel de administración).
+export async function findAllAdmin() {
+	const recompensas = await prisma.recompensa.findMany({ orderBy: { id: "asc" } });
+	return recompensas.map(aFilaRecompensa);
+}
+
 export async function findById(id) {
 	const idNormalizado = normalizarId(id);
 	if (idNormalizado === null) {
@@ -36,4 +42,64 @@ export async function findById(id) {
 
 	const recompensa = await prisma.recompensa.findUnique({ where: { id: idNormalizado } });
 	return aFilaRecompensa(recompensa);
+}
+
+export async function create({ nombre, descripcion, icono, condicion_tipo, condicion_valor, estado }) {
+	const recompensa = await prisma.recompensa.create({
+		data: {
+			nombre,
+			descripcion: descripcion ?? null,
+			icono: icono ?? null,
+			condicionTipo: condicion_tipo,
+			condicionValor: condicion_valor,
+			estado: estado || "activa",
+		},
+	});
+
+	return aFilaRecompensa(recompensa);
+}
+
+export async function update(id, { nombre, descripcion, icono, condicion_tipo, condicion_valor }) {
+	// `undefined` significa "no tocar" y `null` significa "dejar en NULL".
+	const data = {};
+
+	if (nombre !== undefined) {
+		data.nombre = nombre;
+	}
+	if (descripcion !== undefined) {
+		data.descripcion = descripcion;
+	}
+	if (icono !== undefined) {
+		data.icono = icono;
+	}
+	if (condicion_tipo !== undefined) {
+		data.condicionTipo = condicion_tipo;
+	}
+	if (condicion_valor !== undefined) {
+		data.condicionValor = condicion_valor;
+	}
+
+	if (Object.keys(data).length > 0) {
+		await prisma.recompensa.updateMany({ where: { id: Number(id) }, data });
+	}
+
+	return findById(id);
+}
+
+export async function setEstado(id, estado) {
+	await prisma.recompensa.updateMany({ where: { id: Number(id) }, data: { estado } });
+	return findById(id);
+}
+
+// Borra la recompensa; las filas de `recompensas_obtenidas` caen en cascada (FK ON DELETE CASCADE).
+export async function remove(id) {
+	await prisma.recompensa.deleteMany({ where: { id: Number(id) } });
+}
+
+export async function countAll() {
+	return prisma.recompensa.count();
+}
+
+export async function countActivas() {
+	return prisma.recompensa.count({ where: { estado: "activa" } });
 }
