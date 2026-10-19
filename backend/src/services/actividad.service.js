@@ -11,6 +11,8 @@ import * as actividadCompletadaRepository from "../repositories/actividadComplet
 import * as misionRepository from "../repositories/mision.repository.js";
 import * as misionService from "./mision.service.js";
 import * as progresoService from "./progreso.service.js";
+import * as mensajePositivoService from "./mensajePositivo.service.js";
+import { CONTEXTO_ACTIVIDAD_COMPLETADA } from "../constants/convivencia.js";
 
 // Lista blanca de campos que un estudiante puede ver de una actividad: el conjunto que
 // devolvía el endpoint antes de agregar `retroalimentacion` y `puntos`. La explicación
@@ -94,7 +96,22 @@ export async function completar(actividadId, usuarioId) {
 			? await progresoService.evaluarProgresionTrasPuntos(usuarioId, puntosObtenidos, nivelAnterior)
 			: null;
 
-	return { completada: true, puntos_obtenidos: puntosObtenidos, progreso };
+	// Con la actividad ya completada se entrega su explicación (RF-018) y, si pertenece
+	// a una misión de convivencia, un mensaje positivo (RF-013). Las actividades sin
+	// misión no tienen categoría, así que no llevan mensaje.
+	const mision = actividad.mision_id ? await misionRepository.findById(actividad.mision_id) : null;
+	const mensajePositivo = await mensajePositivoService.obtenerTextoParaMision(
+		mision,
+		CONTEXTO_ACTIVIDAD_COMPLETADA,
+	);
+
+	return {
+		completada: true,
+		puntos_obtenidos: puntosObtenidos,
+		progreso,
+		retroalimentacion: actividad.retroalimentacion ?? null,
+		positive_message: mensajePositivo,
+	};
 }
 
 // --- Admin CRUD ---

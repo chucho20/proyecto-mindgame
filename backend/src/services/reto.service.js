@@ -5,6 +5,8 @@ import * as intentoRetoRepository from "../repositories/intentoReto.repository.j
 import { obtenerEvaluador } from "./evaluadores/evaluadorRegistry.js";
 import * as misionService from "./mision.service.js";
 import * as progresoService from "./progreso.service.js";
+import * as mensajePositivoService from "./mensajePositivo.service.js";
+import { CONTEXTO_RETO_COMPLETADO } from "../constants/convivencia.js";
 import {
 	esEnteroValido,
 	esTextoOpcionalValido,
@@ -106,9 +108,25 @@ export async function responder(retoId, usuarioId, respuestaUsuario) {
 		}
 	}
 
+	// Recién ahora, con la respuesta ya dada, se entrega la explicación del reto
+	// (RF-018). Y solo una respuesta correcta en una misión de convivencia dispara un
+	// mensaje positivo (RF-013).
+	let mensajePositivo = null;
+	if (esCorrecto) {
+		const mision = await misionRepository.findById(reto.mision_id);
+		mensajePositivo = await mensajePositivoService.obtenerTextoParaMision(mision, CONTEXTO_RETO_COMPLETADO);
+	}
+
 	// `progreso` (puntos totales, nivel, recompensas y logros nuevos) es null si
-	// esta respuesta no sumó puntos.
-	return { esCorrecto, puntosObtenidos, progreso };
+	// esta respuesta no sumó puntos. `mensajePositivo` es un texto o null: el
+	// controller lo publica como `positive_message` junto a `resultado`.
+	return {
+		esCorrecto,
+		puntosObtenidos,
+		progreso,
+		retroalimentacion: reto.retroalimentacion ?? null,
+		mensajePositivo,
+	};
 }
 
 // --- Admin CRUD ---

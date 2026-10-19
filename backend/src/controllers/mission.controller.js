@@ -61,8 +61,13 @@ export async function listarRetos(req, res) {
 export async function responderReto(req, res) {
 	try {
 		const { respuesta } = req.body || {};
-		const resultado = await retoService.responder(req.params.id, req.user.id, respuesta);
-		return res.status(200).json({ resultado });
+		const { mensajePositivo, ...resultado } = await retoService.responder(
+			req.params.id,
+			req.user.id,
+			respuesta,
+		);
+		// El frontend lee `positive_message` en el nivel superior del body (junto a `resultado`).
+		return res.status(200).json({ resultado, positive_message: mensajePositivo });
 	} catch (error) {
 		return handleError(res, error, "mission.controller");
 	}
