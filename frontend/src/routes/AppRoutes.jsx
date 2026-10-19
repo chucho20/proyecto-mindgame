@@ -22,10 +22,11 @@ import PositiveMessagesAdminPage from "../pages/admin/PositiveMessagesAdminPage.
 import ProgressPage from "../pages/student/ProgressPage.jsx";
 import AchievementsPage from "../pages/student/AchievementsPage.jsx";
 import RewardsPage from "../pages/student/RewardsPage.jsx";
+import TeacherLayout from "../layouts/TeacherLayout.jsx";
+import TeacherDashboardPage from "../pages/teacher/TeacherDashboardPage.jsx";
 
-// Placeholder temporal de las secciones por rol: los dashboards completos
-// (estudiante RF-0xx, docente RF-022/023, admin) se construyen en sprints
-// posteriores. Por ahora, cada rol aterriza acá y puede ir a su perfil.
+// Placeholder temporal del panel de estudiante: su dashboard completo se
+// construye en un sprint posterior. Por ahora aterriza acá y puede ir a su perfil.
 function RoleHomePlaceholder({ label }) {
 	return (
 		<div className="role-home-placeholder">
@@ -62,7 +63,9 @@ function AppRoutes() {
 			</Route>
 
 			<Route element={<ProtectedRoutes roles={["docente"]} />}>
-				<Route path="/docente" element={<RoleHomePlaceholder label="Panel de docente" />} />
+				<Route element={<TeacherLayout />}>
+					<Route path="/docente" element={<TeacherDashboardPage />} />
+				</Route>
 			</Route>
 
 			<Route element={<ProtectedRoutes roles={["administrador"]} />}>

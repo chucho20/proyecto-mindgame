@@ -1,0 +1,324 @@
+/* Estilos compartidos por las páginas del docente (grupos, detalle, estadísticas). */
+
+.teacher-page {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-5);
+	min-width: 0;
+}
+
+.teacher-page .page-header {
+	margin-bottom: 0;
+}
+
+.teacher-page__status {
+	margin: 0;
+	color: var(--color-slate-500);
+	font-size: 0.9rem;
+}
+
+.teacher-page__status--error {
+	color: var(--color-error-700);
+}
+
+.teacher-page__retry,
+.teacher-page__link-button {
+	border: none;
+	background: transparent;
+	color: var(--color-primary-700);
+	font: inherit;
+	font-weight: 700;
+	text-decoration: underline;
+	cursor: pointer;
+	padding: 0;
+}
+
+.teacher-page__back {
+	align-self: flex-start;
+	color: var(--color-primary-700);
+	font-size: 0.85rem;
+	font-weight: 600;
+	text-decoration: none;
+}
+
+.teacher-page__back:hover {
+	text-decoration: underline;
+}
+
+.teacher-page__primary {
+	display: inline-block;
+	padding: 0.6rem 1.1rem;
+	border: none;
+	border-radius: var(--radius-sm);
+	background: var(--color-primary-600);
+	color: #fff;
+	font-weight: 700;
+	font-size: 0.85rem;
+	text-decoration: none;
+	cursor: pointer;
+}
+
+.teacher-page__primary:hover {
+	background: var(--color-primary-700);
+}
+
+.teacher-page__secondary {
+	display: inline-block;
+	padding: 0.6rem 1.1rem;
+	border: 1px solid var(--color-slate-300);
+	border-radius: var(--radius-sm);
+	background: #fff;
+	color: var(--color-slate-700);
+	font-weight: 600;
+	font-size: 0.85rem;
+	text-decoration: none;
+	cursor: pointer;
+}
+
+.teacher-page__secondary:hover {
+	border-color: var(--color-primary-600);
+	color: var(--color-primary-700);
+}
+
+.teacher-page__action {
+	display: inline-block;
+	padding: 0.4rem 0.7rem;
+	border: 1px solid var(--color-slate-300);
+	border-radius: var(--radius-sm);
+	background: #fff;
+	color: var(--color-slate-700);
+	font-weight: 600;
+	font-size: 0.78rem;
+	text-decoration: none;
+	cursor: pointer;
+}
+
+.teacher-page__action:hover {
+	border-color: var(--color-primary-600);
+	color: var(--color-primary-700);
+}
+
+.teacher-page__action--danger:hover {
+	border-color: var(--color-error-700);
+	color: var(--color-error-700);
+}
+
+.teacher-page__primary:focus-visible,
+.teacher-page__secondary:focus-visible,
+.teacher-page__action:focus-visible,
+.teacher-page__retry:focus-visible,
+.teacher-page__back:focus-visible,
+.teacher-page__student-link:focus-visible {
+	outline: none;
+	box-shadow: var(--shadow-focus);
+}
+
+.teacher-page__search {
+	display: block;
+	width: 100%;
+	max-width: 320px;
+	padding: 0.6rem 0.8rem;
+	border: 1px solid var(--color-slate-300);
+	border-radius: var(--radius-sm);
+	font-size: 0.9rem;
+	font-family: inherit;
+	box-sizing: border-box;
+}
+
+.teacher-page__search:focus {
+	outline: none;
+	border-color: var(--color-primary-600);
+	box-shadow: var(--shadow-focus);
+}
+
+.teacher-page__section {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-3);
+	min-width: 0;
+}
+
+.teacher-page__section-title {
+	margin: 0;
+	font-family: var(--font-heading);
+	font-size: 1.05rem;
+	color: var(--color-slate-800);
+}
+
+.teacher-page__section-description {
+	margin: 0;
+	color: var(--color-slate-500);
+	font-size: 0.85rem;
+}
+
+.teacher-page__meta {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--space-3);
+	color: var(--color-slate-500);
+	font-size: 0.85rem;
+}
+
+.teacher-page__student-link {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-2);
+	color: var(--color-slate-800);
+	font-weight: 600;
+	text-decoration: none;
+	border-radius: var(--radius-sm);
+}
+
+.teacher-page__student-link:hover {
+	color: var(--color-primary-700);
+	text-decoration: underline;
+}
+
+.teacher-page__muted {
+	color: var(--color-slate-500);
+	font-size: 0.78rem;
+	font-weight: 400;
+}
+
+.teacher-page__empty {
+	margin: 0;
+	padding: var(--space-6);
+	text-align: center;
+	color: var(--color-slate-500);
+	font-size: 0.9rem;
+	background: #ffffff;
+	border: 1px dashed var(--color-slate-300);
+	border-radius: var(--radius-lg);
+}
+
+.teacher-page__empty strong {
+	display: block;
+	margin-bottom: var(--space-1);
+	color: var(--color-slate-700);
+}
+
+/* Tarjetas de estadísticas: tantas columnas como entren (mín. 160px) para no desbordar la página. */
+
+.teacher-page .teacher-page__stats {
+	grid-template-columns: repeat(auto-fill, minmax(min(100%, 160px), 1fr));
+}
+
+.teacher-page .teacher-page__stats .admin-stat-card {
+	min-width: 0;
+	padding: var(--space-4);
+}
+
+/* Panel overlay (mismo patrón que los paneles de alta del admin) */
+
+.teacher-page__overlay {
+	position: fixed;
+	inset: 0;
+	background: rgba(15, 23, 42, 0.5);
+	display: flex;
+	align-items: flex-start;
+	justify-content: center;
+	padding: var(--space-8) var(--space-4);
+	overflow-y: auto;
+	z-index: 50;
+	box-sizing: border-box;
+}
+
+.teacher-page__panel {
+	width: 100%;
+	max-width: 480px;
+	background: #ffffff;
+	border-radius: var(--radius-lg);
+	box-shadow: var(--shadow-card-strong);
+	padding: var(--space-6);
+	box-sizing: border-box;
+}
+
+.teacher-page__panel:focus {
+	outline: none;
+}
+
+.teacher-page__panel-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: var(--space-4);
+}
+
+.teacher-page__panel-header h2 {
+	margin: 0;
+	font-size: 1.1rem;
+	color: var(--color-slate-800);
+}
+
+.teacher-page__panel-close {
+	border: none;
+	background: transparent;
+	color: var(--color-slate-500);
+	font-size: 1.1rem;
+	line-height: 1;
+	padding: var(--space-1);
+	cursor: pointer;
+}
+
+.teacher-page__panel-close:hover {
+	color: var(--color-slate-800);
+}
+
+/* Datos de contexto (detalle de grupo / estudiante) */
+
+.teacher-page__chips {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--space-2);
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+.teacher-page__chip {
+	display: inline-block;
+	padding: 0.25rem 0.7rem;
+	border-radius: 999px;
+	background: var(--color-primary-50);
+	color: var(--color-primary-700);
+	font-size: 0.78rem;
+	font-weight: 600;
+	text-decoration: none;
+}
+
+.teacher-page__chip:hover {
+	text-decoration: underline;
+}
+
+.teacher-page__actions-row {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--space-2);
+}
+
+/* Tablas de estudiantes: la tabla scrollea dentro de su contenedor, no la página */
+
+.teacher-page .data-table__wrapper {
+	max-width: 100%;
+}
+
+.teacher-page .data-table {
+	min-width: 560px;
+}
+
+/* Filas de una sola línea (fechas, usuarios, cifras); solo el nombre puede partirse. */
+.teacher-page .data-table td {
+	white-space: nowrap;
+}
+
+.teacher-page .data-table td:first-child {
+	min-width: 170px;
+	white-space: normal;
+}
+
+@media (max-width: 480px) {
+	.teacher-page__panel {
+		padding: var(--space-4);
+	}
+}
