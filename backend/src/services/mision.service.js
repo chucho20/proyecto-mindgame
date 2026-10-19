@@ -9,6 +9,9 @@ import * as retoRepository from "../repositories/reto.repository.js";
 import * as actividadRepository from "../repositories/actividad.repository.js";
 import * as intentoRetoRepository from "../repositories/intentoReto.repository.js";
 import * as actividadCompletadaRepository from "../repositories/actividadCompletada.repository.js";
+import * as recompensaRepository from "../repositories/recompensa.repository.js";
+import * as logroRepository from "../repositories/logro.repository.js";
+import * as mensajePositivoRepository from "../repositories/mensajePositivo.repository.js";
 
 function construirMisionConProgreso(mision, progreso) {
 	return {
@@ -225,16 +228,45 @@ export async function eliminar(id) {
 
 /**
  * Conteos reales para la landing del dashboard admin (GET /admin/stats).
- * A propósito no inventa métricas que todavía no existen (usuarios,
- * convivencia) — solo lo que este sprint efectivamente modela.
+ * A propósito no inventa métricas que todavía no existen (usuarios, etc.) —
+ * solo lo que efectivamente se modela. Los totales cuentan activos e inactivos;
+ * los `*_activas` / `*_activos` solo los visibles para los estudiantes.
  */
 export async function obtenerStatsAdmin() {
-	const [misiones, historias, retos, actividades] = await Promise.all([
+	const [
+		misiones,
+		historias,
+		retos,
+		actividades,
+		recompensas,
+		recompensasActivas,
+		logros,
+		logrosActivos,
+		mensajesPositivos,
+		mensajesPositivosActivos,
+	] = await Promise.all([
 		misionRepository.countAll(),
 		historiaRepository.countAll(),
 		retoRepository.countAll(),
 		actividadRepository.countAll(),
+		recompensaRepository.countAll(),
+		recompensaRepository.countActivas(),
+		logroRepository.countAll(),
+		logroRepository.countActivos(),
+		mensajePositivoRepository.countAll(),
+		mensajePositivoRepository.countActivos(),
 	]);
 
-	return { misiones, historias, retos, actividades };
+	return {
+		misiones,
+		historias,
+		retos,
+		actividades,
+		recompensas,
+		recompensas_activas: recompensasActivas,
+		logros,
+		logros_activos: logrosActivos,
+		mensajes_positivos: mensajesPositivos,
+		mensajes_positivos_activos: mensajesPositivosActivos,
+	};
 }
