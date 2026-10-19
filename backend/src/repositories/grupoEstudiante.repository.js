@@ -16,6 +16,18 @@ function aFilaGrupoEstudiante(membresia) {
 	};
 }
 
+// Campos del estudiante que se leen de la base: select explícito para que nunca viajen
+// el hash ni el correo hasta el mapper.
+const SELECCION_ESTUDIANTE = {
+	id: true,
+	nombreCompleto: true,
+	nombreUsuario: true,
+	gradoCurso: true,
+	avatar: true,
+	puntosTotales: true,
+	nivelActual: true,
+};
+
 // Datos de un estudiante que puede ver su docente: identidad básica y progreso.
 // A propósito NO incluye correo, edad ni password_hash.
 function aFilaMiembro(membresia) {
@@ -70,7 +82,7 @@ export async function findEstudiantesByGrupo(grupoId) {
 
 	const membresias = await prisma.grupoEstudiante.findMany({
 		where: { grupoId: grupoIdNormalizado },
-		include: { estudiante: true },
+		include: { estudiante: { select: SELECCION_ESTUDIANTE } },
 		orderBy: [{ createdAt: "asc" }, { id: "asc" }],
 	});
 	return membresias.map(aFilaMiembro);
@@ -123,7 +135,7 @@ export async function findEstudianteDeDocente(estudianteId, docenteId) {
 
 	const membresias = await prisma.grupoEstudiante.findMany({
 		where: { estudianteId: estudianteIdNormalizado, grupo: { docenteId: docenteIdNormalizado } },
-		include: { estudiante: true, grupo: true },
+		include: { estudiante: { select: SELECCION_ESTUDIANTE }, grupo: true },
 		orderBy: [{ createdAt: "asc" }, { id: "asc" }],
 	});
 

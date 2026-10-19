@@ -138,7 +138,9 @@ export async function unirseConCodigo(estudianteId, data) {
 		throw new AppError("Datos inválidos.", 400, ["El código del grupo es obligatorio."]);
 	}
 
-	if (codigo.length > LONGITUD_MAXIMA_CODIGO) {
+	// Un código con caracteres fuera del alfabeto no existe (la collation de MySQL podría
+	// igualar, por ejemplo, "Á" con "A"), así que ni se consulta.
+	if (codigo.length > LONGITUD_MAXIMA_CODIGO || !/^[A-Z0-9]+$/.test(codigo)) {
 		throw new AppError("No existe un grupo con ese código.", 404);
 	}
 

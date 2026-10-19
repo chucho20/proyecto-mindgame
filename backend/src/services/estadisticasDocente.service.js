@@ -126,7 +126,7 @@ export async function estadisticasDelEstudiante(docenteId, estudianteId) {
 		estudiante: aEstudiante(miembro),
 		grupos,
 		estadisticas: armarEstadisticas(miembro, cuentas[miembro.id]),
-		misiones_completadas: misionesCompletadas.map((mision) => ({
+		misiones_completadas_detalle: misionesCompletadas.map((mision) => ({
 			id: mision.mision_id,
 			titulo: mision.titulo,
 			categoria: mision.categoria,
