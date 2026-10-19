@@ -1,0 +1,13 @@
+CREATE TABLE IF NOT EXISTS grupos (
+	id INT AUTO_INCREMENT PRIMARY KEY,
+	docente_id INT NOT NULL,
+	nombre VARCHAR(100) NOT NULL,
+	codigo VARCHAR(20) NOT NULL,
+	created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+	CONSTRAINT fk_grupos_docente
+		FOREIGN KEY (docente_id) REFERENCES usuarios (id)
+		ON DELETE CASCADE,
+	UNIQUE KEY uq_grupos_codigo (codigo),
+	KEY idx_grupos_docente_id (docente_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
