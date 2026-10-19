@@ -99,9 +99,8 @@ export async function completar(actividadId, usuarioId) {
 	// Con la actividad ya completada se entrega su explicación (RF-018) y, si pertenece
 	// a una misión de convivencia, un mensaje positivo (RF-013). Las actividades sin
 	// misión no tienen categoría, así que no llevan mensaje.
-	const mision = actividad.mision_id ? await misionRepository.findById(actividad.mision_id) : null;
 	const mensajePositivo = await mensajePositivoService.obtenerTextoParaMision(
-		mision,
+		actividad.mision_id,
 		CONTEXTO_ACTIVIDAD_COMPLETADA,
 	);
 
@@ -153,7 +152,10 @@ function validarActividad(data, { esCreacion }) {
 		errors.push("El orden debe ser un número entero.");
 	}
 
-	if (data.puntos !== undefined && data.puntos !== null && !esEnteroValido(data.puntos, { min: 0 })) {
+	// Al crear, `null` equivale a "sin puntos" (0); al editar sería un cambio silenciosamente
+	// ignorado, así que ahí se rechaza para que el admin no crea haber quitado los puntos.
+	const puntosNulosPermitidos = esCreacion && data.puntos === null;
+	if (data.puntos !== undefined && !puntosNulosPermitidos && !esEnteroValido(data.puntos, { min: 0 })) {
 		errors.push("Los puntos deben ser un número entero mayor o igual a 0.");
 	}
 
