@@ -1,36 +1,83 @@
-import pool from "../config/db.js";
+import prisma from "../config/prisma.js";
+import { Prisma } from "../generated/prisma/client.ts";
+import { normalizarId } from "../utils/dbIds.js";
 
 // Nota: las columnas `opciones` y `respuesta_correcta` son tipo JSON nativo
-// de MySQL. mysql2 las deserializa automáticamente al leerlas (llegan como
-// objeto/arreglo/booleano/string ya parseados, nunca como texto JSON crudo),
-// así que NO hay que hacer JSON.parse manual acá — intentarlo revienta en
-// respuestas cuyo valor correcto ya es un string primitivo (ej.
-// seleccion_multiple con respuesta_correcta = "a": JSON.parse("a") explota
-// porque no es JSON válido sin comillas).
+// de MySQL y Prisma las entrega ya parseadas (objeto/arreglo/booleano/string
+// primitivo), igual que mysql2. Por eso el mapper las deja pasar SIN tocarlas:
+// no hay que hacer JSON.parse/JSON.stringify manual, y un valor correcto que
+// sea un string primitivo (ej. seleccion_multiple con respuesta_correcta = "a")
+// llega como "a", no como texto JSON crudo.
+
+// Devuelve la misma fila (snake_case) que devolvía `SELECT *` con mysql2.
+function aFilaReto(reto) {
+	if (!reto) {
+		return null;
+	}
+
+	return {
+		id: reto.id,
+		mision_id: reto.misionId,
+		tipo: reto.tipo,
+		enunciado: reto.enunciado,
+		opciones: reto.opciones,
+		respuesta_correcta: reto.respuestaCorrecta,
+		puntos: reto.puntos,
+		orden: reto.orden,
+		estado: reto.estado,
+		created_at: reto.createdAt,
+		updated_at: reto.updatedAt,
+		retroalimentacion: reto.retroalimentacion,
+	};
+}
+
+// En una columna JSON, Prisma distingue el NULL de SQL (`DbNull`) del valor
+// JSON `null` (`JsonNull`); un `null` de JS hay que traducirlo a uno de los dos.
+function aJsonPrisma(valor) {
+	return valor === null ? Prisma.JsonNull : valor;
+}
+
+const ORDEN_POR_DEFECTO = [{ orden: "asc" }, { id: "asc" }];
 
 export async function findByMisionId(misionId, { onlyActive = false } = {}) {
-	const sql = onlyActive
-		? "SELECT * FROM retos WHERE mision_id = ? AND estado = 'activo' ORDER BY orden ASC, id ASC"
-		: "SELECT * FROM retos WHERE mision_id = ? ORDER BY orden ASC, id ASC";
-	const [rows] = await pool.query(sql, [misionId]);
-	return rows;
+	const misionIdNormalizado = normalizarId(misionId);
+	if (misionIdNormalizado === null) {
+		return [];
+	}
+
+	const retos = await prisma.reto.findMany({
+		where: { misionId: misionIdNormalizado, ...(onlyActive ? { estado: "activo" } : {}) },
+		orderBy: ORDEN_POR_DEFECTO,
+	});
+	return retos.map(aFilaReto);
 }
 
 export async function findAllAdmin({ misionId } = {}) {
 	if (misionId) {
-		const [rows] = await pool.query("SELECT * FROM retos WHERE mision_id = ? ORDER BY orden ASC, id ASC", [
-			misionId,
-		]);
-		return rows;
+		const misionIdNormalizado = normalizarId(misionId);
+		if (misionIdNormalizado === null) {
+			return [];
+		}
+
+		const retos = await prisma.reto.findMany({
+			where: { misionId: misionIdNormalizado },
+			orderBy: ORDEN_POR_DEFECTO,
+		});
+		return retos.map(aFilaReto);
 	}
 
-	const [rows] = await pool.query("SELECT * FROM retos ORDER BY mision_id ASC, orden ASC, id ASC");
-	return rows;
+	const retos = await prisma.reto.findMany({ orderBy: [{ misionId: "asc" }, ...ORDEN_POR_DEFECTO] });
+	return retos.map(aFilaReto);
 }
 
 export async function findById(id) {
-	const [rows] = await pool.query("SELECT * FROM retos WHERE id = ? LIMIT 1", [id]);
-	return rows[0] || null;
+	const idNormalizado = normalizarId(id);
+	if (idNormalizado === null) {
+		return null;
+	}
+
+	const reto = await prisma.reto.findUnique({ where: { id: idNormalizado } });
+	return aFilaReto(reto);
 }
 
 export async function create({
@@ -43,79 +90,74 @@ export async function create({
 	orden,
 	estado,
 }) {
-	const [result] = await pool.query(
-		`INSERT INTO retos (mision_id, tipo, enunciado, opciones, respuesta_correcta, puntos, orden, estado)
-			VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-		[
-			misionId,
+	const reto = await prisma.reto.create({
+		data: {
+			misionId: Number(misionId),
 			tipo,
 			enunciado,
-			opciones === undefined ? null : JSON.stringify(opciones),
-			JSON.stringify(respuestaCorrecta),
-			puntos ?? 10,
-			orden ?? 0,
-			estado || "activo",
-		],
-	);
-	return findById(result.insertId);
+			// `undefined` -> NULL de SQL; `null` explícito -> JSON `null` (igual que
+			// hacía `JSON.stringify(null)` en la versión mysql2).
+			opciones: opciones === undefined ? Prisma.DbNull : aJsonPrisma(opciones),
+			respuestaCorrecta: aJsonPrisma(respuestaCorrecta),
+			puntos: puntos ?? 10,
+			orden: orden ?? 0,
+			estado: estado || "activo",
+		},
+	});
+
+	return aFilaReto(reto);
 }
 
 export async function update(id, { tipo, enunciado, opciones, respuestaCorrecta, puntos, orden }) {
-	const setClauses = [];
-	const values = [];
+	// `undefined` significa "no tocar".
+	const data = {};
 
 	if (tipo !== undefined) {
-		setClauses.push("tipo = ?");
-		values.push(tipo);
+		data.tipo = tipo;
 	}
 	if (enunciado !== undefined) {
-		setClauses.push("enunciado = ?");
-		values.push(enunciado);
+		data.enunciado = enunciado;
 	}
 	if (opciones !== undefined) {
-		setClauses.push("opciones = ?");
-		values.push(JSON.stringify(opciones));
+		data.opciones = aJsonPrisma(opciones);
 	}
 	if (respuestaCorrecta !== undefined) {
-		setClauses.push("respuesta_correcta = ?");
-		values.push(JSON.stringify(respuestaCorrecta));
+		data.respuestaCorrecta = aJsonPrisma(respuestaCorrecta);
 	}
 	if (puntos !== undefined) {
-		setClauses.push("puntos = ?");
-		values.push(puntos);
+		data.puntos = puntos;
 	}
 	if (orden !== undefined) {
-		setClauses.push("orden = ?");
-		values.push(orden);
+		data.orden = orden;
 	}
 
-	if (setClauses.length === 0) {
-		return findById(id);
+	if (Object.keys(data).length > 0) {
+		await prisma.reto.updateMany({ where: { id: Number(id) }, data });
 	}
 
-	values.push(id);
-	await pool.query(`UPDATE retos SET ${setClauses.join(", ")} WHERE id = ?`, values);
 	return findById(id);
 }
 
 export async function setEstado(id, estado) {
-	await pool.query("UPDATE retos SET estado = ? WHERE id = ?", [estado, id]);
+	await prisma.reto.updateMany({ where: { id: Number(id) }, data: { estado } });
 	return findById(id);
 }
 
 export async function remove(id) {
-	await pool.query("DELETE FROM retos WHERE id = ?", [id]);
+	await prisma.reto.deleteMany({ where: { id: Number(id) } });
 }
 
 export async function countAll() {
-	const [rows] = await pool.query("SELECT COUNT(*) AS total FROM retos");
-	return rows[0].total;
+	return prisma.reto.count();
 }
 
 export async function countByMisionId(misionId, { onlyActive = false } = {}) {
-	const sql = onlyActive
-		? "SELECT COUNT(*) AS total FROM retos WHERE mision_id = ? AND estado = 'activo'"
-		: "SELECT COUNT(*) AS total FROM retos WHERE mision_id = ?";
-	const [rows] = await pool.query(sql, [misionId]);
-	return rows[0].total;
+	const misionIdNormalizado = normalizarId(misionId);
+	if (misionIdNormalizado === null) {
+		return 0;
+	}
+
+	return prisma.reto.count({
+		where: { misionId: misionIdNormalizado, ...(onlyActive ? { estado: "activo" } : {}) },
+	});
 }
