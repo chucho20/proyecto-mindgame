@@ -31,6 +31,7 @@ function ChallengeForm({ initialValues, misiones, onSubmit, onCancel, submitting
 	const [enunciado, setEnunciado] = useState(initialValues?.enunciado || "");
 	const [puntos, setPuntos] = useState(initialValues?.puntos ?? 10);
 	const [orden, setOrden] = useState(initialValues?.orden ?? 0);
+	const [retroalimentacion, setRetroalimentacion] = useState(initialValues?.retroalimentacion || "");
 	const [error, setError] = useState("");
 
 	// seleccion_multiple
@@ -142,6 +143,7 @@ function ChallengeForm({ initialValues, misiones, onSubmit, onCancel, submitting
 				respuestaCorrecta,
 				puntos: Number(puntos) || 0,
 				orden: Number(orden) || 0,
+				retroalimentacion: retroalimentacion.trim(),
 			});
 		} catch (err) {
 			const details = err.response?.data?.details;
@@ -406,6 +408,17 @@ function ChallengeForm({ initialValues, misiones, onSubmit, onCancel, submitting
 						onChange={(event) => setOrden(event.target.value)}
 					/>
 				</div>
+			</div>
+
+			<div className="challenge-form__field">
+				<label htmlFor="challenge-retroalimentacion">Retroalimentación</label>
+				<textarea
+					id="challenge-retroalimentacion"
+					rows={3}
+					placeholder="Explicación que ve el estudiante después de responder (opcional)"
+					value={retroalimentacion}
+					onChange={(event) => setRetroalimentacion(event.target.value)}
+				/>
 			</div>
 
 			<div className="challenge-form__actions">

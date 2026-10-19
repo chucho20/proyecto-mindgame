@@ -1,4 +1,5 @@
-import { NavLink } from "react-router-dom";
+import { useEffect, useRef } from "react";
+import { NavLink, useLocation } from "react-router-dom";
 
 import "./MobileNavigation.css";
 
@@ -6,13 +7,23 @@ import "./MobileNavigation.css";
  * Navegación inferior para mobile: reemplaza al Sidebar cuando la pantalla
  * es angosta (< 768px, ver responsive.css .hide-desktop). Solo muestra los
  * ítems habilitados de `items` (los deshabilitados no tienen sentido en un
- * espacio tan chico).
+ * espacio tan chico). Cuando hay más ítems de los que entran en el ancho
+ * (ej. el menú de administrador) la barra se desplaza horizontalmente y mantiene
+ * visible el ítem activo.
  */
 function MobileNavigation({ items, variant = "light" }) {
 	const enabledItems = items.filter((item) => !item.disabled);
+	const navRef = useRef(null);
+	const { pathname } = useLocation();
+
+	useEffect(() => {
+		navRef.current
+			?.querySelector("[aria-current='page']")
+			?.scrollIntoView({ inline: "center", block: "nearest" });
+	}, [pathname]);
 
 	return (
-		<nav className={`mobile-nav mobile-nav--${variant} hide-desktop`}>
+		<nav ref={navRef} className={`mobile-nav mobile-nav--${variant} hide-desktop`}>
 			{enabledItems.map((item) => (
 				<NavLink
 					key={item.label}
