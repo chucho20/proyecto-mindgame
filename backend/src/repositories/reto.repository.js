@@ -89,6 +89,7 @@ export async function create({
 	puntos,
 	orden,
 	estado,
+	retroalimentacion,
 }) {
 	const reto = await prisma.reto.create({
 		data: {
@@ -102,13 +103,17 @@ export async function create({
 			puntos: puntos ?? 10,
 			orden: orden ?? 0,
 			estado: estado || "activo",
+			retroalimentacion: retroalimentacion ?? null,
 		},
 	});
 
 	return aFilaReto(reto);
 }
 
-export async function update(id, { tipo, enunciado, opciones, respuestaCorrecta, puntos, orden }) {
+export async function update(
+	id,
+	{ tipo, enunciado, opciones, respuestaCorrecta, puntos, orden, retroalimentacion },
+) {
 	// `undefined` significa "no tocar".
 	const data = {};
 
@@ -129,6 +134,9 @@ export async function update(id, { tipo, enunciado, opciones, respuestaCorrecta,
 	}
 	if (orden !== undefined) {
 		data.orden = orden;
+	}
+	if (retroalimentacion !== undefined) {
+		data.retroalimentacion = retroalimentacion;
 	}
 
 	if (Object.keys(data).length > 0) {

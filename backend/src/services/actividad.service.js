@@ -1,6 +1,11 @@
 import AppError from "../utils/AppError.js";
 import { esViolacionUnica } from "../utils/dbErrors.js";
-import { esEnteroValido } from "../utils/validators.js";
+import {
+	esEnteroValido,
+	esTextoOpcionalValido,
+	LONGITUD_MAXIMA_TEXTO,
+	normalizarTextoOpcional,
+} from "../utils/validators.js";
 import * as actividadRepository from "../repositories/actividad.repository.js";
 import * as actividadCompletadaRepository from "../repositories/actividadCompletada.repository.js";
 import * as misionRepository from "../repositories/mision.repository.js";
@@ -131,6 +136,14 @@ function validarActividad(data, { esCreacion }) {
 		errors.push("El orden debe ser un número entero.");
 	}
 
+	if (data.puntos !== undefined && data.puntos !== null && !esEnteroValido(data.puntos, { min: 0 })) {
+		errors.push("Los puntos deben ser un número entero mayor o igual a 0.");
+	}
+
+	if (!esTextoOpcionalValido(data.retroalimentacion)) {
+		errors.push(`La retroalimentación debe ser texto de hasta ${LONGITUD_MAXIMA_TEXTO} caracteres.`);
+	}
+
 	return errors;
 }
 
@@ -155,6 +168,8 @@ export async function crear(data) {
 		tipo: data.tipo.trim(),
 		orden: data.orden !== undefined ? Number(data.orden) : 0,
 		estado: "activa",
+		puntos: data.puntos !== undefined && data.puntos !== null ? Number(data.puntos) : 0,
+		retroalimentacion: normalizarTextoOpcional(data.retroalimentacion) ?? null,
 	});
 }
 
@@ -171,6 +186,8 @@ export async function actualizar(id, data) {
 		descripcion: data.descripcion,
 		tipo: data.tipo !== undefined ? data.tipo.trim() : undefined,
 		orden: data.orden !== undefined ? Number(data.orden) : undefined,
+		puntos: data.puntos !== undefined && data.puntos !== null ? Number(data.puntos) : undefined,
+		retroalimentacion: normalizarTextoOpcional(data.retroalimentacion),
 	});
 }
 

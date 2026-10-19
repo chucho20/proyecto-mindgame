@@ -44,20 +44,21 @@ export async function findById(id) {
 	return aFilaMision(mision);
 }
 
-export async function create({ titulo, descripcion, orden, estado }) {
+export async function create({ titulo, descripcion, orden, estado, categoria }) {
 	const mision = await prisma.mision.create({
 		data: {
 			titulo,
 			descripcion: descripcion ?? null,
 			orden: orden ?? 0,
 			estado: estado || "activa",
+			categoria: categoria || "historica",
 		},
 	});
 
 	return aFilaMision(mision);
 }
 
-export async function update(id, { titulo, descripcion, orden }) {
+export async function update(id, { titulo, descripcion, orden, categoria }) {
 	// `undefined` significa "no tocar" y `null` significa "dejar en NULL".
 	const data = {};
 
@@ -69,6 +70,9 @@ export async function update(id, { titulo, descripcion, orden }) {
 	}
 	if (orden !== undefined) {
 		data.orden = orden;
+	}
+	if (categoria !== undefined) {
+		data.categoria = categoria;
 	}
 
 	if (Object.keys(data).length > 0) {

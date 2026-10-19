@@ -1,7 +1,7 @@
 import AppError from "../utils/AppError.js";
 import { esViolacionUnica } from "../utils/dbErrors.js";
 import { esEnteroValido } from "../utils/validators.js";
-import { CATEGORIAS_MISION } from "../constants/convivencia.js";
+import { CATEGORIA_HISTORICA, CATEGORIAS_MISION } from "../constants/convivencia.js";
 import * as misionRepository from "../repositories/mision.repository.js";
 import * as historiaRepository from "../repositories/historia.repository.js";
 import * as progresoMisionRepository from "../repositories/progresoMision.repository.js";
@@ -170,6 +170,10 @@ function validarMision(data, { esCreacion }) {
 		errors.push("El orden debe ser un número entero.");
 	}
 
+	if (data.categoria !== undefined && !CATEGORIAS_MISION.includes(data.categoria)) {
+		errors.push(`La categoría debe ser una de: ${CATEGORIAS_MISION.join(", ")}.`);
+	}
+
 	return errors;
 }
 
@@ -185,6 +189,7 @@ export async function crear(data) {
 		descripcion: data.descripcion || null,
 		orden: data.orden !== undefined ? Number(data.orden) : 0,
 		estado: "activa",
+		categoria: data.categoria ?? CATEGORIA_HISTORICA,
 	});
 }
 
@@ -200,6 +205,7 @@ export async function actualizar(id, data) {
 		titulo: data.titulo !== undefined ? data.titulo.trim() : undefined,
 		descripcion: data.descripcion,
 		orden: data.orden !== undefined ? Number(data.orden) : undefined,
+		categoria: data.categoria,
 	});
 }
 

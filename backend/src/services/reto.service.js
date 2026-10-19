@@ -5,7 +5,12 @@ import * as intentoRetoRepository from "../repositories/intentoReto.repository.j
 import { obtenerEvaluador } from "./evaluadores/evaluadorRegistry.js";
 import * as misionService from "./mision.service.js";
 import * as progresoService from "./progreso.service.js";
-import { esEnteroValido } from "../utils/validators.js";
+import {
+	esEnteroValido,
+	esTextoOpcionalValido,
+	LONGITUD_MAXIMA_TEXTO,
+	normalizarTextoOpcional,
+} from "../utils/validators.js";
 
 const TIPOS_VALIDOS = ["seleccion_multiple", "verdadero_falso", "relacion_elementos", "orden_cronologico"];
 
@@ -153,6 +158,10 @@ function validarReto(data, { esCreacion }) {
 		errors.push("El orden debe ser un número entero.");
 	}
 
+	if (!esTextoOpcionalValido(data.retroalimentacion)) {
+		errors.push(`La retroalimentación debe ser texto de hasta ${LONGITUD_MAXIMA_TEXTO} caracteres.`);
+	}
+
 	return errors;
 }
 
@@ -177,6 +186,7 @@ export async function crear(data) {
 		puntos: data.puntos !== undefined ? Number(data.puntos) : 10,
 		orden: data.orden !== undefined ? Number(data.orden) : 0,
 		estado: "activo",
+		retroalimentacion: normalizarTextoOpcional(data.retroalimentacion) ?? null,
 	});
 }
 
@@ -195,6 +205,7 @@ export async function actualizar(id, data) {
 		respuestaCorrecta: data.respuestaCorrecta,
 		puntos: data.puntos !== undefined ? Number(data.puntos) : undefined,
 		orden: data.orden !== undefined ? Number(data.orden) : undefined,
+		retroalimentacion: normalizarTextoOpcional(data.retroalimentacion),
 	});
 }
 
