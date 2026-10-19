@@ -46,6 +46,10 @@ async function runMigrations() {
 	});
 
 	try {
+		// El adaptador Prisma lee y escribe DATETIME como UTC. Fijamos la zona horaria de la sesión
+		// para que los DEFAULT CURRENT_TIMESTAMP se escriban en UTC y no en hora local del servidor.
+		await connection.query("SET time_zone = '+00:00'");
+
 		await ensureMigrationsTable(connection);
 
 		const applied = await getAppliedMigrations(connection);
