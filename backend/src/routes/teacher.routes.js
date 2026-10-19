@@ -15,5 +15,8 @@ router.get("/grupos", teacherController.listarGrupos);
 router.get("/grupos/:id", teacherController.obtenerGrupo);
 router.get("/grupos/:id/estudiantes", teacherController.listarEstudiantes);
 router.delete("/grupos/:id/estudiantes/:estudianteId", teacherController.retirarEstudiante);
+router.get("/grupos/:id/estadisticas", teacherController.estadisticasDelGrupo);
+
+router.get("/estudiantes/:id/estadisticas", teacherController.estadisticasDelEstudiante);
 
 export default router;

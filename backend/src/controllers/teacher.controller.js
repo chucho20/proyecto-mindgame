@@ -1,4 +1,5 @@
 import * as grupoService from "../services/grupo.service.js";
+import * as estadisticasDocenteService from "../services/estadisticasDocente.service.js";
 import handleError from "../utils/handleError.js";
 
 // Módulo docente (RF-021 a RF-023). Todas las operaciones trabajan sobre los
@@ -44,6 +45,27 @@ export async function retirarEstudiante(req, res) {
 	try {
 		await grupoService.retirarEstudiante(req.user.id, req.params.id, req.params.estudianteId);
 		return res.status(200).json({ message: "Estudiante retirado del grupo." });
+	} catch (error) {
+		return handleError(res, error, "teacher.controller");
+	}
+}
+
+export async function estadisticasDelGrupo(req, res) {
+	try {
+		const estadisticas = await estadisticasDocenteService.estadisticasDelGrupo(req.user.id, req.params.id);
+		return res.status(200).json(estadisticas);
+	} catch (error) {
+		return handleError(res, error, "teacher.controller");
+	}
+}
+
+export async function estadisticasDelEstudiante(req, res) {
+	try {
+		const estadisticas = await estadisticasDocenteService.estadisticasDelEstudiante(
+			req.user.id,
+			req.params.id,
+		);
+		return res.status(200).json(estadisticas);
 	} catch (error) {
 		return handleError(res, error, "teacher.controller");
 	}
