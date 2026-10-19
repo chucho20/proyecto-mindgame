@@ -70,7 +70,16 @@ export async function findById(id) {
 	return aFilaActividad(actividad);
 }
 
-export async function create({ misionId, titulo, descripcion, tipo, orden, estado }) {
+export async function create({
+	misionId,
+	titulo,
+	descripcion,
+	tipo,
+	orden,
+	estado,
+	puntos,
+	retroalimentacion,
+}) {
 	const actividad = await prisma.actividad.create({
 		data: {
 			// OJO: `Number(null)` es 0, que violaría la FK; null se conserva como null.
@@ -80,13 +89,15 @@ export async function create({ misionId, titulo, descripcion, tipo, orden, estad
 			tipo,
 			orden: orden ?? 0,
 			estado: estado || "activa",
+			puntos: puntos ?? 0,
+			retroalimentacion: retroalimentacion ?? null,
 		},
 	});
 
 	return aFilaActividad(actividad);
 }
 
-export async function update(id, { titulo, descripcion, tipo, orden }) {
+export async function update(id, { titulo, descripcion, tipo, orden, puntos, retroalimentacion }) {
 	// `undefined` significa "no tocar" y `null` significa "dejar en NULL".
 	const data = {};
 
@@ -101,6 +112,12 @@ export async function update(id, { titulo, descripcion, tipo, orden }) {
 	}
 	if (orden !== undefined) {
 		data.orden = orden;
+	}
+	if (puntos !== undefined) {
+		data.puntos = puntos;
+	}
+	if (retroalimentacion !== undefined) {
+		data.retroalimentacion = retroalimentacion;
 	}
 
 	if (Object.keys(data).length > 0) {
