@@ -7,7 +7,7 @@
 		"dev": "nodemon src/server.js",
 		"start": "node src/server.js",
 		"db:migrate": "node database/migrate.js",
-		"db:seed": "node database/seeders/001_admin_seed.js",
+		"db:seed": "node database/seeders/001_admin_seed.js && node database/seeders/002_niveles_seed.js",
 		"db:studio": "prisma studio",
 		"lint": "eslint .",
 		"format": "prettier --write .",
