@@ -11,6 +11,18 @@
 	border-top: 1px solid var(--color-slate-200);
 }
 
+/*
+ * main.jsx carga responsive.css después de los CSS de los componentes, así que
+ * `.hide-desktop { display: block }` pisaba el `display: flex` de arriba y los
+ * ítems quedaban apilados en vertical. La doble clase gana por especificidad en
+ * mobile; desde 768px sigue mandando `.hide-desktop { display: none }`.
+ */
+@media (max-width: 767px) {
+	.mobile-nav.hide-desktop {
+		display: flex;
+	}
+}
+
 .mobile-nav--light {
 	background: #ffffff;
 }
@@ -27,9 +39,11 @@
 	gap: 0.2rem;
 	font-size: 0.68rem;
 	font-weight: 600;
-	padding: 0.3rem 0.5rem;
+	padding: 0.3rem 0.15rem;
 	border-radius: var(--radius-sm);
 	flex: 1;
+	min-width: 0;
+	text-align: center;
 }
 
 .mobile-nav--light .mobile-nav__link {
