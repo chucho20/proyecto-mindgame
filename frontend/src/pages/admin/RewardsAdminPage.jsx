@@ -312,10 +312,7 @@ function RewardsAdminPage() {
 					<p>
 						¿Seguro que querés eliminar la recompensa <strong>{recompensaEliminando.nombre}</strong>?
 					</p>
-					<p>
-						Esta acción no se puede deshacer: también se quitará de las recompensas obtenidas por los
-						estudiantes que ya la desbloquearon. Si solo querés que deje de entregarse, usá «Desactivar».
-					</p>
+					<p>Esta acción no se puede deshacer.</p>
 				</ConfirmDialog>
 			) : null}
 		</div>

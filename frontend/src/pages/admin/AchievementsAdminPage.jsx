@@ -312,10 +312,7 @@ function AchievementsAdminPage() {
 					<p>
 						¿Seguro que querés eliminar el logro <strong>{logroEliminando.nombre}</strong>?
 					</p>
-					<p>
-						Esta acción no se puede deshacer: también se quitará de los logros obtenidos por los estudiantes
-						que ya lo ganaron. Si solo querés que deje de entregarse, usá «Desactivar».
-					</p>
+					<p>Esta acción no se puede deshacer.</p>
 				</ConfirmDialog>
 			) : null}
 		</div>
