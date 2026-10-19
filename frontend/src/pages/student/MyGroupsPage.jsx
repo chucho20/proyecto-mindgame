@@ -1,4 +1,4 @@
-import { useEffect, useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 
 import * as groupsApi from "../../api/groups.api.js";
 import ConfirmDialog from "../../components/admin/ConfirmDialog/ConfirmDialog.jsx";
@@ -16,6 +16,7 @@ const LONGITUD_MAXIMA_CODIGO = 20;
  */
 function MyGroupsPage() {
 	const idPrefix = useId();
+	const avisoRef = useRef(null);
 	const [grupos, setGrupos] = useState([]);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState("");
@@ -59,6 +60,13 @@ function MyGroupsPage() {
 		};
 	}, [reloadKey]);
 
+	// Al salir de un grupo desaparece el botón que abrió el diálogo: el foco va al aviso.
+	useEffect(() => {
+		if (resultado?.salio) {
+			avisoRef.current?.focus();
+		}
+	}, [resultado]);
+
 	function handleCodigoChange(event) {
 		setCodigo(event.target.value.toUpperCase());
 		setCodigoError("");
@@ -87,9 +95,13 @@ function MyGroupsPage() {
 		try {
 			const { grupo, ya_pertenecia: yaPertenecia } = await groupsApi.joinGroup(limpio);
 
-			if (!yaPertenecia) {
-				setGrupos((actuales) => [{ ...grupo, unido_en: new Date().toISOString() }, ...actuales]);
-			}
+			// Si ya pertenecía pero esta pestaña no lo mostraba (se unió desde otro dispositivo),
+			// se agrega sin inventar la fecha de ingreso.
+			setGrupos((actuales) =>
+				actuales.some((item) => item.id === grupo.id)
+					? actuales
+					: [yaPertenecia ? grupo : { ...grupo, unido_en: new Date().toISOString() }, ...actuales],
+			);
 
 			setCodigo("");
 			setResultado({ grupo, yaPertenecia });
@@ -179,6 +191,8 @@ function MyGroupsPage() {
 							: "my-groups-page__notice my-groups-page__notice--success"
 					}
 					role="status"
+					ref={avisoRef}
+					tabIndex={-1}
 				>
 					{resultado.salio
 						? `Saliste del grupo ${resultado.grupo.nombre}.`

@@ -17,6 +17,10 @@
 	font-size: 0.9rem;
 }
 
+.teacher-page__status:focus {
+	outline: none;
+}
+
 .teacher-page__status--error {
 	color: var(--color-error-700);
 }

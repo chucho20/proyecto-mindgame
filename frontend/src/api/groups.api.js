@@ -14,6 +14,6 @@ export async function listMyGroups() {
 }
 
 export async function leaveGroup(grupoId) {
-	const { data } = await api.delete(`/grupos/mios/${grupoId}`);
+	const { data } = await api.delete(`/grupos/mios/${encodeURIComponent(grupoId)}`);
 	return data;
 }

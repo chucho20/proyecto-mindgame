@@ -116,6 +116,10 @@
 	font-weight: 600;
 }
 
+.my-groups-page__notice:focus {
+	outline: none;
+}
+
 .my-groups-page__notice--success {
 	background: var(--color-success-50);
 	border: 1px solid var(--color-success-200);

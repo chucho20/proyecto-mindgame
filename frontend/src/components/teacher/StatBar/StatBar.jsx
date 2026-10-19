@@ -23,6 +23,7 @@ function StatBar({ value, max = 100, label, valueLabel, tone = "primary" }) {
 							"aria-valuemin": 0,
 							"aria-valuemax": max,
 							"aria-valuenow": value,
+							"aria-valuetext": String(valueLabel ?? value),
 						}
 					: { "aria-hidden": "true" })}
 			>

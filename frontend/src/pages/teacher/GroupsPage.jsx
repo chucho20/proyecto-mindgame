@@ -82,6 +82,7 @@ function GroupsPage() {
 		try {
 			const { grupo } = await teacherApi.createGroup(values);
 			setGrupos((actuales) => [grupo, ...actuales]);
+			setBusqueda("");
 			setGrupoCreado(grupo);
 		} finally {
 			setSubmitting(false);

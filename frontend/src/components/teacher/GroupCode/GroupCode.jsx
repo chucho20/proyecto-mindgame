@@ -38,31 +38,53 @@ function copiarConSeleccion(texto) {
 function GroupCode({ codigo, size = "normal" }) {
 	const [estado, setEstado] = useState("idle");
 	const timeoutRef = useRef(null);
+	const montadoRef = useRef(true);
 
-	useEffect(() => () => clearTimeout(timeoutRef.current), []);
+	useEffect(() => {
+		montadoRef.current = true;
+
+		return () => {
+			montadoRef.current = false;
+			clearTimeout(timeoutRef.current);
+		};
+	}, []);
 
 	async function copiar() {
 		clearTimeout(timeoutRef.current);
+		let resultado = "copiado";
 
 		try {
 			await navigator.clipboard.writeText(codigo);
-			setEstado("copiado");
 		} catch {
-			setEstado(copiarConSeleccion(codigo) ? "copiado" : "error");
+			resultado = copiarConSeleccion(codigo) ? "copiado" : "error";
 		}
 
+		// Si el componente se desmontó mientras se copiaba no hay nada que actualizar.
+		if (!montadoRef.current) {
+			return;
+		}
+
+		setEstado(resultado);
 		timeoutRef.current = setTimeout(() => setEstado("idle"), 2500);
 	}
 
 	return (
 		<span className={size === "large" ? "group-code group-code--large" : "group-code"}>
-			<code className="group-code__value" aria-label={`Código del grupo: ${codigo}`}>
+			<code className="group-code__value">
+				<span className="group-code__sr">Código del grupo: </span>
 				{codigo}
 			</code>
 			<button type="button" className="group-code__copy" onClick={copiar}>
 				Copiar
 			</button>
-			<span className="group-code__feedback" role="status" aria-live="polite">
+			{/* La región vive siempre en el DOM (vacía y oculta visualmente) para que se anuncie el cambio. */}
+			<span
+				className={
+					estado === "error" ? "group-code__feedback group-code__feedback--error" : "group-code__feedback"
+				}
+				role="status"
+				aria-live="polite"
+			>
 				{estado === "copiado" ? "¡Copiado!" : null}
 				{estado === "error" ? "No pudimos copiarlo: seleccionalo y copialo a mano." : null}
 			</span>

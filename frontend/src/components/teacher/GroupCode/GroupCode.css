@@ -1,4 +1,5 @@
 .group-code {
+	position: relative;
 	display: inline-flex;
 	align-items: center;
 	flex-wrap: wrap;
@@ -44,8 +45,29 @@
 	font-weight: 600;
 }
 
+.group-code__feedback--error {
+	color: var(--color-error-700);
+}
+
+/* Vacía no ocupa lugar (ni el gap del contenedor) pero sigue en el árbol de accesibilidad. */
 .group-code__feedback:empty {
-	display: none;
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	margin: -1px;
+	overflow: hidden;
+	clip: rect(0, 0, 0, 0);
+	white-space: nowrap;
+}
+
+.group-code__sr {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	margin: -1px;
+	overflow: hidden;
+	clip: rect(0, 0, 0, 0);
+	white-space: nowrap;
 }
 
 .group-code--large .group-code__value {

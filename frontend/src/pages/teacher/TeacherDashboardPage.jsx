@@ -89,7 +89,7 @@ function TeacherDashboardPage() {
 					<section className="stat-cards-grid teacher-dashboard__cards" aria-label="Resumen">
 						<AdminStatCard label="Grupos" value={formatearNumero(grupos.length)} icon="👥" accent="primary" />
 						<AdminStatCard
-							label="Estudiantes en tus grupos"
+							label="Inscripciones en tus grupos"
 							value={formatearNumero(totalEstudiantes)}
 							icon="🎓"
 							accent="success"

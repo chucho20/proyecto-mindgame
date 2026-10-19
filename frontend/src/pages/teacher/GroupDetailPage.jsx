@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 
 import * as teacherApi from "../../api/teacher.api.js";
@@ -27,6 +27,14 @@ function GroupDetailPage() {
 	const [removing, setRemoving] = useState(false);
 	const [removeError, setRemoveError] = useState("");
 	const [actionMessage, setActionMessage] = useState("");
+	const avisoRef = useRef(null);
+
+	// Al retirar a un estudiante desaparece el botón que abrió el diálogo: el foco va al aviso.
+	useEffect(() => {
+		if (actionMessage) {
+			avisoRef.current?.focus();
+		}
+	}, [actionMessage]);
 
 	useEffect(() => {
 		let cancelled = false;
@@ -179,7 +187,7 @@ function GroupDetailPage() {
 			</div>
 
 			{actionMessage ? (
-				<p className="teacher-page__status" role="status">
+				<p className="teacher-page__status" role="status" ref={avisoRef} tabIndex={-1}>
 					{actionMessage}
 				</p>
 			) : null}
