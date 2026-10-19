@@ -113,8 +113,10 @@ export async function responder(retoId, usuarioId, respuestaUsuario) {
 	// mensaje positivo (RF-013).
 	let mensajePositivo = null;
 	if (esCorrecto) {
-		const mision = await misionRepository.findById(reto.mision_id);
-		mensajePositivo = await mensajePositivoService.obtenerTextoParaMision(mision, CONTEXTO_RETO_COMPLETADO);
+		mensajePositivo = await mensajePositivoService.obtenerTextoParaMision(
+			reto.mision_id,
+			CONTEXTO_RETO_COMPLETADO,
+		);
 	}
 
 	// `progreso` (puntos totales, nivel, recompensas y logros nuevos) es null si

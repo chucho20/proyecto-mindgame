@@ -99,9 +99,8 @@ export async function completar(actividadId, usuarioId) {
 	// Con la actividad ya completada se entrega su explicación (RF-018) y, si pertenece
 	// a una misión de convivencia, un mensaje positivo (RF-013). Las actividades sin
 	// misión no tienen categoría, así que no llevan mensaje.
-	const mision = actividad.mision_id ? await misionRepository.findById(actividad.mision_id) : null;
 	const mensajePositivo = await mensajePositivoService.obtenerTextoParaMision(
-		mision,
+		actividad.mision_id,
 		CONTEXTO_ACTIVIDAD_COMPLETADA,
 	);
 

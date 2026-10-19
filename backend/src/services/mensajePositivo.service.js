@@ -2,6 +2,7 @@ import AppError from "../utils/AppError.js";
 import { CATEGORIA_CONVIVENCIA } from "../constants/convivencia.js";
 import { LONGITUD_MAXIMA_TEXTO } from "../utils/validators.js";
 import * as mensajePositivoRepository from "../repositories/mensajePositivo.repository.js";
+import * as misionRepository from "../repositories/mision.repository.js";
 
 const LONGITUD_MAXIMA_CONTEXTO = 100;
 
@@ -22,16 +23,23 @@ export async function obtenerAleatorioPorContexto(contexto) {
 /**
  * Texto del mensaje positivo que corresponde mostrar tras una acción del estudiante:
  * solo las misiones de convivencia lo muestran, y si no hay mensajes cargados para el
- * contexto devuelve `null`. Es un adorno de la respuesta: si falla la consulta se
- * registra y se devuelve `null`, porque la acción del estudiante (con sus puntos) ya
- * quedó guardada y no tiene que terminar en un 500.
+ * contexto devuelve `null`. Es un adorno de la respuesta: tanto la búsqueda de la misión
+ * como la del mensaje quedan dentro del mismo resguardo; si algo falla se registra y se
+ * devuelve `null`, porque la acción del estudiante (con sus puntos) ya quedó guardada y
+ * no tiene que terminar en un 500.
  */
-export async function obtenerTextoParaMision(mision, contexto) {
-	if (!mision || mision.categoria !== CATEGORIA_CONVIVENCIA) {
+export async function obtenerTextoParaMision(misionId, contexto) {
+	if (!misionId) {
 		return null;
 	}
 
 	try {
+		const mision = await misionRepository.findById(misionId);
+
+		if (!mision || mision.categoria !== CATEGORIA_CONVIVENCIA) {
+			return null;
+		}
+
 		const mensaje = await obtenerAleatorioPorContexto(contexto);
 		return mensaje ? mensaje.contenido : null;
 	} catch (error) {
