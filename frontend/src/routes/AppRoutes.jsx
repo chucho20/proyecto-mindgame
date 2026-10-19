@@ -22,6 +22,7 @@ import PositiveMessagesAdminPage from "../pages/admin/PositiveMessagesAdminPage.
 import ProgressPage from "../pages/student/ProgressPage.jsx";
 import AchievementsPage from "../pages/student/AchievementsPage.jsx";
 import RewardsPage from "../pages/student/RewardsPage.jsx";
+import MyGroupsPage from "../pages/student/MyGroupsPage.jsx";
 import TeacherLayout from "../layouts/TeacherLayout.jsx";
 import TeacherDashboardPage from "../pages/teacher/TeacherDashboardPage.jsx";
 import GroupsPage from "../pages/teacher/GroupsPage.jsx";
@@ -63,6 +64,7 @@ function AppRoutes() {
 					<Route path="/estudiante/progreso" element={<ProgressPage />} />
 					<Route path="/estudiante/logros" element={<AchievementsPage />} />
 					<Route path="/estudiante/recompensas" element={<RewardsPage />} />
+					<Route path="/estudiante/grupos" element={<MyGroupsPage />} />
 				</Route>
 			</Route>
 
