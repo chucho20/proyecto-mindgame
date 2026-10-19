@@ -1,32 +1,58 @@
-import pool from "../config/db.js";
+import prisma from "../config/prisma.js";
+import { normalizarId } from "../utils/dbIds.js";
+
+// Devuelve la misma fila (snake_case) que devolvía `SELECT *` con mysql2.
+function aFilaActividadCompletada(completada) {
+	if (!completada) {
+		return null;
+	}
+
+	return {
+		id: completada.id,
+		usuario_id: completada.usuarioId,
+		actividad_id: completada.actividadId,
+		completada_en: completada.completadaEn,
+	};
+}
 
 export async function findByUsuarioYActividad(usuarioId, actividadId) {
-	const [rows] = await pool.query(
-		"SELECT * FROM actividades_completadas WHERE usuario_id = ? AND actividad_id = ? LIMIT 1",
-		[usuarioId, actividadId],
-	);
-	return rows[0] || null;
+	const usuarioIdNormalizado = normalizarId(usuarioId);
+	const actividadIdNormalizado = normalizarId(actividadId);
+	if (usuarioIdNormalizado === null || actividadIdNormalizado === null) {
+		return null;
+	}
+
+	const completada = await prisma.actividadCompletada.findUnique({
+		where: {
+			usuarioId_actividadId: { usuarioId: usuarioIdNormalizado, actividadId: actividadIdNormalizado },
+		},
+	});
+	return aFilaActividadCompletada(completada);
 }
 
 /**
- * Marca una actividad como completada. Puede lanzar un error con
- * `code === "ER_DUP_ENTRY"` si ya estaba completada (UNIQUE usuario_id +
- * actividad_id) — el caller lo trata como éxito idempotente.
+ * Marca una actividad como completada. Puede lanzar un error de violación
+ * UNIQUE (`P2002` en Prisma; ver `esViolacionUnica` en utils/dbErrors.js) si
+ * ya estaba completada (UNIQUE usuario_id + actividad_id) — el caller lo trata
+ * como éxito idempotente.
  */
 export async function create(usuarioId, actividadId) {
-	const [result] = await pool.query(
-		"INSERT INTO actividades_completadas (usuario_id, actividad_id) VALUES (?, ?)",
-		[usuarioId, actividadId],
-	);
-	const [rows] = await pool.query("SELECT * FROM actividades_completadas WHERE id = ? LIMIT 1", [
-		result.insertId,
-	]);
-	return rows[0];
+	const completada = await prisma.actividadCompletada.create({
+		data: { usuarioId: Number(usuarioId), actividadId: Number(actividadId) },
+	});
+	return aFilaActividadCompletada(completada);
 }
 
 export async function findAllByUsuario(usuarioId) {
-	const [rows] = await pool.query("SELECT * FROM actividades_completadas WHERE usuario_id = ?", [usuarioId]);
-	return rows;
+	const usuarioIdNormalizado = normalizarId(usuarioId);
+	if (usuarioIdNormalizado === null) {
+		return [];
+	}
+
+	const completadas = await prisma.actividadCompletada.findMany({
+		where: { usuarioId: usuarioIdNormalizado },
+	});
+	return completadas.map(aFilaActividadCompletada);
 }
 
 /**
@@ -34,12 +60,13 @@ export async function findAllByUsuario(usuarioId) {
  * para calcular si la misión está completa).
  */
 export async function countCompletadasPorMision(usuarioId, misionId) {
-	const [rows] = await pool.query(
-		`SELECT COUNT(*) AS total
-			FROM actividades_completadas ac
-			INNER JOIN actividades a ON a.id = ac.actividad_id
-			WHERE ac.usuario_id = ? AND a.mision_id = ?`,
-		[usuarioId, misionId],
-	);
-	return rows[0].total;
+	const usuarioIdNormalizado = normalizarId(usuarioId);
+	const misionIdNormalizado = normalizarId(misionId);
+	if (usuarioIdNormalizado === null || misionIdNormalizado === null) {
+		return 0;
+	}
+
+	return prisma.actividadCompletada.count({
+		where: { usuarioId: usuarioIdNormalizado, actividad: { misionId: misionIdNormalizado } },
+	});
 }
