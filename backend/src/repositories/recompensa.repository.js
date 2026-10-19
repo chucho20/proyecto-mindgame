@@ -91,9 +91,23 @@ export async function setEstado(id, estado) {
 	return findById(id);
 }
 
-// Borra la recompensa; las filas de `recompensas_obtenidas` caen en cascada (FK ON DELETE CASCADE).
-export async function remove(id) {
-	await prisma.recompensa.deleteMany({ where: { id: Number(id) } });
+/**
+ * Borra la recompensa solo si ningún estudiante la obtuvo. Cuenta y borra en una
+ * misma transacción para no arrastrar por cascada (FK ON DELETE CASCADE) filas de
+ * `recompensas_obtenidas`. Devuelve `{ eliminada, obtenidaPor }`: si `eliminada` es
+ * false, `obtenidaPor` es la cantidad de estudiantes que ya la tienen.
+ */
+export async function removeSiNadieLaObtuvo(id) {
+	return prisma.$transaction(async (tx) => {
+		const obtenidaPor = await tx.recompensaObtenida.count({ where: { recompensaId: Number(id) } });
+
+		if (obtenidaPor > 0) {
+			return { eliminada: false, obtenidaPor };
+		}
+
+		await tx.recompensa.deleteMany({ where: { id: Number(id) } });
+		return { eliminada: true, obtenidaPor: 0 };
+	});
 }
 
 export async function countAll() {

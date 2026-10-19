@@ -91,9 +91,23 @@ export async function setEstado(id, estado) {
 	return findById(id);
 }
 
-// Borra el logro; las filas de `logros_obtenidos` caen en cascada (FK ON DELETE CASCADE).
-export async function remove(id) {
-	await prisma.logro.deleteMany({ where: { id: Number(id) } });
+/**
+ * Borra el logro solo si ningún estudiante lo obtuvo. Cuenta y borra en una misma
+ * transacción para no arrastrar por cascada (FK ON DELETE CASCADE) filas de
+ * `logros_obtenidos`. Devuelve `{ eliminado, obtenidoPor }`: si `eliminado` es
+ * false, `obtenidoPor` es la cantidad de estudiantes que ya lo tienen.
+ */
+export async function removeSiNadieLoObtuvo(id) {
+	return prisma.$transaction(async (tx) => {
+		const obtenidoPor = await tx.logroObtenido.count({ where: { logroId: Number(id) } });
+
+		if (obtenidoPor > 0) {
+			return { eliminado: false, obtenidoPor };
+		}
+
+		await tx.logro.deleteMany({ where: { id: Number(id) } });
+		return { eliminado: true, obtenidoPor: 0 };
+	});
 }
 
 export async function countAll() {

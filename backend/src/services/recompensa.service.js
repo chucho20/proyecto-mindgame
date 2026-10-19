@@ -125,5 +125,15 @@ export async function cambiarEstado(id, estado) {
 
 export async function eliminar(id) {
 	await obtenerAdmin(id);
-	await recompensaRepository.remove(id);
+
+	// Borrarla arrastraría el historial de los estudiantes que ya la obtuvieron:
+	// en ese caso se rechaza y se sugiere desactivarla (PUT /:id/estado).
+	const { eliminada, obtenidaPor } = await recompensaRepository.removeSiNadieLaObtuvo(id);
+
+	if (!eliminada) {
+		throw new AppError(
+			`No se puede eliminar: ${obtenidaPor} estudiante(s) ya la obtuvieron. Desactivala en su lugar para conservar el historial.`,
+			409,
+		);
+	}
 }
