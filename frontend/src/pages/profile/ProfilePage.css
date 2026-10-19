@@ -24,6 +24,19 @@
 	height: fit-content;
 }
 
+.profile-page__back {
+	display: inline-block;
+	margin-bottom: 1rem;
+	color: var(--color-primary-700);
+	font-size: 0.85rem;
+	font-weight: 600;
+	text-decoration: none;
+}
+
+.profile-page__back:hover {
+	text-decoration: underline;
+}
+
 .profile-page__header {
 	display: flex;
 	align-items: center;

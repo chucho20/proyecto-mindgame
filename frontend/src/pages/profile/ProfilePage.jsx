@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 import * as profileApi from "../../api/profile.api.js";
 import { useAuth } from "../../context/AuthContext.js";
 import { AVATAR_OPTIONS, avatarEmoji } from "../../constants/avatars.js";
+import { ROLE_HOME_ROUTES } from "../../constants/roleRoutes.js";
 import "./ProfilePage.css";
 
 function ProfilePage() {
@@ -94,6 +95,10 @@ function ProfilePage() {
 	return (
 		<div className="profile-page">
 			<div className="profile-page__card">
+				<Link to={ROLE_HOME_ROUTES[sessionUser?.rol] || "/"} className="profile-page__back">
+					← Volver al inicio
+				</Link>
+
 				<div className="profile-page__header">
 					<div className="profile-page__avatar">{avatarEmoji(form.avatar)}</div>
 					<div className="profile-page__identity">
