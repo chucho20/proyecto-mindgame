@@ -14,6 +14,7 @@ const NAV_ITEMS = [
 	{ label: "Mi progreso", to: "/estudiante/progreso", icon: "📈" },
 	{ label: "Logros", to: "/estudiante/logros", icon: "🏆" },
 	{ label: "Recompensas", to: "/estudiante/recompensas", icon: "🎁" },
+	{ label: "Mis grupos", to: "/estudiante/grupos", icon: "👥" },
 	{ label: "Convivencia", icon: "🤝", disabled: true },
 	{ label: "Mi perfil", to: "/perfil", icon: "👤" },
 ];
@@ -22,7 +23,7 @@ const NAV_ITEMS = [
  * Layout compartido de las pantallas de estudiante: sidebar claro en
  * desktop/tablet, navegación inferior en mobile (ver responsive.css).
  * Están habilitados "Inicio", "Misiones", "Mi progreso", "Logros",
- * "Recompensas", "Mi perfil" y "Cerrar sesión"; el resto (Retos, Actividades,
+ * "Recompensas", "Mis grupos", "Mi perfil" y "Cerrar sesión"; el resto (Retos, Actividades,
  * Convivencia) muestra la leyenda honesta del proyecto.
  */
 function StudentLayout() {

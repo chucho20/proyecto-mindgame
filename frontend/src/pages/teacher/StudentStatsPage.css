@@ -1,0 +1,99 @@
+.student-stats__retos {
+	background: #ffffff;
+	border: 1px solid var(--color-slate-200);
+	border-radius: var(--radius-lg);
+	box-shadow: var(--shadow-card);
+	padding: var(--space-5);
+}
+
+.student-stats__acierto {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--space-3);
+}
+
+.student-stats__acierto-label {
+	font-size: 0.85rem;
+	font-weight: 600;
+	color: var(--color-slate-700);
+}
+
+.student-stats__acierto .stat-bar {
+	flex: 1;
+	min-width: 200px;
+	max-width: 420px;
+}
+
+.student-stats__datos {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+	gap: var(--space-3);
+	margin: 0;
+}
+
+.student-stats__datos div {
+	padding: var(--space-3);
+	border-radius: var(--radius-sm);
+	background: var(--color-slate-50);
+}
+
+.student-stats__datos dt {
+	font-size: 0.75rem;
+	color: var(--color-slate-500);
+}
+
+.student-stats__datos dd {
+	margin: 0.2rem 0 0;
+	font-family: var(--font-heading);
+	font-size: 1.2rem;
+	font-weight: 700;
+	color: var(--color-slate-800);
+}
+
+.student-stats__misiones {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+.student-stats__mision {
+	display: flex;
+	align-items: center;
+	gap: var(--space-3);
+	padding: var(--space-3) var(--space-4);
+	background: #ffffff;
+	border: 1px solid var(--color-slate-200);
+	border-radius: var(--radius-sm);
+}
+
+.student-stats__mision-icon {
+	width: 28px;
+	height: 28px;
+	border-radius: var(--radius-full);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: var(--color-success-50);
+	color: var(--color-success-700);
+	font-weight: 700;
+	flex-shrink: 0;
+}
+
+.student-stats__mision-body {
+	flex: 1;
+	min-width: 0;
+}
+
+.student-stats__mision-body p {
+	margin: 0;
+}
+
+.student-stats__mision-title {
+	font-weight: 600;
+	color: var(--color-slate-800);
+	overflow-wrap: anywhere;
+}
