@@ -73,3 +73,28 @@ export async function updateEstado(usuarioId, misionId, estado) {
 	});
 	return findByUsuarioYMision(usuarioId, misionId);
 }
+
+/**
+ * Misiones que el usuario ya completó, con los datos de la misión, de la más
+ * antigua a la más reciente (usado por la consulta de progreso, RF-017).
+ */
+export async function findCompletadasConMision(usuarioId) {
+	const usuarioIdNormalizado = normalizarId(usuarioId);
+	if (usuarioIdNormalizado === null) {
+		return [];
+	}
+
+	const progresos = await prisma.progresoMision.findMany({
+		where: { usuarioId: usuarioIdNormalizado, estado: "completada" },
+		include: { mision: true },
+		orderBy: [{ completadaEn: "asc" }, { id: "asc" }],
+	});
+
+	return progresos.map((progreso) => ({
+		mision_id: progreso.misionId,
+		titulo: progreso.mision.titulo,
+		descripcion: progreso.mision.descripcion,
+		categoria: progreso.mision.categoria,
+		completada_en: progreso.completadaEn,
+	}));
+}

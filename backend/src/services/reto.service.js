@@ -4,6 +4,7 @@ import * as misionRepository from "../repositories/mision.repository.js";
 import * as intentoRetoRepository from "../repositories/intentoReto.repository.js";
 import { obtenerEvaluador } from "./evaluadores/evaluadorRegistry.js";
 import * as misionService from "./mision.service.js";
+import * as progresoService from "./progreso.service.js";
 import { esEnteroValido } from "../utils/validators.js";
 
 const TIPOS_VALIDOS = ["seleccion_multiple", "verdadero_falso", "relacion_elementos", "orden_cronologico"];
@@ -70,21 +71,39 @@ export async function responder(retoId, usuarioId, respuestaUsuario) {
 		throw new AppError("No hay un evaluador configurado para este tipo de reto.", 500);
 	}
 
-	const { esCorrecto, puntosObtenidos } = evaluador.evaluar(reto, respuestaUsuario);
+	const { esCorrecto, puntosObtenidos: puntosDelReto } = evaluador.evaluar(reto, respuestaUsuario);
 
-	await intentoRetoRepository.create({
+	// Regla de puntos (RF-014): un reto suma puntos SOLO la primera vez que se
+	// responde bien. Los aciertos repetidos y las respuestas incorrectas no
+	// suman, para que no se puedan "farmear" puntos repitiendo el mismo reto.
+	// El repositorio lo decide y suma los puntos a usuarios.puntos_totales en la misma
+	// transacción que registra el intento (ver createConPuntosDelPrimerAcierto).
+	const nivelAnterior = esCorrecto ? await progresoService.obtenerNivelActual(usuarioId) : null;
+
+	const intento = await intentoRetoRepository.createConPuntosDelPrimerAcierto({
 		usuarioId,
 		retoId,
 		respuestaDada: respuestaUsuario,
 		esCorrecto,
-		puntosObtenidos,
+		puntosPrimerAcierto: puntosDelReto,
 	});
+	const puntosObtenidos = intento.puntos_obtenidos;
+
+	let progreso = null;
 
 	if (esCorrecto) {
 		await misionService.actualizarProgresoSiCompleta(reto.mision_id, usuarioId);
+
+		// Los puntos ya quedaron guardados; nivel, recompensas y logros se evalúan en un
+		// paso idempotente aparte (GET /api/progreso lo repite si este paso no llega a correr).
+		if (puntosObtenidos > 0) {
+			progreso = await progresoService.evaluarProgresionTrasPuntos(usuarioId, puntosObtenidos, nivelAnterior);
+		}
 	}
 
-	return { esCorrecto, puntosObtenidos };
+	// `progreso` (puntos totales, nivel, recompensas y logros nuevos) es null si
+	// esta respuesta no sumó puntos.
+	return { esCorrecto, puntosObtenidos, progreso };
 }
 
 // --- Admin CRUD ---
