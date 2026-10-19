@@ -24,6 +24,7 @@ import AchievementsPage from "../pages/student/AchievementsPage.jsx";
 import RewardsPage from "../pages/student/RewardsPage.jsx";
 import TeacherLayout from "../layouts/TeacherLayout.jsx";
 import TeacherDashboardPage from "../pages/teacher/TeacherDashboardPage.jsx";
+import GroupsPage from "../pages/teacher/GroupsPage.jsx";
 
 // Placeholder temporal del panel de estudiante: su dashboard completo se
 // construye en un sprint posterior. Por ahora aterriza acá y puede ir a su perfil.
@@ -65,6 +66,7 @@ function AppRoutes() {
 			<Route element={<ProtectedRoutes roles={["docente"]} />}>
 				<Route element={<TeacherLayout />}>
 					<Route path="/docente" element={<TeacherDashboardPage />} />
+					<Route path="/docente/grupos" element={<GroupsPage />} />
 				</Route>
 			</Route>
 
