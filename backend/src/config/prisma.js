@@ -13,6 +13,12 @@ const adapter = new PrismaMariaDb({
 	user: process.env.DB_USER,
 	password: process.env.DB_PASSWORD,
 	database: process.env.DB_NAME,
+	// Prisma lee y escribe los DATETIME siempre en UTC. Se fuerza la sesión de
+	// MySQL a UTC para que los valores que genera el propio servidor
+	// (`ON UPDATE CURRENT_TIMESTAMP` de updated_at, DEFAULT CURRENT_TIMESTAMP)
+	// usen la misma referencia y no queden desfasados en servidores con otra
+	// zona horaria.
+	initSql: "SET time_zone = '+00:00'",
 });
 
 const prisma = new PrismaClient({ adapter });
