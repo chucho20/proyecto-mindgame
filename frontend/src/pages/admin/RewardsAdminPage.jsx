@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 
 import * as adminApi from "../../api/admin.api.js";
 import ConfirmDialog from "../../components/admin/ConfirmDialog/ConfirmDialog.jsx";
@@ -6,6 +6,7 @@ import DataTable from "../../components/admin/DataTable/DataTable.jsx";
 import RewardForm from "../../components/admin/RewardForm/RewardForm.jsx";
 import StatusBadge from "../../components/admin/StatusBadge/StatusBadge.jsx";
 import PageHeader from "../../components/layout/PageHeader/PageHeader.jsx";
+import { useDialogA11y } from "../../hooks/useDialogA11y.js";
 import { describirCondicion } from "../../utils/progresion.js";
 import "./RewardsAdminPage.css";
 
@@ -45,15 +46,37 @@ function RewardsAdminPage() {
 	const [recompensaEliminando, setRecompensaEliminando] = useState(null);
 	const [deleting, setDeleting] = useState(false);
 	const [deleteError, setDeleteError] = useState("");
+	const [reloadFailed, setReloadFailed] = useState(false);
+	const panelTitleId = useId();
+	const { dialogRef, backdropProps } = useDialogA11y({
+		open: panelAbierto,
+		onClose: cerrarPanel,
+		closeDisabled: submitting,
+		initialFocus: "form input, form textarea, form select",
+	});
 
 	async function recargar() {
 		const { recompensas: data } = await adminApi.listRewardsAdmin();
 		setRecompensas(data);
 	}
 
+	/**
+	 * Recarga la lista DESPUÉS de una acción que ya se guardó: si la recarga falla no
+	 * hay que mostrar "no se pudo guardar" (sí se guardó), sino un aviso propio en la página.
+	 */
+	async function recargarTrasAccion() {
+		try {
+			await recargar();
+			setReloadFailed(false);
+		} catch {
+			setReloadFailed(true);
+		}
+	}
+
 	async function cargar() {
 		setLoading(true);
 		setError("");
+		setReloadFailed(false);
 
 		try {
 			await recargar();
@@ -114,12 +137,14 @@ function RewardsAdminPage() {
 			} else {
 				await adminApi.createReward(values);
 			}
-			cerrarPanel();
-			setActionError("");
-			await recargar();
 		} finally {
 			setSubmitting(false);
 		}
+
+		// Si el guardado falló, el error ya subió al formulario (el panel sigue abierto).
+		cerrarPanel();
+		setActionError("");
+		await recargarTrasAccion();
 	}
 
 	async function handleToggleEstado(recompensa) {
@@ -128,10 +153,12 @@ function RewardsAdminPage() {
 
 		try {
 			await adminApi.setRewardStatus(recompensa.id, nuevoEstado);
-			await recargar();
 		} catch (err) {
 			setActionError(err.response?.data?.message || "No pudimos cambiar el estado de la recompensa.");
+			return;
 		}
+
+		await recargarTrasAccion();
 	}
 
 	function pedirEliminacion(recompensa) {
@@ -145,14 +172,16 @@ function RewardsAdminPage() {
 
 		try {
 			await adminApi.deleteReward(recompensaEliminando.id);
-			setRecompensaEliminando(null);
-			setActionError("");
-			await recargar();
 		} catch (err) {
 			setDeleteError(err.response?.data?.message || "No pudimos eliminar la recompensa.");
-		} finally {
 			setDeleting(false);
+			return;
 		}
+
+		setDeleting(false);
+		setRecompensaEliminando(null);
+		setActionError("");
+		await recargarTrasAccion();
 	}
 
 	const recompensasFiltradas = recompensas.filter((recompensa) =>
@@ -174,6 +203,7 @@ function RewardsAdminPage() {
 			<input
 				type="search"
 				className="rewards-admin-page__search"
+				aria-label="Buscar recompensas por nombre"
 				placeholder="Buscar por nombre..."
 				value={busqueda}
 				onChange={(event) => setBusqueda(event.target.value)}
@@ -189,7 +219,17 @@ function RewardsAdminPage() {
 				</p>
 			) : null}
 			{actionError ? (
-				<p className="rewards-admin-page__status rewards-admin-page__status--error">{actionError}</p>
+				<p className="rewards-admin-page__status rewards-admin-page__status--error" role="alert">
+					{actionError}
+				</p>
+			) : null}
+			{reloadFailed ? (
+				<p className="rewards-admin-page__status rewards-admin-page__status--error" role="alert">
+					Se guardó, pero no pudimos actualizar la lista.{" "}
+					<button type="button" className="rewards-admin-page__retry" onClick={recargarTrasAccion}>
+						Reintentar
+					</button>
+				</p>
 			) : null}
 
 			{!loading && !error ? (
@@ -230,14 +270,22 @@ function RewardsAdminPage() {
 			) : null}
 
 			{panelAbierto ? (
-				<div className="rewards-admin-page__overlay" onClick={cerrarPanel}>
-					<div className="rewards-admin-page__panel" onClick={(event) => event.stopPropagation()}>
+				<div className="rewards-admin-page__overlay" {...backdropProps}>
+					<div
+						className="rewards-admin-page__panel"
+						ref={dialogRef}
+						role="dialog"
+						aria-modal="true"
+						aria-labelledby={panelTitleId}
+						tabIndex={-1}
+					>
 						<div className="rewards-admin-page__panel-header">
-							<h2>{recompensaEditando ? "Editar recompensa" : "Nueva recompensa"}</h2>
+							<h2 id={panelTitleId}>{recompensaEditando ? "Editar recompensa" : "Nueva recompensa"}</h2>
 							<button
 								type="button"
 								className="rewards-admin-page__panel-close"
 								onClick={cerrarPanel}
+								disabled={submitting}
 								aria-label="Cerrar"
 							>
 								✕

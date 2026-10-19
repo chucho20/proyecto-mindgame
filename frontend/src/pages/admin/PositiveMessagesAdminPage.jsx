@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 
 import * as adminApi from "../../api/admin.api.js";
 import ConfirmDialog from "../../components/admin/ConfirmDialog/ConfirmDialog.jsx";
@@ -6,12 +6,9 @@ import DataTable from "../../components/admin/DataTable/DataTable.jsx";
 import PositiveMessageForm from "../../components/admin/PositiveMessageForm/PositiveMessageForm.jsx";
 import StatusBadge from "../../components/admin/StatusBadge/StatusBadge.jsx";
 import PageHeader from "../../components/layout/PageHeader/PageHeader.jsx";
+import { useDialogA11y } from "../../hooks/useDialogA11y.js";
+import { etiquetaContexto } from "../../utils/convivencia.js";
 import "./PositiveMessagesAdminPage.css";
-
-const CONTEXTO_LABELS = {
-	reto_completado: "Reto completado",
-	actividad_completada: "Actividad completada",
-};
 
 const COLUMNS = [
 	{
@@ -23,7 +20,7 @@ const COLUMNS = [
 			</span>
 		),
 	},
-	{ key: "contexto", label: "Contexto", render: (row) => CONTEXTO_LABELS[row.contexto] || row.contexto },
+	{ key: "contexto", label: "Contexto", render: (row) => etiquetaContexto(row.contexto) },
 	{ key: "estado", label: "Estado", render: (row) => <StatusBadge estado={row.estado} /> },
 ];
 
@@ -46,6 +43,14 @@ function PositiveMessagesAdminPage() {
 	const [mensajeEliminando, setMensajeEliminando] = useState(null);
 	const [deleting, setDeleting] = useState(false);
 	const [deleteError, setDeleteError] = useState("");
+	const [reloadFailed, setReloadFailed] = useState(false);
+	const panelTitleId = useId();
+	const { dialogRef, backdropProps } = useDialogA11y({
+		open: panelAbierto,
+		onClose: cerrarPanel,
+		closeDisabled: submitting,
+		initialFocus: "form input, form textarea, form select",
+	});
 
 	async function recargar() {
 		const { mensajes: data, contextos_conocidos: contextos } = await adminApi.listPositiveMessagesAdmin();
@@ -53,9 +58,23 @@ function PositiveMessagesAdminPage() {
 		setContextosConocidos(contextos || []);
 	}
 
+	/**
+	 * Recarga la lista DESPUÉS de una acción que ya se guardó: si la recarga falla no
+	 * hay que mostrar "no se pudo guardar" (sí se guardó), sino un aviso propio en la página.
+	 */
+	async function recargarTrasAccion() {
+		try {
+			await recargar();
+			setReloadFailed(false);
+		} catch {
+			setReloadFailed(true);
+		}
+	}
+
 	async function cargar() {
 		setLoading(true);
 		setError("");
+		setReloadFailed(false);
 
 		try {
 			await recargar();
@@ -117,12 +136,14 @@ function PositiveMessagesAdminPage() {
 			} else {
 				await adminApi.createPositiveMessage(values);
 			}
-			cerrarPanel();
-			setActionError("");
-			await recargar();
 		} finally {
 			setSubmitting(false);
 		}
+
+		// Si el guardado falló, el error ya subió al formulario (el panel sigue abierto).
+		cerrarPanel();
+		setActionError("");
+		await recargarTrasAccion();
 	}
 
 	async function handleToggleEstado(mensaje) {
@@ -131,10 +152,12 @@ function PositiveMessagesAdminPage() {
 
 		try {
 			await adminApi.setPositiveMessageStatus(mensaje.id, nuevoEstado);
-			await recargar();
 		} catch (err) {
 			setActionError(err.response?.data?.message || "No pudimos cambiar el estado del mensaje.");
+			return;
 		}
+
+		await recargarTrasAccion();
 	}
 
 	function pedirEliminacion(mensaje) {
@@ -148,14 +171,16 @@ function PositiveMessagesAdminPage() {
 
 		try {
 			await adminApi.deletePositiveMessage(mensajeEliminando.id);
-			setMensajeEliminando(null);
-			setActionError("");
-			await recargar();
 		} catch (err) {
 			setDeleteError(err.response?.data?.message || "No pudimos eliminar el mensaje.");
-		} finally {
 			setDeleting(false);
+			return;
 		}
+
+		setDeleting(false);
+		setMensajeEliminando(null);
+		setActionError("");
+		await recargarTrasAccion();
 	}
 
 	const termino = busqueda.trim().toLowerCase();
@@ -179,6 +204,7 @@ function PositiveMessagesAdminPage() {
 			<input
 				type="search"
 				className="positive-messages-admin-page__search"
+				aria-label="Buscar mensajes positivos por mensaje o contexto"
 				placeholder="Buscar por mensaje o contexto..."
 				value={busqueda}
 				onChange={(event) => setBusqueda(event.target.value)}
@@ -194,8 +220,22 @@ function PositiveMessagesAdminPage() {
 				</p>
 			) : null}
 			{actionError ? (
-				<p className="positive-messages-admin-page__status positive-messages-admin-page__status--error">
+				<p
+					className="positive-messages-admin-page__status positive-messages-admin-page__status--error"
+					role="alert"
+				>
 					{actionError}
+				</p>
+			) : null}
+			{reloadFailed ? (
+				<p
+					className="positive-messages-admin-page__status positive-messages-admin-page__status--error"
+					role="alert"
+				>
+					Se guardó, pero no pudimos actualizar la lista.{" "}
+					<button type="button" className="positive-messages-admin-page__retry" onClick={recargarTrasAccion}>
+						Reintentar
+					</button>
 				</p>
 			) : null}
 
@@ -237,14 +277,22 @@ function PositiveMessagesAdminPage() {
 			) : null}
 
 			{panelAbierto ? (
-				<div className="positive-messages-admin-page__overlay" onClick={cerrarPanel}>
-					<div className="positive-messages-admin-page__panel" onClick={(event) => event.stopPropagation()}>
+				<div className="positive-messages-admin-page__overlay" {...backdropProps}>
+					<div
+						className="positive-messages-admin-page__panel"
+						ref={dialogRef}
+						role="dialog"
+						aria-modal="true"
+						aria-labelledby={panelTitleId}
+						tabIndex={-1}
+					>
 						<div className="positive-messages-admin-page__panel-header">
-							<h2>{mensajeEditando ? "Editar mensaje" : "Nuevo mensaje"}</h2>
+							<h2 id={panelTitleId}>{mensajeEditando ? "Editar mensaje" : "Nuevo mensaje"}</h2>
 							<button
 								type="button"
 								className="positive-messages-admin-page__panel-close"
 								onClick={cerrarPanel}
+								disabled={submitting}
 								aria-label="Cerrar"
 							>
 								✕

@@ -127,3 +127,7 @@
 .rewards-admin-page__panel-close:hover {
 	color: var(--color-slate-800);
 }
+
+.rewards-admin-page__panel:focus {
+	outline: none;
+}

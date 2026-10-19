@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 
 import * as adminApi from "../../api/admin.api.js";
 import ConfirmDialog from "../../components/admin/ConfirmDialog/ConfirmDialog.jsx";
@@ -6,6 +6,7 @@ import DataTable from "../../components/admin/DataTable/DataTable.jsx";
 import AchievementForm from "../../components/admin/AchievementForm/AchievementForm.jsx";
 import StatusBadge from "../../components/admin/StatusBadge/StatusBadge.jsx";
 import PageHeader from "../../components/layout/PageHeader/PageHeader.jsx";
+import { useDialogA11y } from "../../hooks/useDialogA11y.js";
 import { describirCondicion } from "../../utils/progresion.js";
 import "./AchievementsAdminPage.css";
 
@@ -45,15 +46,37 @@ function AchievementsAdminPage() {
 	const [logroEliminando, setLogroEliminando] = useState(null);
 	const [deleting, setDeleting] = useState(false);
 	const [deleteError, setDeleteError] = useState("");
+	const [reloadFailed, setReloadFailed] = useState(false);
+	const panelTitleId = useId();
+	const { dialogRef, backdropProps } = useDialogA11y({
+		open: panelAbierto,
+		onClose: cerrarPanel,
+		closeDisabled: submitting,
+		initialFocus: "form input, form textarea, form select",
+	});
 
 	async function recargar() {
 		const { logros: data } = await adminApi.listAchievementsAdmin();
 		setLogros(data);
 	}
 
+	/**
+	 * Recarga la lista DESPUÉS de una acción que ya se guardó: si la recarga falla no
+	 * hay que mostrar "no se pudo guardar" (sí se guardó), sino un aviso propio en la página.
+	 */
+	async function recargarTrasAccion() {
+		try {
+			await recargar();
+			setReloadFailed(false);
+		} catch {
+			setReloadFailed(true);
+		}
+	}
+
 	async function cargar() {
 		setLoading(true);
 		setError("");
+		setReloadFailed(false);
 
 		try {
 			await recargar();
@@ -114,12 +137,14 @@ function AchievementsAdminPage() {
 			} else {
 				await adminApi.createAchievement(values);
 			}
-			cerrarPanel();
-			setActionError("");
-			await recargar();
 		} finally {
 			setSubmitting(false);
 		}
+
+		// Si el guardado falló, el error ya subió al formulario (el panel sigue abierto).
+		cerrarPanel();
+		setActionError("");
+		await recargarTrasAccion();
 	}
 
 	async function handleToggleEstado(logro) {
@@ -128,10 +153,12 @@ function AchievementsAdminPage() {
 
 		try {
 			await adminApi.setAchievementStatus(logro.id, nuevoEstado);
-			await recargar();
 		} catch (err) {
 			setActionError(err.response?.data?.message || "No pudimos cambiar el estado del logro.");
+			return;
 		}
+
+		await recargarTrasAccion();
 	}
 
 	function pedirEliminacion(logro) {
@@ -145,14 +172,16 @@ function AchievementsAdminPage() {
 
 		try {
 			await adminApi.deleteAchievement(logroEliminando.id);
-			setLogroEliminando(null);
-			setActionError("");
-			await recargar();
 		} catch (err) {
 			setDeleteError(err.response?.data?.message || "No pudimos eliminar el logro.");
-		} finally {
 			setDeleting(false);
+			return;
 		}
+
+		setDeleting(false);
+		setLogroEliminando(null);
+		setActionError("");
+		await recargarTrasAccion();
 	}
 
 	const logrosFiltrados = logros.filter((logro) =>
@@ -174,6 +203,7 @@ function AchievementsAdminPage() {
 			<input
 				type="search"
 				className="achievements-admin-page__search"
+				aria-label="Buscar logros por nombre"
 				placeholder="Buscar por nombre..."
 				value={busqueda}
 				onChange={(event) => setBusqueda(event.target.value)}
@@ -189,8 +219,16 @@ function AchievementsAdminPage() {
 				</p>
 			) : null}
 			{actionError ? (
-				<p className="achievements-admin-page__status achievements-admin-page__status--error">
+				<p className="achievements-admin-page__status achievements-admin-page__status--error" role="alert">
 					{actionError}
+				</p>
+			) : null}
+			{reloadFailed ? (
+				<p className="achievements-admin-page__status achievements-admin-page__status--error" role="alert">
+					Se guardó, pero no pudimos actualizar la lista.{" "}
+					<button type="button" className="achievements-admin-page__retry" onClick={recargarTrasAccion}>
+						Reintentar
+					</button>
 				</p>
 			) : null}
 
@@ -232,14 +270,22 @@ function AchievementsAdminPage() {
 			) : null}
 
 			{panelAbierto ? (
-				<div className="achievements-admin-page__overlay" onClick={cerrarPanel}>
-					<div className="achievements-admin-page__panel" onClick={(event) => event.stopPropagation()}>
+				<div className="achievements-admin-page__overlay" {...backdropProps}>
+					<div
+						className="achievements-admin-page__panel"
+						ref={dialogRef}
+						role="dialog"
+						aria-modal="true"
+						aria-labelledby={panelTitleId}
+						tabIndex={-1}
+					>
 						<div className="achievements-admin-page__panel-header">
-							<h2>{logroEditando ? "Editar logro" : "Nuevo logro"}</h2>
+							<h2 id={panelTitleId}>{logroEditando ? "Editar logro" : "Nuevo logro"}</h2>
 							<button
 								type="button"
 								className="achievements-admin-page__panel-close"
 								onClick={cerrarPanel}
+								disabled={submitting}
 								aria-label="Cerrar"
 							>
 								✕

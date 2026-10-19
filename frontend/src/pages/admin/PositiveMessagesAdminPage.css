@@ -138,3 +138,7 @@
 	font-style: italic;
 	overflow-wrap: anywhere;
 }
+
+.positive-messages-admin-page__panel:focus {
+	outline: none;
+}
