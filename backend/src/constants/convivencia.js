@@ -7,3 +7,4 @@ export const CATEGORIAS_MISION = [CATEGORIA_HISTORICA, CATEGORIA_CONVIVENCIA];
 // El admin debe cargar los mensajes con exactamente estos textos de contexto.
 export const CONTEXTO_RETO_COMPLETADO = "reto_completado";
 export const CONTEXTO_ACTIVIDAD_COMPLETADA = "actividad_completada";
+export const CONTEXTOS_CONOCIDOS = [CONTEXTO_RETO_COMPLETADO, CONTEXTO_ACTIVIDAD_COMPLETADA];

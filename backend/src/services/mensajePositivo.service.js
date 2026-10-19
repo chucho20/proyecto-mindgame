@@ -1,5 +1,5 @@
 import AppError from "../utils/AppError.js";
-import { CATEGORIA_CONVIVENCIA } from "../constants/convivencia.js";
+import { CATEGORIA_CONVIVENCIA, CONTEXTOS_CONOCIDOS } from "../constants/convivencia.js";
 import { LONGITUD_MAXIMA_TEXTO } from "../utils/validators.js";
 import * as mensajePositivoRepository from "../repositories/mensajePositivo.repository.js";
 import * as misionRepository from "../repositories/mision.repository.js";
@@ -80,6 +80,9 @@ function validarMensaje(data, { esCreacion }) {
 			errors.push("El contexto es obligatorio.");
 		} else if (data.contexto.trim().length > LONGITUD_MAXIMA_CONTEXTO) {
 			errors.push(`El contexto no puede superar los ${LONGITUD_MAXIMA_CONTEXTO} caracteres.`);
+		} else if (!CONTEXTOS_CONOCIDOS.includes(data.contexto.trim())) {
+			// Un contexto que el backend nunca consulta guardaría un mensaje que no se muestra jamás.
+			errors.push(`El contexto debe ser uno de: ${CONTEXTOS_CONOCIDOS.join(", ")}.`);
 		}
 	}
 
