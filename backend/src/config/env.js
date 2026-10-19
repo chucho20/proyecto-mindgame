@@ -51,6 +51,7 @@ const env = {
 		email: process.env.ADMIN_EMAIL || "",
 		password: process.env.ADMIN_PASSWORD || "",
 	},
+	docenteRegistrationCode: process.env.DOCENTE_REGISTRATION_CODE,
 };
 
 export default env;
