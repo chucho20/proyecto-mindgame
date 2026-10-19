@@ -6,7 +6,7 @@ import handleError from "../utils/handleError.js";
 
 export async function listarMisiones(req, res) {
 	try {
-		const misiones = await misionService.listar(req.user.id);
+		const misiones = await misionService.listar(req.user.id, { categoria: req.query.categoria });
 		return res.status(200).json({ misiones });
 	} catch (error) {
 		return handleError(res, error, "mission.controller");

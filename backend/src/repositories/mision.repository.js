@@ -21,9 +21,9 @@ function aFilaMision(mision) {
 
 const ORDEN_POR_DEFECTO = [{ orden: "asc" }, { id: "asc" }];
 
-export async function findAllActivas() {
+export async function findAllActivas({ categoria } = {}) {
 	const misiones = await prisma.mision.findMany({
-		where: { estado: "activa" },
+		where: { estado: "activa", ...(categoria ? { categoria } : {}) },
 		orderBy: ORDEN_POR_DEFECTO,
 	});
 	return misiones.map(aFilaMision);
