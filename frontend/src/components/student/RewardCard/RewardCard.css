@@ -1,0 +1,173 @@
+.reward-card {
+	display: flex;
+	align-items: center;
+	gap: var(--space-4);
+	width: 100%;
+	padding: var(--space-4);
+	box-sizing: border-box;
+	background: #ffffff;
+	border: 1px solid var(--color-slate-200);
+	border-radius: var(--radius-lg);
+	box-shadow: var(--shadow-card);
+	transition:
+		transform var(--transition-base),
+		box-shadow var(--transition-base);
+}
+
+.reward-card:hover {
+	transform: translateY(-2px);
+	box-shadow: var(--shadow-card-strong);
+}
+
+/* Icono */
+
+.reward-card__icon {
+	display: flex;
+	flex-shrink: 0;
+	align-items: center;
+	justify-content: center;
+	width: 3.5rem;
+	height: 3.5rem;
+	border-radius: var(--radius-full);
+	background: var(--color-accent-50);
+	font-size: 1.8rem;
+}
+
+/* Contenido */
+
+.reward-card__content {
+	flex: 1;
+	min-width: 0;
+}
+
+.reward-card__header {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--space-1) var(--space-3);
+}
+
+.reward-card__title {
+	margin: 0;
+	font-size: 1rem;
+	font-weight: 700;
+	line-height: 1.3;
+	color: var(--color-slate-700);
+	overflow-wrap: anywhere;
+}
+
+.reward-card__description {
+	margin: var(--space-1) 0 0;
+	font-size: 0.875rem;
+	line-height: 1.45;
+	color: var(--color-slate-500);
+	overflow-wrap: anywhere;
+}
+
+/* Estado */
+
+.reward-card__status {
+	flex-shrink: 0;
+	padding: 0.25rem 0.55rem;
+	border-radius: 999px;
+	font-size: 0.7rem;
+	font-weight: 700;
+	white-space: nowrap;
+}
+
+.reward-card__status--obtained {
+	background: var(--color-accent-50);
+	color: #92400e;
+}
+
+.reward-card__status--locked {
+	background: var(--color-slate-100);
+	color: var(--color-slate-600);
+}
+
+/* Fecha / condición */
+
+.reward-card__meta {
+	margin: var(--space-2) 0 0;
+	font-size: 0.75rem;
+	line-height: 1.4;
+	color: var(--color-slate-500);
+}
+
+.reward-card__meta-label {
+	font-weight: 600;
+	color: var(--color-slate-600);
+}
+
+/* Marca de recompensa obtenida */
+
+.reward-card__check {
+	display: flex;
+	flex-shrink: 0;
+	align-items: center;
+	justify-content: center;
+	width: 1.75rem;
+	height: 1.75rem;
+	border-radius: var(--radius-full);
+	background: var(--color-success-700);
+	color: #ffffff;
+	font-size: 0.9rem;
+	font-weight: 700;
+}
+
+/* Recompensa pendiente: atenuada, pero con contraste de texto suficiente */
+
+.reward-card--locked {
+	background: var(--color-slate-50);
+}
+
+.reward-card--locked .reward-card__icon {
+	background: var(--color-slate-100);
+	filter: grayscale(1);
+	opacity: 0.7;
+}
+
+/* Responsive */
+
+@media (max-width: 639px) {
+	.reward-card {
+		align-items: flex-start;
+		gap: var(--space-3);
+		padding: var(--space-3);
+	}
+
+	.reward-card__icon {
+		width: 3rem;
+		height: 3rem;
+		font-size: 1.5rem;
+	}
+
+	.reward-card__header {
+		align-items: flex-start;
+		flex-direction: column;
+		gap: var(--space-1);
+	}
+
+	.reward-card__title {
+		font-size: 0.95rem;
+	}
+
+	.reward-card__description {
+		font-size: 0.8rem;
+	}
+
+	.reward-card__check {
+		display: none;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.reward-card {
+		transition: none;
+	}
+
+	.reward-card:hover {
+		transform: none;
+	}
+}
