@@ -5,8 +5,8 @@ import { PrismaClient } from "../generated/prisma/client.ts";
 // Prisma 7 requiere un "driver adapter" explícito para conectar. No existe
 // @prisma/adapter-mysql: el adaptador oficial de Prisma para MySQL es
 // @prisma/adapter-mariadb (el driver mariadb es compatible con el
-// protocolo de MySQL). Reusa las mismas variables DB_* que ya usa
-// config/db.js, no hace falta duplicarlas.
+// protocolo de MySQL). Usa las variables DB_* del .env, las mismas que usan
+// database/migrate.js y los seeders, sin duplicarlas.
 const adapter = new PrismaMariaDb({
 	host: process.env.DB_HOST,
 	port: Number(process.env.DB_PORT),
