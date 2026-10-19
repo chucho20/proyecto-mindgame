@@ -118,8 +118,14 @@ function ProgressionItemForm({ initialValues = null, labels, onSubmit, onCancel,
 				</div>
 			) : null}
 
+			<p className="progression-form__legend">
+				<span aria-hidden="true">*</span> Campo obligatorio
+			</p>
+
 			<div className="progression-form__field">
-				<label htmlFor={`${idPrefix}-nombre`}>Nombre</label>
+				<label htmlFor={`${idPrefix}-nombre`}>
+					Nombre <span aria-hidden="true">*</span>
+				</label>
 				<input
 					id={`${idPrefix}-nombre`}
 					name="nombre"
@@ -128,14 +134,22 @@ function ProgressionItemForm({ initialValues = null, labels, onSubmit, onCancel,
 					onChange={updateField}
 					maxLength={150}
 					placeholder={labels.nombrePlaceholder}
+					aria-required="true"
 					aria-invalid={Boolean(errors.nombre)}
+					aria-describedby={errors.nombre ? `${idPrefix}-nombre-error` : undefined}
 					disabled={submitting}
 				/>
-				{errors.nombre ? <p className="progression-form__error">{errors.nombre}</p> : null}
+				{errors.nombre ? (
+					<p id={`${idPrefix}-nombre-error`} className="progression-form__error">
+						{errors.nombre}
+					</p>
+				) : null}
 			</div>
 
 			<div className="progression-form__field">
-				<label htmlFor={`${idPrefix}-descripcion`}>Descripción</label>
+				<label htmlFor={`${idPrefix}-descripcion`}>
+					Descripción <span aria-hidden="true">*</span>
+				</label>
 				<textarea
 					id={`${idPrefix}-descripcion`}
 					name="descripcion"
@@ -144,14 +158,22 @@ function ProgressionItemForm({ initialValues = null, labels, onSubmit, onCancel,
 					rows={3}
 					maxLength={2000}
 					placeholder={labels.descripcionPlaceholder}
+					aria-required="true"
 					aria-invalid={Boolean(errors.descripcion)}
+					aria-describedby={errors.descripcion ? `${idPrefix}-descripcion-error` : undefined}
 					disabled={submitting}
 				/>
-				{errors.descripcion ? <p className="progression-form__error">{errors.descripcion}</p> : null}
+				{errors.descripcion ? (
+					<p id={`${idPrefix}-descripcion-error`} className="progression-form__error">
+						{errors.descripcion}
+					</p>
+				) : null}
 			</div>
 
 			<div className="progression-form__field">
-				<label htmlFor={`${idPrefix}-icono`}>Ícono</label>
+				<label htmlFor={`${idPrefix}-icono`}>
+					Ícono <span aria-hidden="true">*</span>
+				</label>
 				<input
 					id={`${idPrefix}-icono`}
 					name="icono"
@@ -160,22 +182,36 @@ function ProgressionItemForm({ initialValues = null, labels, onSubmit, onCancel,
 					onChange={updateField}
 					maxLength={100}
 					placeholder="Ej: 🏆"
+					aria-required="true"
 					aria-invalid={Boolean(errors.icono)}
+					aria-describedby={
+						errors.icono ? `${idPrefix}-icono-hint ${idPrefix}-icono-error` : `${idPrefix}-icono-hint`
+					}
 					disabled={submitting}
 				/>
-				<p className="progression-form__hint">Escribí un emoji: es lo que ve el estudiante en la tarjeta.</p>
-				{errors.icono ? <p className="progression-form__error">{errors.icono}</p> : null}
+				<p id={`${idPrefix}-icono-hint`} className="progression-form__hint">
+					Escribí un emoji: es lo que ve el estudiante en la tarjeta.
+				</p>
+				{errors.icono ? (
+					<p id={`${idPrefix}-icono-error`} className="progression-form__error">
+						{errors.icono}
+					</p>
+				) : null}
 			</div>
 
 			<div className="progression-form__row">
 				<div className="progression-form__field">
-					<label htmlFor={`${idPrefix}-tipo`}>Tipo de condición</label>
+					<label htmlFor={`${idPrefix}-tipo`}>
+						Tipo de condición <span aria-hidden="true">*</span>
+					</label>
 					<select
 						id={`${idPrefix}-tipo`}
 						name="condicionTipo"
 						value={form.condicionTipo}
 						onChange={updateField}
+						aria-required="true"
 						aria-invalid={Boolean(errors.condicionTipo)}
+						aria-describedby={errors.condicionTipo ? `${idPrefix}-tipo-error` : undefined}
 						disabled={submitting}
 					>
 						{TIPOS_CONDICION.map((tipo) => (
@@ -184,11 +220,17 @@ function ProgressionItemForm({ initialValues = null, labels, onSubmit, onCancel,
 							</option>
 						))}
 					</select>
-					{errors.condicionTipo ? <p className="progression-form__error">{errors.condicionTipo}</p> : null}
+					{errors.condicionTipo ? (
+						<p id={`${idPrefix}-tipo-error`} className="progression-form__error">
+							{errors.condicionTipo}
+						</p>
+					) : null}
 				</div>
 
 				<div className="progression-form__field">
-					<label htmlFor={`${idPrefix}-valor`}>Valor requerido</label>
+					<label htmlFor={`${idPrefix}-valor`}>
+						Valor requerido <span aria-hidden="true">*</span>
+					</label>
 					<input
 						id={`${idPrefix}-valor`}
 						name="condicionValor"
@@ -197,10 +239,16 @@ function ProgressionItemForm({ initialValues = null, labels, onSubmit, onCancel,
 						step="1"
 						value={form.condicionValor}
 						onChange={updateField}
+						aria-required="true"
 						aria-invalid={Boolean(errors.condicionValor)}
+						aria-describedby={errors.condicionValor ? `${idPrefix}-valor-error` : undefined}
 						disabled={submitting}
 					/>
-					{errors.condicionValor ? <p className="progression-form__error">{errors.condicionValor}</p> : null}
+					{errors.condicionValor ? (
+						<p id={`${idPrefix}-valor-error`} className="progression-form__error">
+							{errors.condicionValor}
+						</p>
+					) : null}
 				</div>
 			</div>
 

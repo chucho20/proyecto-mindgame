@@ -1,21 +1,19 @@
 import { useId, useState } from "react";
 
+import { CONTEXTOS_POR_DEFECTO, etiquetaContexto } from "../../../utils/convivencia.js";
 import "./PositiveMessageForm.css";
 
-const CONTEXTO_LABELS = {
-	reto_completado: "Reto completado",
-	actividad_completada: "Actividad completada",
-};
-
 const CONTENIDO_MAX = 2000;
-const CONTEXTO_MAX = 100;
 
 /**
  * Formulario de alta/edición de mensajes positivos de convivencia. El estudiante
- * recibe uno al azar de los mensajes activos del contexto que corresponda
- * (`reto_completado`, `actividad_completada`), por eso `contextosConocidos`
- * (que devuelve la API) se ofrece como sugerencia: el campo sigue siendo libre.
- * `initialValues` es el mensaje tal como lo devuelve la API; `null` = alta.
+ * recibe uno al azar de los mensajes activos del contexto que corresponde
+ * (`reto_completado`, `actividad_completada`), y el backend rechaza cualquier otro
+ * contexto: por eso es un select de `contextosConocidos` (lo que devuelve la API;
+ * si no llega, los dos contextos que usa la plataforma).
+ * `initialValues` es el mensaje tal como lo devuelve la API; `null` = alta. Un
+ * mensaje viejo con un contexto desconocido se muestra como opción deshabilitada con
+ * una advertencia: nunca se le muestra a un estudiante y hay que cambiarlo para guardar.
  */
 function PositiveMessageForm({
 	initialValues = null,
@@ -32,6 +30,17 @@ function PositiveMessageForm({
 	const [errors, setErrors] = useState({});
 	const [submitError, setSubmitError] = useState("");
 
+	const contextos = contextosConocidos.length > 0 ? contextosConocidos : CONTEXTOS_POR_DEFECTO;
+	const contextoLegacy =
+		initialValues?.contexto && !contextos.includes(initialValues.contexto) ? initialValues.contexto : null;
+	const contextoDescribedBy = [
+		`${idPrefix}-contexto-hint`,
+		contextoLegacy ? `${idPrefix}-contexto-legacy` : null,
+		errors.contexto ? `${idPrefix}-contexto-error` : null,
+	]
+		.filter(Boolean)
+		.join(" ");
+
 	function updateField(field, value) {
 		setForm((current) => ({ ...current, [field]: value }));
 		setErrors((current) => ({ ...current, [field]: "" }));
@@ -47,10 +56,10 @@ function PositiveMessageForm({
 			nextErrors.contenido = `El mensaje no puede superar los ${CONTENIDO_MAX} caracteres.`;
 		}
 
-		if (!form.contexto.trim()) {
+		if (!form.contexto) {
 			nextErrors.contexto = "El contexto es obligatorio.";
-		} else if (form.contexto.trim().length > CONTEXTO_MAX) {
-			nextErrors.contexto = `El contexto no puede superar los ${CONTEXTO_MAX} caracteres.`;
+		} else if (!contextos.includes(form.contexto)) {
+			nextErrors.contexto = "Elegí uno de los contextos de la lista.";
 		}
 
 		setErrors(nextErrors);
@@ -66,7 +75,7 @@ function PositiveMessageForm({
 		}
 
 		try {
-			await onSubmit({ contenido: form.contenido.trim(), contexto: form.contexto.trim() });
+			await onSubmit({ contenido: form.contenido.trim(), contexto: form.contexto });
 		} catch (error) {
 			const details = error.response?.data?.details;
 			setSubmitError(
@@ -85,8 +94,14 @@ function PositiveMessageForm({
 				</div>
 			) : null}
 
+			<p className="positive-message-form__legend">
+				<span aria-hidden="true">*</span> Campo obligatorio
+			</p>
+
 			<div className="positive-message-form__field">
-				<label htmlFor={`${idPrefix}-contenido`}>Mensaje</label>
+				<label htmlFor={`${idPrefix}-contenido`}>
+					Mensaje <span aria-hidden="true">*</span>
+				</label>
 				<textarea
 					id={`${idPrefix}-contenido`}
 					rows={4}
@@ -94,54 +109,59 @@ function PositiveMessageForm({
 					placeholder="Ej: ¡Excelente trabajo! Cada intento te hace más fuerte."
 					value={form.contenido}
 					onChange={(event) => updateField("contenido", event.target.value)}
+					aria-required="true"
 					aria-invalid={Boolean(errors.contenido)}
+					aria-describedby={errors.contenido ? `${idPrefix}-contenido-error` : undefined}
 					disabled={submitting}
 				/>
-				{errors.contenido ? <p className="positive-message-form__error">{errors.contenido}</p> : null}
+				{errors.contenido ? (
+					<p id={`${idPrefix}-contenido-error`} className="positive-message-form__error">
+						{errors.contenido}
+					</p>
+				) : null}
 			</div>
 
 			<div className="positive-message-form__field">
-				<label htmlFor={`${idPrefix}-contexto`}>Contexto</label>
-				<input
+				<label htmlFor={`${idPrefix}-contexto`}>
+					Contexto <span aria-hidden="true">*</span>
+				</label>
+				<select
 					id={`${idPrefix}-contexto`}
-					type="text"
-					list={`${idPrefix}-contextos`}
-					maxLength={CONTEXTO_MAX}
-					placeholder="Ej: reto_completado"
 					value={form.contexto}
 					onChange={(event) => updateField("contexto", event.target.value)}
+					aria-required="true"
 					aria-invalid={Boolean(errors.contexto)}
+					aria-describedby={contextoDescribedBy}
 					disabled={submitting}
-				/>
-				<datalist id={`${idPrefix}-contextos`}>
-					{contextosConocidos.map((contexto) => (
-						<option key={contexto} value={contexto} />
+				>
+					<option value="" disabled>
+						Elegí un contexto
+					</option>
+					{contextoLegacy ? (
+						<option value={contextoLegacy} disabled>
+							{contextoLegacy} (no se muestra)
+						</option>
+					) : null}
+					{contextos.map((contexto) => (
+						<option key={contexto} value={contexto}>
+							{etiquetaContexto(contexto)}
+						</option>
 					))}
-				</datalist>
-				<p className="positive-message-form__hint">
-					Indica cuándo se muestra el mensaje. Elegí uno de los contextos que usa la plataforma o escribí uno
-					propio.
+				</select>
+				<p id={`${idPrefix}-contexto-hint`} className="positive-message-form__hint">
+					Indica cuándo se muestra el mensaje: al responder bien un reto o al completar una actividad.
 				</p>
-				{contextosConocidos.length > 0 ? (
-					<div className="positive-message-form__suggestions">
-						{contextosConocidos.map((contexto) => (
-							<button
-								key={contexto}
-								type="button"
-								className={
-									form.contexto === contexto
-										? "positive-message-form__chip positive-message-form__chip--active"
-										: "positive-message-form__chip"
-								}
-								onClick={() => updateField("contexto", contexto)}
-								disabled={submitting}
-							>
-								{CONTEXTO_LABELS[contexto] || contexto}
-							</button>
-						))}
-					</div>
+				{contextoLegacy ? (
+					<p id={`${idPrefix}-contexto-legacy`} className="positive-message-form__warning">
+						El contexto actual («{contextoLegacy}») no existe en la plataforma, así que este mensaje nunca se
+						le muestra a un estudiante. Elegí uno de la lista para poder guardarlo.
+					</p>
 				) : null}
-				{errors.contexto ? <p className="positive-message-form__error">{errors.contexto}</p> : null}
+				{errors.contexto ? (
+					<p id={`${idPrefix}-contexto-error`} className="positive-message-form__error">
+						{errors.contexto}
+					</p>
+				) : null}
 			</div>
 
 			<div className="positive-message-form__actions">
