@@ -1,4 +1,6 @@
 import AppError from "../utils/AppError.js";
+import { esViolacionUnica } from "../utils/dbErrors.js";
+import { esEnteroValido } from "../utils/validators.js";
 import * as historiaRepository from "../repositories/historia.repository.js";
 import * as historiaCompletadaRepository from "../repositories/historiaCompletada.repository.js";
 import * as misionRepository from "../repositories/mision.repository.js";
@@ -37,7 +39,7 @@ export async function marcarCompletada(historiaId, usuarioId) {
 	try {
 		await historiaCompletadaRepository.create(usuarioId, historiaId);
 	} catch (error) {
-		if (!(error && error.code === "ER_DUP_ENTRY")) {
+		if (!esViolacionUnica(error)) {
 			throw error;
 		}
 	}
@@ -52,7 +54,7 @@ export async function marcarCompletada(historiaId, usuarioId) {
 		const progreso = await progresoMisionRepository.create(usuarioId, historia.mision_id, "en_progreso");
 		return { completada: true, progreso };
 	} catch (error) {
-		if (error && error.code === "ER_DUP_ENTRY") {
+		if (esViolacionUnica(error)) {
 			const progreso = await progresoMisionRepository.findByUsuarioYMision(usuarioId, historia.mision_id);
 			return { completada: true, progreso };
 		}
@@ -93,6 +95,10 @@ function validarHistoria(data, { esCreacion }) {
 		if (typeof data.contenido !== "string" || data.contenido.trim().length === 0) {
 			errors.push("El contenido es obligatorio.");
 		}
+	}
+
+	if (data.orden !== undefined && data.orden !== null && !esEnteroValido(data.orden)) {
+		errors.push("El orden debe ser un número entero.");
 	}
 
 	return errors;

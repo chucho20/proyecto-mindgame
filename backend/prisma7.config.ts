@@ -1,5 +1,5 @@
 // Generado por Prisma. Ajustado para reusar las variables DB_* que ya
-// existen en .env (mismas que usa src/config/db.js) en vez de duplicar las
+// existen en .env (mismas que usan src/config/prisma.js y database/migrate.js) en vez de duplicar las
 // credenciales en un DATABASE_URL separado.
 import "dotenv/config";
 import { defineConfig } from "prisma/config";

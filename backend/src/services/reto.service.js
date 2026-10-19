@@ -4,21 +4,40 @@ import * as misionRepository from "../repositories/mision.repository.js";
 import * as intentoRetoRepository from "../repositories/intentoReto.repository.js";
 import { obtenerEvaluador } from "./evaluadores/evaluadorRegistry.js";
 import * as misionService from "./mision.service.js";
+import { esEnteroValido } from "../utils/validators.js";
 
 const TIPOS_VALIDOS = ["seleccion_multiple", "verdadero_falso", "relacion_elementos", "orden_cronologico"];
 
+// Lista blanca de campos que un estudiante puede ver de un reto. Es exactamente el
+// conjunto que devolvía el endpoint antes de agregar `retroalimentacion`: así, una
+// columna nueva en la tabla no se filtra por defecto a los estudiantes.
+const CAMPOS_RETO_ESTUDIANTE = [
+	"id",
+	"mision_id",
+	"tipo",
+	"enunciado",
+	"opciones",
+	"puntos",
+	"orden",
+	"estado",
+	"created_at",
+	"updated_at",
+];
+
 /**
- * Nunca devuelve `respuesta_correcta` a un estudiante — igual que
- * `sanitizeUser` esconde `password_hash` en Sprint 1. Las funciones *Admin
- * de este archivo sí devuelven el campo real (lo necesitan para editarlo).
+ * Nunca devuelve `respuesta_correcta` ni `retroalimentacion` a un estudiante:
+ * solo copia los campos de la lista blanca (la explicación se entrega recién al
+ * responder). Las funciones *Admin de este archivo sí devuelven la fila completa
+ * (la necesitan para editarla).
  */
 function sanitizarReto(reto) {
 	if (!reto) {
 		return reto;
 	}
 
-	const { respuesta_correcta: _respuestaCorrecta, ...safeReto } = reto;
-	return safeReto;
+	return Object.fromEntries(
+		CAMPOS_RETO_ESTUDIANTE.filter((campo) => campo in reto).map((campo) => [campo, reto[campo]]),
+	);
 }
 
 export async function listarPorMision(misionId) {
@@ -107,8 +126,12 @@ function validarReto(data, { esCreacion }) {
 		errors.push("La respuesta correcta es obligatoria.");
 	}
 
-	if (data.puntos !== undefined && data.puntos !== null && !Number.isFinite(Number(data.puntos))) {
-		errors.push("Los puntos deben ser un número.");
+	if (data.puntos !== undefined && data.puntos !== null && !esEnteroValido(data.puntos, { min: 0 })) {
+		errors.push("Los puntos deben ser un número entero mayor o igual a 0.");
+	}
+
+	if (data.orden !== undefined && data.orden !== null && !esEnteroValido(data.orden)) {
+		errors.push("El orden debe ser un número entero.");
 	}
 
 	return errors;

@@ -1,4 +1,6 @@
 import AppError from "../utils/AppError.js";
+import { esViolacionUnica } from "../utils/dbErrors.js";
+import { esEnteroValido } from "../utils/validators.js";
 import * as misionRepository from "../repositories/mision.repository.js";
 import * as historiaRepository from "../repositories/historia.repository.js";
 import * as progresoMisionRepository from "../repositories/progresoMision.repository.js";
@@ -54,7 +56,7 @@ export async function iniciar(id, usuarioId) {
 		// el UNIQUE (usuario_id, mision_id) rechaza al segundo insert. Devolvemos
 		// el registro existente en vez de un 500 (mismo patrón que el registro
 		// de usuarios en Sprint 1 con el UNIQUE de correo).
-		if (error && error.code === "ER_DUP_ENTRY") {
+		if (esViolacionUnica(error)) {
 			return progresoMisionRepository.findByUsuarioYMision(usuarioId, id);
 		}
 		throw error;
@@ -85,7 +87,7 @@ export async function actualizarProgresoSiCompleta(misionId, usuarioId) {
 		} catch (error) {
 			// Misma carrera que en iniciar(): otra request pudo haber creado la
 			// fila justo antes que esta.
-			if (error && error.code === "ER_DUP_ENTRY") {
+			if (esViolacionUnica(error)) {
 				progreso = await progresoMisionRepository.findByUsuarioYMision(usuarioId, misionId);
 			} else {
 				throw error;
@@ -140,8 +142,12 @@ function validarMision(data, { esCreacion }) {
 		}
 	}
 
-	if (data.orden !== undefined && data.orden !== null && !Number.isFinite(Number(data.orden))) {
-		errors.push("El orden debe ser un número.");
+	if (data.descripcion !== undefined && data.descripcion !== null && typeof data.descripcion !== "string") {
+		errors.push("La descripción debe ser texto.");
+	}
+
+	if (data.orden !== undefined && data.orden !== null && !esEnteroValido(data.orden)) {
+		errors.push("El orden debe ser un número entero.");
 	}
 
 	return errors;
