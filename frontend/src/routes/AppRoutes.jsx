@@ -16,6 +16,9 @@ import MissionsAdminPage from "../pages/admin/MissionsAdminPage.jsx";
 import ChallengesAdminPage from "../pages/admin/ChallengesAdminPage.jsx";
 import ActivitiesAdminPage from "../pages/admin/ActivitiesAdminPage.jsx";
 import ContentAdminPage from "../pages/admin/ContentAdminPage.jsx";
+import RewardsAdminPage from "../pages/admin/RewardsAdminPage.jsx";
+import AchievementsAdminPage from "../pages/admin/AchievementsAdminPage.jsx";
+import PositiveMessagesAdminPage from "../pages/admin/PositiveMessagesAdminPage.jsx";
 import ProgressPage from "../pages/student/ProgressPage.jsx";
 import AchievementsPage from "../pages/student/AchievementsPage.jsx";
 import RewardsPage from "../pages/student/RewardsPage.jsx";
@@ -69,6 +72,9 @@ function AppRoutes() {
 					<Route path="/admin/retos" element={<ChallengesAdminPage />} />
 					<Route path="/admin/actividades" element={<ActivitiesAdminPage />} />
 					<Route path="/admin/contenidos" element={<ContentAdminPage />} />
+					<Route path="/admin/recompensas" element={<RewardsAdminPage />} />
+					<Route path="/admin/logros" element={<AchievementsAdminPage />} />
+					<Route path="/admin/mensajes-positivos" element={<PositiveMessagesAdminPage />} />
 				</Route>
 			</Route>
 

@@ -102,3 +102,23 @@
 .missions-admin-page__panel-close:hover {
 	color: var(--color-slate-800);
 }
+
+.missions-admin-page__category {
+	display: inline-block;
+	padding: 0.25rem 0.6rem;
+	border-radius: var(--radius-sm);
+	font-size: 0.72rem;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.02em;
+}
+
+.missions-admin-page__category--historica {
+	background: var(--color-primary-50);
+	color: var(--color-primary-700);
+}
+
+.missions-admin-page__category--convivencia {
+	background: var(--color-accent-50);
+	color: var(--color-accent-700);
+}

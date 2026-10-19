@@ -2,7 +2,7 @@ import { useState } from "react";
 
 import "./MissionForm.css";
 
-const EMPTY_FORM = { titulo: "", descripcion: "", orden: 0 };
+const EMPTY_FORM = { titulo: "", descripcion: "", orden: 0, categoria: "historica" };
 
 /**
  * Formulario de creación/edición de misiones (RF-024). `initialValues` viene
@@ -13,6 +13,7 @@ function MissionForm({ initialValues, onSubmit, onCancel, submitting }) {
 		titulo: initialValues?.titulo || EMPTY_FORM.titulo,
 		descripcion: initialValues?.descripcion || EMPTY_FORM.descripcion,
 		orden: initialValues?.orden ?? EMPTY_FORM.orden,
+		categoria: initialValues?.categoria || EMPTY_FORM.categoria,
 	});
 	const [error, setError] = useState("");
 
@@ -69,6 +70,18 @@ function MissionForm({ initialValues, onSubmit, onCancel, submitting }) {
 					value={form.orden}
 					onChange={(event) => updateField("orden", event.target.value)}
 				/>
+			</div>
+
+			<div className="mission-form__field">
+				<label htmlFor="mission-categoria">Categoría</label>
+				<select
+					id="mission-categoria"
+					value={form.categoria}
+					onChange={(event) => updateField("categoria", event.target.value)}
+				>
+					<option value="historica">Histórica</option>
+					<option value="convivencia">Convivencia</option>
+				</select>
 			</div>
 
 			<div className="mission-form__actions">
