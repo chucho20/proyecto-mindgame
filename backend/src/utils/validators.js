@@ -27,6 +27,31 @@ export function esEnteroValido(value, { min = -INT_MAXIMO - 1 } = {}) {
 	return Number.isInteger(numero) && numero >= min && numero <= INT_MAXIMO;
 }
 
+// Tope de caracteres para textos largos (columnas TEXT): evita que un body enorme
+// termine en un error de la base de datos (500) en vez de un 400.
+export const LONGITUD_MAXIMA_TEXTO = 2000;
+
+/**
+ * Indica si `value` sirve para una columna de texto opcional: no enviado
+ * (`undefined`), `null` (dejar vacío) o un string que no supere el tope.
+ */
+export function esTextoOpcionalValido(value, { max = LONGITUD_MAXIMA_TEXTO } = {}) {
+	return value === undefined || value === null || (typeof value === "string" && value.length <= max);
+}
+
+/**
+ * Normaliza un texto opcional ya validado: `undefined` se conserva ("no tocar"),
+ * y un texto vacío o solo con espacios pasa a `null`.
+ */
+export function normalizarTextoOpcional(value) {
+	if (typeof value !== "string") {
+		return value;
+	}
+
+	const texto = value.trim();
+	return texto.length > 0 ? texto : null;
+}
+
 /**
  * Valida el payload de registro (RF-001).
  * Devuelve un arreglo de mensajes de error. Vacío significa payload válido.
