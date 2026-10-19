@@ -1,132 +1,120 @@
-
-.reward-form {
+.progression-form {
 	display: flex;
 	flex-direction: column;
-	gap: 1.25rem;
-	width: 100%;
+	gap: var(--space-3);
 }
 
-.reward-form__field {
+.progression-form__field {
 	display: flex;
 	flex-direction: column;
-	gap: 0.45rem;
+	gap: 0.35rem;
+	min-width: 0;
 }
 
-.reward-form__field label {
-	font-size: 0.95rem;
+.progression-form__row {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: var(--space-3);
+}
+
+.progression-form__field label {
+	font-size: 0.85rem;
 	font-weight: 600;
-	color: var(--text-primary, #202938);
+	color: var(--color-slate-700);
 }
 
-.reward-form__field input,
-.reward-form__field textarea,
-.reward-form__field select {
+.progression-form__field input,
+.progression-form__field textarea,
+.progression-form__field select {
+	padding: 0.6rem 0.8rem;
+	border: 1px solid var(--color-slate-300);
+	border-radius: var(--radius-sm);
+	font-size: 0.9rem;
+	font-family: inherit;
 	box-sizing: border-box;
 	width: 100%;
-	padding: 0.75rem 0.875rem;
-	border: 1px solid var(--border-color, #d1d5db);
-	border-radius: 8px;
-	background: var(--surface-color, #fff);
-	color: var(--text-primary, #202938);
-	font: inherit;
-	transition: border-color 0.2s ease, box-shadow 0.2s ease;
-}
-
-.reward-form__field textarea {
+	background: #fff;
 	resize: vertical;
-	min-height: 100px;
 }
 
-.reward-form__field input:focus,
-.reward-form__field textarea:focus,
-.reward-form__field select:focus {
+.progression-form__field input:focus,
+.progression-form__field textarea:focus,
+.progression-form__field select:focus {
 	outline: none;
-	border-color: var(--primary-color, #6366f1);
-	box-shadow: 0 0 0 3px rgb(99 102 241 / 15%);
+	border-color: var(--color-primary-600);
+	box-shadow: var(--shadow-focus);
 }
 
-.reward-form__field input[aria-invalid="true"],
-.reward-form__field textarea[aria-invalid="true"],
-.reward-form__field select[aria-invalid="true"] {
-	border-color: #dc2626;
+.progression-form__field input[aria-invalid="true"],
+.progression-form__field textarea[aria-invalid="true"],
+.progression-form__field select[aria-invalid="true"] {
+	border-color: var(--color-error-700);
 }
 
-.reward-form__field input:disabled,
-.reward-form__field textarea:disabled,
-.reward-form__field select:disabled {
+.progression-form__field input:disabled,
+.progression-form__field textarea:disabled,
+.progression-form__field select:disabled {
 	cursor: not-allowed;
 	opacity: 0.65;
 }
 
-.reward-form__hint {
+.progression-form__hint {
 	margin: 0;
-	color: var(--text-secondary, #6b7280);
-	font-size: 0.8rem;
-	line-height: 1.4;
+	color: var(--color-slate-500);
+	font-size: 0.78rem;
 }
 
-.reward-form__error,
-.reward-form__submit-error {
+.progression-form__error {
 	margin: 0;
-	color: #b91c1c;
+	color: var(--color-error-700);
+	font-size: 0.78rem;
+}
+
+.progression-form__submit-error {
+	background: var(--color-error-50);
+	color: var(--color-error-700);
+	border: 1px solid var(--color-error-200);
+	border-radius: var(--radius-sm);
+	padding: 0.6rem 0.8rem;
 	font-size: 0.85rem;
-	line-height: 1.4;
 }
 
-.reward-form__submit-error {
-	padding: 0.75rem;
-	border: 1px solid #fecaca;
-	border-radius: 8px;
-	background: #fef2f2;
-}
-
-.reward-form__actions {
+.progression-form__actions {
 	display: flex;
 	justify-content: flex-end;
-	gap: 0.75rem;
-	margin-top: 0.5rem;
+	gap: var(--space-2);
+	margin-top: var(--space-2);
 }
 
-.reward-form__button {
-	padding: 0.75rem 1.1rem;
-	border: 1px solid transparent;
-	border-radius: 8px;
-	font: inherit;
-	font-weight: 600;
-	cursor: pointer;
-	transition: background-color 0.2s ease, opacity 0.2s ease;
-}
-
-.reward-form__button:disabled {
-	cursor: not-allowed;
-	opacity: 0.6;
-}
-
-.reward-form__button--primary {
-	background: var(--primary-color, #4f46e5);
+.progression-form__submit {
+	padding: 0.6rem 1.1rem;
+	border: none;
+	border-radius: var(--radius-sm);
+	background: var(--color-primary-600);
 	color: #fff;
+	font-weight: 700;
+	font-size: 0.85rem;
+	cursor: pointer;
 }
 
-.reward-form__button--primary:hover:not(:disabled) {
-	background: var(--primary-color-hover, #4338ca);
+.progression-form__submit:disabled {
+	opacity: 0.7;
+	cursor: not-allowed;
 }
 
-.reward-form__button--secondary {
-	border-color: var(--border-color, #d1d5db);
-	background: var(--surface-color, #fff);
-	color: var(--text-primary, #202938);
-}
-
-.reward-form__button--secondary:hover:not(:disabled) {
-	background: var(--surface-hover, #f3f4f6);
+.progression-form__cancel {
+	padding: 0.6rem 1.1rem;
+	border: 1px solid var(--color-slate-300);
+	border-radius: var(--radius-sm);
+	background: #fff;
+	color: var(--color-slate-700);
+	font-weight: 600;
+	font-size: 0.85rem;
+	cursor: pointer;
 }
 
 @media (max-width: 480px) {
-	.reward-form__actions {
-		flex-direction: column-reverse;
-	}
-
-	.reward-form__button {
-		width: 100%;
+	.progression-form__row {
+		grid-template-columns: 1fr;
 	}
 }
