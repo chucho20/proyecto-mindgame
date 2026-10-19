@@ -98,7 +98,9 @@ export function useDialogA11y({ open = true, onClose, closeDisabled = false, ini
 		},
 		onClick(event) {
 			const empezoYTerminoEnElFondo =
-				pressStartedOnBackdrop.current && pressEndedOnBackdrop.current && event.target === event.currentTarget;
+				pressStartedOnBackdrop.current &&
+				pressEndedOnBackdrop.current &&
+				event.target === event.currentTarget;
 			pressStartedOnBackdrop.current = false;
 			pressEndedOnBackdrop.current = false;
 
