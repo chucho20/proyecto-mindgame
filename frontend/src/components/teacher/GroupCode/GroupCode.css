@@ -1,0 +1,80 @@
+.group-code {
+	position: relative;
+	display: inline-flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: var(--space-2);
+}
+
+.group-code__value {
+	padding: 0.3rem 0.7rem;
+	border: 1px dashed var(--color-accent-700);
+	border-radius: var(--radius-sm);
+	background: var(--color-accent-50);
+	color: var(--color-accent-700);
+	font-family: var(--font-heading);
+	font-size: 0.95rem;
+	font-weight: 700;
+	letter-spacing: 0.12em;
+}
+
+.group-code__copy {
+	padding: 0.35rem 0.7rem;
+	border: 1px solid var(--color-slate-300);
+	border-radius: var(--radius-sm);
+	background: #fff;
+	color: var(--color-slate-700);
+	font-weight: 600;
+	font-size: 0.78rem;
+	cursor: pointer;
+}
+
+.group-code__copy:hover {
+	border-color: var(--color-primary-600);
+	color: var(--color-primary-700);
+}
+
+.group-code__copy:focus-visible {
+	outline: none;
+	box-shadow: var(--shadow-focus);
+}
+
+.group-code__feedback {
+	color: var(--color-success-700);
+	font-size: 0.78rem;
+	font-weight: 600;
+}
+
+.group-code__feedback--error {
+	color: var(--color-error-700);
+}
+
+/* Vacía no ocupa lugar (ni el gap del contenedor) pero sigue en el árbol de accesibilidad. */
+.group-code__feedback:empty {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	margin: -1px;
+	overflow: hidden;
+	clip: rect(0, 0, 0, 0);
+	white-space: nowrap;
+}
+
+.group-code__sr {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	margin: -1px;
+	overflow: hidden;
+	clip: rect(0, 0, 0, 0);
+	white-space: nowrap;
+}
+
+.group-code--large .group-code__value {
+	padding: 0.6rem 1.2rem;
+	font-size: 1.6rem;
+}
+
+.group-code--large {
+	justify-content: center;
+}

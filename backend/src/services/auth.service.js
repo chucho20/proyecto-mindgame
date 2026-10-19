@@ -10,6 +10,7 @@ import {
 } from "../utils/validators.js";
 import { comparePassword, hashPassword } from "../utils/password.util.js";
 import { signToken } from "../utils/jwt.util.js";
+import { esViolacionUnica } from "../utils/dbErrors.js";
 import * as usuarioRepository from "../repositories/usuario.repository.js";
 import * as passwordResetRepository from "../repositories/passwordReset.repository.js";
 import { sendPasswordResetEmail } from "./mail.service.js";
@@ -103,7 +104,7 @@ if (rolSolicitado === "docente") {
 		// Cubre la carrera entre la verificación previa y el INSERT: si dos
 		// registros concurrentes usan el mismo correo/usuario, el UNIQUE de la
 		// base de datos rechaza al segundo — lo mapeamos a 409, no a un 500 genérico.
-		if (error && error.code === "ER_DUP_ENTRY") {
+		if (esViolacionUnica(error)) {
 			throw new AppError("Ya existe una cuenta registrada con ese correo o nombre de usuario.", 409);
 		}
 		throw error;

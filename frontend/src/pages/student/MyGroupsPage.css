@@ -1,0 +1,251 @@
+.my-groups-page {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-5);
+	min-width: 0;
+}
+
+.my-groups-page .page-header {
+	margin-bottom: 0;
+}
+
+.my-groups-page__join {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+	max-width: 520px;
+	padding: var(--space-5);
+	background: #ffffff;
+	border: 1px solid var(--color-slate-200);
+	border-radius: var(--radius-lg);
+	box-shadow: var(--shadow-card);
+}
+
+.my-groups-page__label {
+	font-size: 0.85rem;
+	font-weight: 600;
+	color: var(--color-slate-700);
+}
+
+.my-groups-page__join-row {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--space-2);
+}
+
+.my-groups-page__input {
+	flex: 1;
+	min-width: 160px;
+	padding: 0.6rem 0.8rem;
+	border: 1px solid var(--color-slate-300);
+	border-radius: var(--radius-sm);
+	font-family: var(--font-heading);
+	font-size: 1rem;
+	font-weight: 700;
+	letter-spacing: 0.12em;
+	box-sizing: border-box;
+	background: #fff;
+}
+
+.my-groups-page__input::placeholder {
+	font-weight: 400;
+	letter-spacing: normal;
+	color: var(--color-slate-500);
+}
+
+.my-groups-page__input:focus {
+	outline: none;
+	border-color: var(--color-primary-600);
+	box-shadow: var(--shadow-focus);
+}
+
+.my-groups-page__input[aria-invalid="true"] {
+	border-color: var(--color-error-700);
+}
+
+.my-groups-page__input:disabled {
+	cursor: not-allowed;
+	opacity: 0.65;
+}
+
+.my-groups-page__submit {
+	padding: 0.6rem 1.2rem;
+	border: none;
+	border-radius: var(--radius-sm);
+	background: var(--color-primary-600);
+	color: #fff;
+	font-weight: 700;
+	font-size: 0.9rem;
+	cursor: pointer;
+}
+
+.my-groups-page__submit:hover {
+	background: var(--color-primary-700);
+}
+
+.my-groups-page__submit:focus-visible,
+.my-groups-page__leave:focus-visible,
+.my-groups-page__retry:focus-visible {
+	outline: none;
+	box-shadow: var(--shadow-focus);
+}
+
+.my-groups-page__submit:disabled {
+	opacity: 0.7;
+	cursor: not-allowed;
+}
+
+.my-groups-page__hint {
+	margin: 0;
+	color: var(--color-slate-500);
+	font-size: 0.78rem;
+}
+
+.my-groups-page__error {
+	margin: 0;
+	color: var(--color-error-700);
+	font-size: 0.82rem;
+}
+
+.my-groups-page__notice {
+	margin: 0;
+	max-width: 520px;
+	padding: 0.7rem 0.9rem;
+	border-radius: var(--radius-sm);
+	font-size: 0.88rem;
+	font-weight: 600;
+}
+
+.my-groups-page__notice:focus {
+	outline: none;
+}
+
+.my-groups-page__notice--success {
+	background: var(--color-success-50);
+	border: 1px solid var(--color-success-200);
+	color: var(--color-success-700);
+}
+
+.my-groups-page__notice--info {
+	background: var(--color-primary-50);
+	border: 1px solid var(--color-slate-200);
+	color: var(--color-primary-700);
+}
+
+.my-groups-page__section {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-3);
+}
+
+.my-groups-page__section-title {
+	margin: 0;
+	font-family: var(--font-heading);
+	font-size: 1.05rem;
+	color: var(--color-slate-800);
+}
+
+.my-groups-page__status {
+	margin: 0;
+	color: var(--color-slate-500);
+	font-size: 0.9rem;
+}
+
+.my-groups-page__status--error {
+	color: var(--color-error-700);
+}
+
+.my-groups-page__retry {
+	border: none;
+	background: transparent;
+	color: var(--color-primary-700);
+	font: inherit;
+	font-weight: 700;
+	text-decoration: underline;
+	cursor: pointer;
+	padding: 0;
+}
+
+.my-groups-page__empty {
+	margin: 0;
+	padding: var(--space-6);
+	text-align: center;
+	color: var(--color-slate-500);
+	font-size: 0.9rem;
+	background: #ffffff;
+	border: 1px dashed var(--color-slate-300);
+	border-radius: var(--radius-lg);
+}
+
+.my-groups-page__empty strong {
+	display: block;
+	margin-bottom: var(--space-1);
+	color: var(--color-slate-700);
+}
+
+.my-groups-page__list {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-3);
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+.my-groups-page__card {
+	display: flex;
+	align-items: center;
+	gap: var(--space-3);
+	padding: var(--space-4);
+	background: #ffffff;
+	border: 1px solid var(--color-slate-200);
+	border-radius: var(--radius-lg);
+	box-shadow: var(--shadow-card);
+}
+
+.my-groups-page__card-icon {
+	width: 44px;
+	height: 44px;
+	border-radius: var(--radius-sm);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: var(--color-primary-50);
+	font-size: 1.3rem;
+	flex-shrink: 0;
+}
+
+.my-groups-page__card-body {
+	flex: 1;
+	min-width: 0;
+}
+
+.my-groups-page__card-name {
+	margin: 0;
+	font-family: var(--font-heading);
+	font-size: 1rem;
+	color: var(--color-slate-800);
+	overflow-wrap: anywhere;
+}
+
+.my-groups-page__card-meta {
+	margin: 0.2rem 0 0;
+	color: var(--color-slate-500);
+	font-size: 0.82rem;
+}
+
+.my-groups-page__leave {
+	padding: 0.4rem 0.8rem;
+	border: 1px solid var(--color-slate-300);
+	border-radius: var(--radius-sm);
+	background: #fff;
+	color: var(--color-slate-700);
+	font-weight: 600;
+	font-size: 0.8rem;
+	cursor: pointer;
+}
+
+.my-groups-page__leave:hover {
+	border-color: var(--color-error-700);
+	color: var(--color-error-700);
+}

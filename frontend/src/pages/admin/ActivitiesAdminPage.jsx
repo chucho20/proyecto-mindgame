@@ -107,6 +107,7 @@ function ActivitiesAdminPage() {
 		{ key: "titulo", label: "Título" },
 		{ key: "tipo", label: "Tipo" },
 		{ key: "mision_id", label: "Misión", render: (row) => misionesPorId.get(row.mision_id) || "—" },
+		{ key: "puntos", label: "Puntos" },
 		{ key: "orden", label: "Orden" },
 		{ key: "estado", label: "Estado", render: (row) => <StatusBadge estado={row.estado} /> },
 	];

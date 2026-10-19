@@ -13,6 +13,8 @@ function ActivityForm({ initialValues, misiones, onSubmit, onCancel, submitting 
 		descripcion: initialValues?.descripcion || "",
 		tipo: initialValues?.tipo || "",
 		orden: initialValues?.orden ?? 0,
+		puntos: initialValues?.puntos ?? 0,
+		retroalimentacion: initialValues?.retroalimentacion || "",
 	});
 	const [error, setError] = useState("");
 
@@ -25,7 +27,13 @@ function ActivityForm({ initialValues, misiones, onSubmit, onCancel, submitting 
 		setError("");
 
 		try {
-			await onSubmit({ ...form, misionId: Number(form.misionId), orden: Number(form.orden) || 0 });
+			await onSubmit({
+				...form,
+				misionId: Number(form.misionId),
+				orden: Number(form.orden) || 0,
+				puntos: Number(form.puntos) || 0,
+				retroalimentacion: form.retroalimentacion.trim(),
+			});
 		} catch (err) {
 			const details = err.response?.data?.details;
 			setError(
@@ -80,16 +88,28 @@ function ActivityForm({ initialValues, misiones, onSubmit, onCancel, submitting 
 				/>
 			</div>
 
+			<div className="activity-form__field">
+				<label htmlFor="activity-tipo">Tipo</label>
+				<input
+					id="activity-tipo"
+					type="text"
+					placeholder="ej: sopa_de_letras, memoria, rompecabezas"
+					value={form.tipo}
+					onChange={(event) => updateField("tipo", event.target.value)}
+					required
+				/>
+			</div>
+
 			<div className="activity-form__row">
 				<div className="activity-form__field">
-					<label htmlFor="activity-tipo">Tipo</label>
+					<label htmlFor="activity-puntos">Puntos</label>
 					<input
-						id="activity-tipo"
-						type="text"
-						placeholder="ej: sopa_de_letras, memoria, rompecabezas"
-						value={form.tipo}
-						onChange={(event) => updateField("tipo", event.target.value)}
-						required
+						id="activity-puntos"
+						type="number"
+						min="0"
+						step="1"
+						value={form.puntos}
+						onChange={(event) => updateField("puntos", event.target.value)}
 					/>
 				</div>
 
@@ -102,6 +122,17 @@ function ActivityForm({ initialValues, misiones, onSubmit, onCancel, submitting 
 						onChange={(event) => updateField("orden", event.target.value)}
 					/>
 				</div>
+			</div>
+
+			<div className="activity-form__field">
+				<label htmlFor="activity-retroalimentacion">Retroalimentación</label>
+				<textarea
+					id="activity-retroalimentacion"
+					rows={3}
+					placeholder="Texto que ve el estudiante al completar la actividad (opcional)"
+					value={form.retroalimentacion}
+					onChange={(event) => updateField("retroalimentacion", event.target.value)}
+				/>
 			</div>
 
 			<div className="activity-form__actions">

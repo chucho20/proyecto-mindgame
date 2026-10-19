@@ -7,9 +7,10 @@ import "./AdminDashboardPage.css";
 
 /**
  * Landing del panel admin (RF-024/025): conteos reales de GET /admin/stats.
- * A propósito no muestra métricas que este sprint no modela todavía
- * (usuarios, convivencia, progresión) — esas secciones siguen deshabilitadas
- * en el sidebar hasta que tengan datos reales detrás.
+ * Además del contenido educativo muestra cuántas recompensas, logros y mensajes
+ * positivos están activos (las claves de la API vienen en snake_case). A
+ * propósito no muestra métricas que todavía no se modelan (usuarios): esa
+ * sección sigue deshabilitada en el sidebar.
  */
 function AdminDashboardPage() {
 	const [stats, setStats] = useState(null);
@@ -61,6 +62,19 @@ function AdminDashboardPage() {
 					<AdminStatCard label="Historias" value={stats.historias} icon="📖" accent="success" />
 					<AdminStatCard label="Retos" value={stats.retos} icon="🧩" accent="accent" />
 					<AdminStatCard label="Actividades" value={stats.actividades} icon="🎲" accent="error" />
+					<AdminStatCard
+						label="Recompensas activas"
+						value={stats.recompensas_activas}
+						icon="🎁"
+						accent="accent"
+					/>
+					<AdminStatCard label="Logros activos" value={stats.logros_activos} icon="🏆" accent="primary" />
+					<AdminStatCard
+						label="Mensajes positivos activos"
+						value={stats.mensajes_positivos_activos}
+						icon="💬"
+						accent="success"
+					/>
 				</div>
 			) : null}
 		</div>

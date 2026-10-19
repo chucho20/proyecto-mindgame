@@ -52,6 +52,12 @@
 	color: var(--color-primary-700);
 }
 
+.progress-page__stat-note {
+	font-size: 0.75rem;
+	font-weight: 700;
+	color: var(--color-accent-700);
+}
+
 .progress-page__section {
 	margin-top: var(--space-8);
 }

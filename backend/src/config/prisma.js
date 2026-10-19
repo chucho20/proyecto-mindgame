@@ -5,14 +5,20 @@ import { PrismaClient } from "../generated/prisma/client.ts";
 // Prisma 7 requiere un "driver adapter" explícito para conectar. No existe
 // @prisma/adapter-mysql: el adaptador oficial de Prisma para MySQL es
 // @prisma/adapter-mariadb (el driver mariadb es compatible con el
-// protocolo de MySQL). Reusa las mismas variables DB_* que ya usa
-// config/db.js, no hace falta duplicarlas.
+// protocolo de MySQL). Usa las variables DB_* del .env, las mismas que usan
+// database/migrate.js y los seeders, sin duplicarlas.
 const adapter = new PrismaMariaDb({
 	host: process.env.DB_HOST,
 	port: Number(process.env.DB_PORT),
 	user: process.env.DB_USER,
 	password: process.env.DB_PASSWORD,
 	database: process.env.DB_NAME,
+	// Prisma lee y escribe los DATETIME siempre en UTC. Se fuerza la sesión de
+	// MySQL a UTC para que los valores que genera el propio servidor
+	// (`ON UPDATE CURRENT_TIMESTAMP` de updated_at, DEFAULT CURRENT_TIMESTAMP)
+	// usen la misma referencia y no queden desfasados en servidores con otra
+	// zona horaria.
+	initSql: "SET time_zone = '+00:00'",
 });
 
 const prisma = new PrismaClient({ adapter });

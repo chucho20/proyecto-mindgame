@@ -181,6 +181,17 @@
 	color: var(--color-slate-500);
 }
 
+/* Región en vivo siempre montada; vacía no suma el hueco del `gap` de la tarjeta. */
+.challenge-card__live {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-3);
+}
+
+.challenge-card__live:empty {
+	margin-top: calc(var(--space-3) * -1);
+}
+
 .challenge-card__error {
 	margin: 0;
 	font-size: 0.8rem;

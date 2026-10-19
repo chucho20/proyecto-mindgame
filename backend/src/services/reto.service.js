@@ -4,21 +4,48 @@ import * as misionRepository from "../repositories/mision.repository.js";
 import * as intentoRetoRepository from "../repositories/intentoReto.repository.js";
 import { obtenerEvaluador } from "./evaluadores/evaluadorRegistry.js";
 import * as misionService from "./mision.service.js";
+import * as progresoService from "./progreso.service.js";
+import * as mensajePositivoService from "./mensajePositivo.service.js";
+import { CONTEXTO_RETO_COMPLETADO } from "../constants/convivencia.js";
+import {
+	esEnteroValido,
+	esTextoOpcionalValido,
+	LONGITUD_MAXIMA_TEXTO,
+	normalizarTextoOpcional,
+} from "../utils/validators.js";
 
 const TIPOS_VALIDOS = ["seleccion_multiple", "verdadero_falso", "relacion_elementos", "orden_cronologico"];
 
+// Lista blanca de campos que un estudiante puede ver de un reto. Es exactamente el
+// conjunto que devolvía el endpoint antes de agregar `retroalimentacion`: así, una
+// columna nueva en la tabla no se filtra por defecto a los estudiantes.
+const CAMPOS_RETO_ESTUDIANTE = [
+	"id",
+	"mision_id",
+	"tipo",
+	"enunciado",
+	"opciones",
+	"puntos",
+	"orden",
+	"estado",
+	"created_at",
+	"updated_at",
+];
+
 /**
- * Nunca devuelve `respuesta_correcta` a un estudiante — igual que
- * `sanitizeUser` esconde `password_hash` en Sprint 1. Las funciones *Admin
- * de este archivo sí devuelven el campo real (lo necesitan para editarlo).
+ * Nunca devuelve `respuesta_correcta` ni `retroalimentacion` a un estudiante:
+ * solo copia los campos de la lista blanca (la explicación se entrega recién al
+ * responder). Las funciones *Admin de este archivo sí devuelven la fila completa
+ * (la necesitan para editarla).
  */
 function sanitizarReto(reto) {
 	if (!reto) {
 		return reto;
 	}
 
-	const { respuesta_correcta: _respuestaCorrecta, ...safeReto } = reto;
-	return safeReto;
+	return Object.fromEntries(
+		CAMPOS_RETO_ESTUDIANTE.filter((campo) => campo in reto).map((campo) => [campo, reto[campo]]),
+	);
 }
 
 export async function listarPorMision(misionId) {
@@ -51,21 +78,57 @@ export async function responder(retoId, usuarioId, respuestaUsuario) {
 		throw new AppError("No hay un evaluador configurado para este tipo de reto.", 500);
 	}
 
-	const { esCorrecto, puntosObtenidos } = evaluador.evaluar(reto, respuestaUsuario);
+	const { esCorrecto, puntosObtenidos: puntosDelReto } = evaluador.evaluar(reto, respuestaUsuario);
 
-	await intentoRetoRepository.create({
+	// Regla de puntos (RF-014): un reto suma puntos SOLO la primera vez que se
+	// responde bien. Los aciertos repetidos y las respuestas incorrectas no
+	// suman, para que no se puedan "farmear" puntos repitiendo el mismo reto.
+	// El repositorio lo decide y suma los puntos a usuarios.puntos_totales en la misma
+	// transacción que registra el intento (ver createConPuntosDelPrimerAcierto).
+	const nivelAnterior = esCorrecto ? await progresoService.obtenerNivelActual(usuarioId) : null;
+
+	const intento = await intentoRetoRepository.createConPuntosDelPrimerAcierto({
 		usuarioId,
 		retoId,
 		respuestaDada: respuestaUsuario,
 		esCorrecto,
-		puntosObtenidos,
+		puntosPrimerAcierto: puntosDelReto,
 	});
+	const puntosObtenidos = intento.puntos_obtenidos;
+
+	let progreso = null;
 
 	if (esCorrecto) {
 		await misionService.actualizarProgresoSiCompleta(reto.mision_id, usuarioId);
+
+		// Los puntos ya quedaron guardados; nivel, recompensas y logros se evalúan en un
+		// paso idempotente aparte (GET /api/progreso lo repite si este paso no llega a correr).
+		if (puntosObtenidos > 0) {
+			progreso = await progresoService.evaluarProgresionTrasPuntos(usuarioId, puntosObtenidos, nivelAnterior);
+		}
 	}
 
-	return { esCorrecto, puntosObtenidos };
+	// Recién ahora, con la respuesta ya dada, se entrega la explicación del reto
+	// (RF-018). Y solo una respuesta correcta en una misión de convivencia dispara un
+	// mensaje positivo (RF-013).
+	let mensajePositivo = null;
+	if (esCorrecto) {
+		mensajePositivo = await mensajePositivoService.obtenerTextoParaMision(
+			reto.mision_id,
+			CONTEXTO_RETO_COMPLETADO,
+		);
+	}
+
+	// `progreso` (puntos totales, nivel, recompensas y logros nuevos) es null si
+	// esta respuesta no sumó puntos. `mensajePositivo` es un texto o null: el
+	// controller lo publica como `positive_message` junto a `resultado`.
+	return {
+		esCorrecto,
+		puntosObtenidos,
+		progreso,
+		retroalimentacion: reto.retroalimentacion ?? null,
+		mensajePositivo,
+	};
 }
 
 // --- Admin CRUD ---
@@ -107,8 +170,18 @@ function validarReto(data, { esCreacion }) {
 		errors.push("La respuesta correcta es obligatoria.");
 	}
 
-	if (data.puntos !== undefined && data.puntos !== null && !Number.isFinite(Number(data.puntos))) {
-		errors.push("Los puntos deben ser un número.");
+	// `null` no es "sin cambios" ni "usar el valor por defecto": Number(null) daría 0 y
+	// pisaría el valor guardado, así que se rechaza igual que cualquier otro valor inválido.
+	if (data.puntos !== undefined && !esEnteroValido(data.puntos, { min: 0 })) {
+		errors.push("Los puntos deben ser un número entero mayor o igual a 0.");
+	}
+
+	if (data.orden !== undefined && !esEnteroValido(data.orden)) {
+		errors.push("El orden debe ser un número entero.");
+	}
+
+	if (!esTextoOpcionalValido(data.retroalimentacion)) {
+		errors.push(`La retroalimentación debe ser texto de hasta ${LONGITUD_MAXIMA_TEXTO} caracteres.`);
 	}
 
 	return errors;
@@ -135,6 +208,7 @@ export async function crear(data) {
 		puntos: data.puntos !== undefined ? Number(data.puntos) : 10,
 		orden: data.orden !== undefined ? Number(data.orden) : 0,
 		estado: "activo",
+		retroalimentacion: normalizarTextoOpcional(data.retroalimentacion) ?? null,
 	});
 }
 
@@ -153,6 +227,7 @@ export async function actualizar(id, data) {
 		respuestaCorrecta: data.respuestaCorrecta,
 		puntos: data.puntos !== undefined ? Number(data.puntos) : undefined,
 		orden: data.orden !== undefined ? Number(data.orden) : undefined,
+		retroalimentacion: normalizarTextoOpcional(data.retroalimentacion),
 	});
 }
 

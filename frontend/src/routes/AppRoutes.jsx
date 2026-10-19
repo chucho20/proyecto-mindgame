@@ -16,11 +16,22 @@ import MissionsAdminPage from "../pages/admin/MissionsAdminPage.jsx";
 import ChallengesAdminPage from "../pages/admin/ChallengesAdminPage.jsx";
 import ActivitiesAdminPage from "../pages/admin/ActivitiesAdminPage.jsx";
 import ContentAdminPage from "../pages/admin/ContentAdminPage.jsx";
+import RewardsAdminPage from "../pages/admin/RewardsAdminPage.jsx";
+import AchievementsAdminPage from "../pages/admin/AchievementsAdminPage.jsx";
+import PositiveMessagesAdminPage from "../pages/admin/PositiveMessagesAdminPage.jsx";
 import ProgressPage from "../pages/student/ProgressPage.jsx";
+import AchievementsPage from "../pages/student/AchievementsPage.jsx";
+import RewardsPage from "../pages/student/RewardsPage.jsx";
+import MyGroupsPage from "../pages/student/MyGroupsPage.jsx";
+import TeacherLayout from "../layouts/TeacherLayout.jsx";
+import TeacherDashboardPage from "../pages/teacher/TeacherDashboardPage.jsx";
+import GroupsPage from "../pages/teacher/GroupsPage.jsx";
+import GroupDetailPage from "../pages/teacher/GroupDetailPage.jsx";
+import GroupStatsPage from "../pages/teacher/GroupStatsPage.jsx";
+import StudentStatsPage from "../pages/teacher/StudentStatsPage.jsx";
 
-// Placeholder temporal de las secciones por rol: los dashboards completos
-// (estudiante RF-0xx, docente RF-022/023, admin) se construyen en sprints
-// posteriores. Por ahora, cada rol aterriza acá y puede ir a su perfil.
+// Placeholder temporal del panel de estudiante: su dashboard completo se
+// construye en un sprint posterior. Por ahora aterriza acá y puede ir a su perfil.
 function RoleHomePlaceholder({ label }) {
 	return (
 		<div className="role-home-placeholder">
@@ -51,11 +62,20 @@ function AppRoutes() {
 					<Route path="/estudiante/misiones" element={<MissionsPage />} />
 					<Route path="/estudiante/misiones/:id" element={<MissionDetailPage />} />
 					<Route path="/estudiante/progreso" element={<ProgressPage />} />
+					<Route path="/estudiante/logros" element={<AchievementsPage />} />
+					<Route path="/estudiante/recompensas" element={<RewardsPage />} />
+					<Route path="/estudiante/grupos" element={<MyGroupsPage />} />
 				</Route>
 			</Route>
 
 			<Route element={<ProtectedRoutes roles={["docente"]} />}>
-				<Route path="/docente" element={<RoleHomePlaceholder label="Panel de docente" />} />
+				<Route element={<TeacherLayout />}>
+					<Route path="/docente" element={<TeacherDashboardPage />} />
+					<Route path="/docente/grupos" element={<GroupsPage />} />
+					<Route path="/docente/grupos/:grupoId" element={<GroupDetailPage />} />
+					<Route path="/docente/grupos/:grupoId/estadisticas" element={<GroupStatsPage />} />
+					<Route path="/docente/estudiantes/:estudianteId/estadisticas" element={<StudentStatsPage />} />
+				</Route>
 			</Route>
 
 			<Route element={<ProtectedRoutes roles={["administrador"]} />}>
@@ -65,6 +85,9 @@ function AppRoutes() {
 					<Route path="/admin/retos" element={<ChallengesAdminPage />} />
 					<Route path="/admin/actividades" element={<ActivitiesAdminPage />} />
 					<Route path="/admin/contenidos" element={<ContentAdminPage />} />
+					<Route path="/admin/recompensas" element={<RewardsAdminPage />} />
+					<Route path="/admin/logros" element={<AchievementsAdminPage />} />
+					<Route path="/admin/mensajes-positivos" element={<PositiveMessagesAdminPage />} />
 				</Route>
 			</Route>
 

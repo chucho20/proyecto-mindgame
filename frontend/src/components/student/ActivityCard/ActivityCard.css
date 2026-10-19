@@ -39,6 +39,17 @@
 	cursor: not-allowed;
 }
 
+/* Región en vivo siempre montada; vacía no suma el hueco del `gap` de la tarjeta. */
+.activity-card__live {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-3);
+}
+
+.activity-card__live:empty {
+	margin-top: calc(var(--space-3) * -1);
+}
+
 .activity-card__done {
 	align-self: flex-start;
 	padding: 0.4rem 0.8rem;

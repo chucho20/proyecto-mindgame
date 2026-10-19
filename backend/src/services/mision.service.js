@@ -1,4 +1,7 @@
 import AppError from "../utils/AppError.js";
+import { esViolacionUnica } from "../utils/dbErrors.js";
+import { esEnteroValido } from "../utils/validators.js";
+import { CATEGORIA_HISTORICA, CATEGORIAS_MISION } from "../constants/convivencia.js";
 import * as misionRepository from "../repositories/mision.repository.js";
 import * as historiaRepository from "../repositories/historia.repository.js";
 import * as progresoMisionRepository from "../repositories/progresoMision.repository.js";
@@ -6,6 +9,9 @@ import * as retoRepository from "../repositories/reto.repository.js";
 import * as actividadRepository from "../repositories/actividad.repository.js";
 import * as intentoRetoRepository from "../repositories/intentoReto.repository.js";
 import * as actividadCompletadaRepository from "../repositories/actividadCompletada.repository.js";
+import * as recompensaRepository from "../repositories/recompensa.repository.js";
+import * as logroRepository from "../repositories/logro.repository.js";
+import * as mensajePositivoRepository from "../repositories/mensajePositivo.repository.js";
 
 function construirMisionConProgreso(mision, progreso) {
 	return {
@@ -16,8 +22,27 @@ function construirMisionConProgreso(mision, progreso) {
 	};
 }
 
-export async function listar(usuarioId) {
-	const misiones = await misionRepository.findAllActivas();
+/**
+ * Normaliza el filtro `?categoria=` de GET /misiones. Sin valor (o vacío) no se filtra;
+ * un valor que no sea una categoría conocida es un error del cliente (400).
+ */
+function normalizarCategoriaFiltro(categoria) {
+	if (categoria === undefined || categoria === "") {
+		return undefined;
+	}
+
+	const normalizada = typeof categoria === "string" ? categoria.trim().toLowerCase() : null;
+
+	if (!CATEGORIAS_MISION.includes(normalizada)) {
+		throw new AppError(`La categoría debe ser una de: ${CATEGORIAS_MISION.join(", ")}.`, 400);
+	}
+
+	return normalizada;
+}
+
+export async function listar(usuarioId, { categoria } = {}) {
+	const categoriaFiltro = normalizarCategoriaFiltro(categoria);
+	const misiones = await misionRepository.findAllActivas({ categoria: categoriaFiltro });
 	const progresos = await progresoMisionRepository.findAllByUsuario(usuarioId);
 	const progresoPorMision = new Map(progresos.map((progreso) => [progreso.mision_id, progreso]));
 
@@ -54,7 +79,7 @@ export async function iniciar(id, usuarioId) {
 		// el UNIQUE (usuario_id, mision_id) rechaza al segundo insert. Devolvemos
 		// el registro existente en vez de un 500 (mismo patrón que el registro
 		// de usuarios en Sprint 1 con el UNIQUE de correo).
-		if (error && error.code === "ER_DUP_ENTRY") {
+		if (esViolacionUnica(error)) {
 			return progresoMisionRepository.findByUsuarioYMision(usuarioId, id);
 		}
 		throw error;
@@ -85,7 +110,7 @@ export async function actualizarProgresoSiCompleta(misionId, usuarioId) {
 		} catch (error) {
 			// Misma carrera que en iniciar(): otra request pudo haber creado la
 			// fila justo antes que esta.
-			if (error && error.code === "ER_DUP_ENTRY") {
+			if (esViolacionUnica(error)) {
 				progreso = await progresoMisionRepository.findByUsuarioYMision(usuarioId, misionId);
 			} else {
 				throw error;
@@ -140,8 +165,16 @@ function validarMision(data, { esCreacion }) {
 		}
 	}
 
-	if (data.orden !== undefined && data.orden !== null && !Number.isFinite(Number(data.orden))) {
-		errors.push("El orden debe ser un número.");
+	if (data.descripcion !== undefined && data.descripcion !== null && typeof data.descripcion !== "string") {
+		errors.push("La descripción debe ser texto.");
+	}
+
+	if (data.orden !== undefined && data.orden !== null && !esEnteroValido(data.orden)) {
+		errors.push("El orden debe ser un número entero.");
+	}
+
+	if (data.categoria !== undefined && !CATEGORIAS_MISION.includes(data.categoria)) {
+		errors.push(`La categoría debe ser una de: ${CATEGORIAS_MISION.join(", ")}.`);
 	}
 
 	return errors;
@@ -159,6 +192,7 @@ export async function crear(data) {
 		descripcion: data.descripcion || null,
 		orden: data.orden !== undefined ? Number(data.orden) : 0,
 		estado: "activa",
+		categoria: data.categoria ?? CATEGORIA_HISTORICA,
 	});
 }
 
@@ -174,6 +208,7 @@ export async function actualizar(id, data) {
 		titulo: data.titulo !== undefined ? data.titulo.trim() : undefined,
 		descripcion: data.descripcion,
 		orden: data.orden !== undefined ? Number(data.orden) : undefined,
+		categoria: data.categoria,
 	});
 }
 
@@ -193,16 +228,45 @@ export async function eliminar(id) {
 
 /**
  * Conteos reales para la landing del dashboard admin (GET /admin/stats).
- * A propósito no inventa métricas que todavía no existen (usuarios,
- * convivencia) — solo lo que este sprint efectivamente modela.
+ * A propósito no inventa métricas que todavía no existen (usuarios, etc.) —
+ * solo lo que efectivamente se modela. Los totales cuentan activos e inactivos;
+ * los `*_activas` / `*_activos` solo los visibles para los estudiantes.
  */
 export async function obtenerStatsAdmin() {
-	const [misiones, historias, retos, actividades] = await Promise.all([
+	const [
+		misiones,
+		historias,
+		retos,
+		actividades,
+		recompensas,
+		recompensasActivas,
+		logros,
+		logrosActivos,
+		mensajesPositivos,
+		mensajesPositivosActivos,
+	] = await Promise.all([
 		misionRepository.countAll(),
 		historiaRepository.countAll(),
 		retoRepository.countAll(),
 		actividadRepository.countAll(),
+		recompensaRepository.countAll(),
+		recompensaRepository.countActivas(),
+		logroRepository.countAll(),
+		logroRepository.countActivos(),
+		mensajePositivoRepository.countAll(),
+		mensajePositivoRepository.countActivos(),
 	]);
 
-	return { misiones, historias, retos, actividades };
+	return {
+		misiones,
+		historias,
+		retos,
+		actividades,
+		recompensas,
+		recompensas_activas: recompensasActivas,
+		logros,
+		logros_activos: logrosActivos,
+		mensajes_positivos: mensajesPositivos,
+		mensajes_positivos_activos: mensajesPositivosActivos,
+	};
 }
