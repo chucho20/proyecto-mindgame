@@ -170,11 +170,13 @@ function validarReto(data, { esCreacion }) {
 		errors.push("La respuesta correcta es obligatoria.");
 	}
 
-	if (data.puntos !== undefined && data.puntos !== null && !esEnteroValido(data.puntos, { min: 0 })) {
+	// `null` no es "sin cambios" ni "usar el valor por defecto": Number(null) daría 0 y
+	// pisaría el valor guardado, así que se rechaza igual que cualquier otro valor inválido.
+	if (data.puntos !== undefined && !esEnteroValido(data.puntos, { min: 0 })) {
 		errors.push("Los puntos deben ser un número entero mayor o igual a 0.");
 	}
 
-	if (data.orden !== undefined && data.orden !== null && !esEnteroValido(data.orden)) {
+	if (data.orden !== undefined && !esEnteroValido(data.orden)) {
 		errors.push("El orden debe ser un número entero.");
 	}
 

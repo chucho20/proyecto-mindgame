@@ -152,7 +152,10 @@ function validarActividad(data, { esCreacion }) {
 		errors.push("El orden debe ser un número entero.");
 	}
 
-	if (data.puntos !== undefined && data.puntos !== null && !esEnteroValido(data.puntos, { min: 0 })) {
+	// Al crear, `null` equivale a "sin puntos" (0); al editar sería un cambio silenciosamente
+	// ignorado, así que ahí se rechaza para que el admin no crea haber quitado los puntos.
+	const puntosNulosPermitidos = esCreacion && data.puntos === null;
+	if (data.puntos !== undefined && !puntosNulosPermitidos && !esEnteroValido(data.puntos, { min: 0 })) {
 		errors.push("Los puntos deben ser un número entero mayor o igual a 0.");
 	}
 
