@@ -1,66 +1,92 @@
-import pool from "../config/db.js";
+import prisma from "../config/prisma.js";
+import { normalizarId } from "../utils/dbIds.js";
+
+// Devuelve la misma fila (snake_case) que devolvía `SELECT *` con mysql2.
+function aFilaMision(mision) {
+	if (!mision) {
+		return null;
+	}
+
+	return {
+		id: mision.id,
+		titulo: mision.titulo,
+		descripcion: mision.descripcion,
+		orden: mision.orden,
+		estado: mision.estado,
+		created_at: mision.createdAt,
+		updated_at: mision.updatedAt,
+		categoria: mision.categoria,
+	};
+}
+
+const ORDEN_POR_DEFECTO = [{ orden: "asc" }, { id: "asc" }];
 
 export async function findAllActivas() {
-	const [rows] = await pool.query(
-		"SELECT * FROM misiones WHERE estado = 'activa' ORDER BY orden ASC, id ASC",
-	);
-	return rows;
+	const misiones = await prisma.mision.findMany({
+		where: { estado: "activa" },
+		orderBy: ORDEN_POR_DEFECTO,
+	});
+	return misiones.map(aFilaMision);
 }
 
 export async function findAllAdmin() {
-	const [rows] = await pool.query("SELECT * FROM misiones ORDER BY orden ASC, id ASC");
-	return rows;
+	const misiones = await prisma.mision.findMany({ orderBy: ORDEN_POR_DEFECTO });
+	return misiones.map(aFilaMision);
 }
 
 export async function findById(id) {
-	const [rows] = await pool.query("SELECT * FROM misiones WHERE id = ? LIMIT 1", [id]);
-	return rows[0] || null;
+	const idNormalizado = normalizarId(id);
+	if (idNormalizado === null) {
+		return null;
+	}
+
+	const mision = await prisma.mision.findUnique({ where: { id: idNormalizado } });
+	return aFilaMision(mision);
 }
 
 export async function create({ titulo, descripcion, orden, estado }) {
-	const [result] = await pool.query(
-		"INSERT INTO misiones (titulo, descripcion, orden, estado) VALUES (?, ?, ?, ?)",
-		[titulo, descripcion ?? null, orden ?? 0, estado || "activa"],
-	);
-	return findById(result.insertId);
+	const mision = await prisma.mision.create({
+		data: {
+			titulo,
+			descripcion: descripcion ?? null,
+			orden: orden ?? 0,
+			estado: estado || "activa",
+		},
+	});
+
+	return aFilaMision(mision);
 }
 
 export async function update(id, { titulo, descripcion, orden }) {
-	const setClauses = [];
-	const values = [];
+	// `undefined` significa "no tocar" y `null` significa "dejar en NULL".
+	const data = {};
 
 	if (titulo !== undefined) {
-		setClauses.push("titulo = ?");
-		values.push(titulo);
+		data.titulo = titulo;
 	}
 	if (descripcion !== undefined) {
-		setClauses.push("descripcion = ?");
-		values.push(descripcion);
+		data.descripcion = descripcion;
 	}
 	if (orden !== undefined) {
-		setClauses.push("orden = ?");
-		values.push(orden);
+		data.orden = orden;
 	}
 
-	if (setClauses.length === 0) {
-		return findById(id);
+	if (Object.keys(data).length > 0) {
+		await prisma.mision.updateMany({ where: { id: Number(id) }, data });
 	}
 
-	values.push(id);
-	await pool.query(`UPDATE misiones SET ${setClauses.join(", ")} WHERE id = ?`, values);
 	return findById(id);
 }
 
 export async function setEstado(id, estado) {
-	await pool.query("UPDATE misiones SET estado = ? WHERE id = ?", [estado, id]);
+	await prisma.mision.updateMany({ where: { id: Number(id) }, data: { estado } });
 	return findById(id);
 }
 
 export async function remove(id) {
-	await pool.query("DELETE FROM misiones WHERE id = ?", [id]);
+	await prisma.mision.deleteMany({ where: { id: Number(id) } });
 }
 
 export async function countAll() {
-	const [rows] = await pool.query("SELECT COUNT(*) AS total FROM misiones");
-	return rows[0].total;
+	return prisma.mision.count();
 }

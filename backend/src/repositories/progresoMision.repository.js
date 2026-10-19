@@ -1,44 +1,75 @@
-import pool from "../config/db.js";
+import prisma from "../config/prisma.js";
+import { normalizarId } from "../utils/dbIds.js";
+
+// Devuelve la misma fila (snake_case) que devolvía `SELECT *` con mysql2.
+function aFilaProgresoMision(progreso) {
+	if (!progreso) {
+		return null;
+	}
+
+	return {
+		id: progreso.id,
+		usuario_id: progreso.usuarioId,
+		mision_id: progreso.misionId,
+		estado: progreso.estado,
+		iniciada_en: progreso.iniciadaEn,
+		completada_en: progreso.completadaEn,
+		created_at: progreso.createdAt,
+		updated_at: progreso.updatedAt,
+	};
+}
 
 export async function findByUsuarioYMision(usuarioId, misionId) {
-	const [rows] = await pool.query(
-		"SELECT * FROM progreso_misiones WHERE usuario_id = ? AND mision_id = ? LIMIT 1",
-		[usuarioId, misionId],
-	);
-	return rows[0] || null;
+	const usuarioIdNormalizado = normalizarId(usuarioId);
+	const misionIdNormalizado = normalizarId(misionId);
+	if (usuarioIdNormalizado === null || misionIdNormalizado === null) {
+		return null;
+	}
+
+	const progreso = await prisma.progresoMision.findUnique({
+		where: { usuarioId_misionId: { usuarioId: usuarioIdNormalizado, misionId: misionIdNormalizado } },
+	});
+	return aFilaProgresoMision(progreso);
 }
 
 export async function findAllByUsuario(usuarioId) {
-	const [rows] = await pool.query("SELECT * FROM progreso_misiones WHERE usuario_id = ?", [usuarioId]);
-	return rows;
+	const usuarioIdNormalizado = normalizarId(usuarioId);
+	if (usuarioIdNormalizado === null) {
+		return [];
+	}
+
+	const progresos = await prisma.progresoMision.findMany({ where: { usuarioId: usuarioIdNormalizado } });
+	return progresos.map(aFilaProgresoMision);
 }
 
 /**
  * Crea el registro de progreso de una misión para un usuario. Puede lanzar
- * un error con `code === "ER_DUP_ENTRY"` si ya existe (UNIQUE usuario_id +
- * mision_id) — el caller decide cómo manejar la carrera (ver mision.service).
+ * un error de violación UNIQUE (`P2002` en Prisma; ver `esViolacionUnica` en
+ * utils/dbErrors.js) si ya existe (UNIQUE usuario_id + mision_id) — el caller
+ * decide cómo manejar la carrera (ver mision.service).
  */
 export async function create(usuarioId, misionId, estado = "en_progreso") {
-	const [result] = await pool.query(
-		"INSERT INTO progreso_misiones (usuario_id, mision_id, estado, iniciada_en) VALUES (?, ?, ?, NOW())",
-		[usuarioId, misionId, estado],
-	);
-	const [rows] = await pool.query("SELECT * FROM progreso_misiones WHERE id = ? LIMIT 1", [result.insertId]);
-	return rows[0];
+	const progreso = await prisma.progresoMision.create({
+		data: {
+			usuarioId: Number(usuarioId),
+			misionId: Number(misionId),
+			estado,
+			iniciadaEn: new Date(),
+		},
+	});
+	return aFilaProgresoMision(progreso);
 }
 
 export async function updateEstado(usuarioId, misionId, estado) {
+	const data = { estado };
+
 	if (estado === "completada") {
-		await pool.query(
-			"UPDATE progreso_misiones SET estado = ?, completada_en = NOW() WHERE usuario_id = ? AND mision_id = ?",
-			[estado, usuarioId, misionId],
-		);
-	} else {
-		await pool.query("UPDATE progreso_misiones SET estado = ? WHERE usuario_id = ? AND mision_id = ?", [
-			estado,
-			usuarioId,
-			misionId,
-		]);
+		data.completadaEn = new Date();
 	}
+
+	await prisma.progresoMision.updateMany({
+		where: { usuarioId: Number(usuarioId), misionId: Number(misionId) },
+		data,
+	});
 	return findByUsuarioYMision(usuarioId, misionId);
 }
