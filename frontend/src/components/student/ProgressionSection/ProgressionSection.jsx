@@ -14,8 +14,9 @@ function ProgressionSection({ title, description, count, emptyIcon, emptyTitle, 
 					{description ? <p className="progression-section__description">{description}</p> : null}
 				</div>
 
-				<span className="progression-section__count" aria-label={`${count} en total`}>
+				<span className="progression-section__count">
 					{count}
+					<span className="visually-hidden"> en total</span>
 				</span>
 			</div>
 
