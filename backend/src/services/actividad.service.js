@@ -1,10 +1,35 @@
 import AppError from "../utils/AppError.js";
 import { esViolacionUnica } from "../utils/dbErrors.js";
+import { esEnteroValido } from "../utils/validators.js";
 import * as actividadRepository from "../repositories/actividad.repository.js";
 import * as actividadCompletadaRepository from "../repositories/actividadCompletada.repository.js";
 import * as misionRepository from "../repositories/mision.repository.js";
 import * as misionService from "./mision.service.js";
 import * as progresoService from "./progreso.service.js";
+
+// Lista blanca de campos que un estudiante puede ver de una actividad: el conjunto que
+// devolvía el endpoint antes de agregar `retroalimentacion` y `puntos`. La explicación
+// se entrega recién al completar la actividad; las funciones *Admin devuelven la fila completa.
+const CAMPOS_ACTIVIDAD_ESTUDIANTE = [
+	"id",
+	"mision_id",
+	"titulo",
+	"descripcion",
+	"tipo",
+	"orden",
+	"estado",
+	"created_at",
+	"updated_at",
+];
+
+function sanitizarActividad(actividad) {
+	return Object.fromEntries(
+		CAMPOS_ACTIVIDAD_ESTUDIANTE.filter((campo) => campo in actividad).map((campo) => [
+			campo,
+			actividad[campo],
+		]),
+	);
+}
 
 export async function listar(misionId, usuarioId) {
 	const mision = await misionRepository.findById(misionId);
@@ -18,7 +43,7 @@ export async function listar(misionId, usuarioId) {
 	const completadasIds = new Set(completadas.map((completada) => completada.actividad_id));
 
 	return actividades.map((actividad) => ({
-		...actividad,
+		...sanitizarActividad(actividad),
 		completada: completadasIds.has(actividad.id),
 	}));
 }
@@ -87,6 +112,14 @@ function validarActividad(data, { esCreacion }) {
 		if (typeof data.tipo !== "string" || data.tipo.trim().length === 0) {
 			errors.push("El tipo es obligatorio.");
 		}
+	}
+
+	if (data.descripcion !== undefined && data.descripcion !== null && typeof data.descripcion !== "string") {
+		errors.push("La descripción debe ser texto.");
+	}
+
+	if (data.orden !== undefined && data.orden !== null && !esEnteroValido(data.orden)) {
+		errors.push("El orden debe ser un número entero.");
 	}
 
 	return errors;

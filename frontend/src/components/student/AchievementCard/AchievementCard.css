@@ -1,0 +1,179 @@
+.achievement-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+
+  width: 100%;
+  padding: 1rem;
+
+  background: var(--color-white, #ffffff);
+  border: 1px solid var(--color-slate-200, #e2e8f0);
+  border-radius: 0.875rem;
+
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.06);
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.achievement-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 12px rgba(15, 23, 42, 0.1);
+}
+
+/* Icono */
+
+.achievement-card__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  flex-shrink: 0;
+
+  width: 3.5rem;
+  height: 3.5rem;
+
+  border-radius: 50%;
+
+  background: var(--color-primary-50, #eef2ff);
+
+  font-size: 1.8rem;
+}
+
+/* Contenido */
+
+.achievement-card__content {
+  min-width: 0;
+  flex: 1;
+}
+
+.achievement-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.achievement-card__title {
+  margin: 0;
+
+  color: var(--color-slate-700, #334155);
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.achievement-card__description {
+  margin: 0.35rem 0 0;
+
+  color: var(--color-slate-500, #64748b);
+  font-size: 0.875rem;
+  line-height: 1.45;
+}
+
+/* Estado */
+
+.achievement-card__status {
+  flex-shrink: 0;
+
+  padding: 0.25rem 0.55rem;
+
+  border-radius: 999px;
+
+  font-size: 0.7rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.achievement-card__status--obtained {
+  color: #166534;
+  background: #dcfce7;
+}
+
+.achievement-card__status--locked {
+  color: var(--color-slate-600, #475569);
+  background: var(--color-slate-100, #f1f5f9);
+}
+
+/* Condición del logro pendiente */
+
+.achievement-card__condition {
+  margin: 0.45rem 0 0;
+
+  color: var(--color-slate-500, #64748b);
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+
+.achievement-card__condition-label {
+  font-weight: 600;
+  color: var(--color-slate-600, #475569);
+}
+
+/* Marca de obtenido */
+
+.achievement-card__check {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  flex-shrink: 0;
+
+  width: 1.75rem;
+  height: 1.75rem;
+
+  border-radius: 50%;
+
+  color: #ffffff;
+  background: #22c55e;
+
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+/* Logro pendiente */
+
+.achievement-card--locked {
+  opacity: 0.78;
+}
+
+.achievement-card--locked .achievement-card__icon {
+  filter: grayscale(0.6);
+  opacity: 0.8;
+}
+
+/* Responsive */
+
+@media (max-width: 640px) {
+  .achievement-card {
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 0.875rem;
+  }
+
+  .achievement-card__icon {
+    width: 3rem;
+    height: 3rem;
+    font-size: 1.5rem;
+  }
+
+  .achievement-card__header {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+
+  .achievement-card__title {
+    font-size: 0.95rem;
+  }
+
+  .achievement-card__description {
+    font-size: 0.8rem;
+  }
+
+  .achievement-card__check {
+    display: none;
+  }
+}

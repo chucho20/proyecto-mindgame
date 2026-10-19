@@ -1,5 +1,6 @@
 import AppError from "../utils/AppError.js";
 import { esViolacionUnica } from "../utils/dbErrors.js";
+import { esEnteroValido } from "../utils/validators.js";
 import * as misionRepository from "../repositories/mision.repository.js";
 import * as historiaRepository from "../repositories/historia.repository.js";
 import * as progresoMisionRepository from "../repositories/progresoMision.repository.js";
@@ -141,8 +142,12 @@ function validarMision(data, { esCreacion }) {
 		}
 	}
 
-	if (data.orden !== undefined && data.orden !== null && !Number.isFinite(Number(data.orden))) {
-		errors.push("El orden debe ser un número.");
+	if (data.descripcion !== undefined && data.descripcion !== null && typeof data.descripcion !== "string") {
+		errors.push("La descripción debe ser texto.");
+	}
+
+	if (data.orden !== undefined && data.orden !== null && !esEnteroValido(data.orden)) {
+		errors.push("El orden debe ser un número entero.");
 	}
 
 	return errors;

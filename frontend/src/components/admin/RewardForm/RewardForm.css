@@ -1,0 +1,132 @@
+
+.reward-form {
+	display: flex;
+	flex-direction: column;
+	gap: 1.25rem;
+	width: 100%;
+}
+
+.reward-form__field {
+	display: flex;
+	flex-direction: column;
+	gap: 0.45rem;
+}
+
+.reward-form__field label {
+	font-size: 0.95rem;
+	font-weight: 600;
+	color: var(--text-primary, #202938);
+}
+
+.reward-form__field input,
+.reward-form__field textarea,
+.reward-form__field select {
+	box-sizing: border-box;
+	width: 100%;
+	padding: 0.75rem 0.875rem;
+	border: 1px solid var(--border-color, #d1d5db);
+	border-radius: 8px;
+	background: var(--surface-color, #fff);
+	color: var(--text-primary, #202938);
+	font: inherit;
+	transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.reward-form__field textarea {
+	resize: vertical;
+	min-height: 100px;
+}
+
+.reward-form__field input:focus,
+.reward-form__field textarea:focus,
+.reward-form__field select:focus {
+	outline: none;
+	border-color: var(--primary-color, #6366f1);
+	box-shadow: 0 0 0 3px rgb(99 102 241 / 15%);
+}
+
+.reward-form__field input[aria-invalid="true"],
+.reward-form__field textarea[aria-invalid="true"],
+.reward-form__field select[aria-invalid="true"] {
+	border-color: #dc2626;
+}
+
+.reward-form__field input:disabled,
+.reward-form__field textarea:disabled,
+.reward-form__field select:disabled {
+	cursor: not-allowed;
+	opacity: 0.65;
+}
+
+.reward-form__hint {
+	margin: 0;
+	color: var(--text-secondary, #6b7280);
+	font-size: 0.8rem;
+	line-height: 1.4;
+}
+
+.reward-form__error,
+.reward-form__submit-error {
+	margin: 0;
+	color: #b91c1c;
+	font-size: 0.85rem;
+	line-height: 1.4;
+}
+
+.reward-form__submit-error {
+	padding: 0.75rem;
+	border: 1px solid #fecaca;
+	border-radius: 8px;
+	background: #fef2f2;
+}
+
+.reward-form__actions {
+	display: flex;
+	justify-content: flex-end;
+	gap: 0.75rem;
+	margin-top: 0.5rem;
+}
+
+.reward-form__button {
+	padding: 0.75rem 1.1rem;
+	border: 1px solid transparent;
+	border-radius: 8px;
+	font: inherit;
+	font-weight: 600;
+	cursor: pointer;
+	transition: background-color 0.2s ease, opacity 0.2s ease;
+}
+
+.reward-form__button:disabled {
+	cursor: not-allowed;
+	opacity: 0.6;
+}
+
+.reward-form__button--primary {
+	background: var(--primary-color, #4f46e5);
+	color: #fff;
+}
+
+.reward-form__button--primary:hover:not(:disabled) {
+	background: var(--primary-color-hover, #4338ca);
+}
+
+.reward-form__button--secondary {
+	border-color: var(--border-color, #d1d5db);
+	background: var(--surface-color, #fff);
+	color: var(--text-primary, #202938);
+}
+
+.reward-form__button--secondary:hover:not(:disabled) {
+	background: var(--surface-hover, #f3f4f6);
+}
+
+@media (max-width: 480px) {
+	.reward-form__actions {
+		flex-direction: column-reverse;
+	}
+
+	.reward-form__button {
+		width: 100%;
+	}
+}

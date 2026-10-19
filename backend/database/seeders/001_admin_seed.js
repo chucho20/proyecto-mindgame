@@ -23,6 +23,9 @@ async function seedAdmin() {
 	});
 
 	try {
+		// Mantiene los timestamps en UTC, igual que el adaptador Prisma (ver migrate.js).
+		await connection.query("SET time_zone = '+00:00'");
+
 		const [existing] = await connection.query("SELECT id FROM usuarios WHERE correo = ? LIMIT 1", [
 			adminEmail,
 		]);

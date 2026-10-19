@@ -7,6 +7,26 @@ function isNonEmptyString(value) {
 	return typeof value === "string" && value.trim().length > 0;
 }
 
+const INT_MAXIMO = 2147483647;
+
+/**
+ * Indica si `value` es un entero que entra en una columna INT de la base de datos
+ * (acepta número o texto numérico, como el resto de validaciones del backend).
+ * Prisma rechaza con un error de runtime los decimales, los no numéricos y los que
+ * se salen de rango, y eso terminaría en un 500: acá se corta antes con un 400.
+ */
+export function esEnteroValido(value, { min = -INT_MAXIMO - 1 } = {}) {
+	const esNumeroOTextoNumerico =
+		typeof value === "number" || (typeof value === "string" && value.trim().length > 0);
+
+	if (!esNumeroOTextoNumerico) {
+		return false;
+	}
+
+	const numero = Number(value);
+	return Number.isInteger(numero) && numero >= min && numero <= INT_MAXIMO;
+}
+
 /**
  * Valida el payload de registro (RF-001).
  * Devuelve un arreglo de mensajes de error. Vacío significa payload válido.
@@ -39,6 +59,10 @@ export function validateRegister(data = {}) {
 		if (!Number.isInteger(edadNum) || edadNum <= 0) {
 			errors.push("La edad debe ser un número entero positivo.");
 		}
+	}
+
+	if (data.gradoCurso !== undefined && data.gradoCurso !== null && typeof data.gradoCurso !== "string") {
+		errors.push("El grado/curso no es válido.");
 	}
 
 	if (!isNonEmptyString(data.rol) || !ALLOWED_ROLES.includes(data.rol)) {

@@ -6,6 +6,8 @@ import mysql from "mysql2/promise";
 // reglas numéricas de puntos y niveles pendientes de balance de juego, y se
 // pueden ajustar luego sin tocar el código (tabla `niveles`).
 // ServicioDeProgreso asume que el nivel 1 requiere 0 puntos.
+// La migración 023_seed_niveles_iniciales.sql inserta los mismos valores en bases nuevas;
+// este seeder sigue siendo idempotente y debe mantenerse en sincronía con ella.
 const NIVELES = [
 	{ numero: 1, puntosRequeridos: 0 },
 	{ numero: 2, puntosRequeridos: 100 },
@@ -24,6 +26,9 @@ async function seedNiveles() {
 	});
 
 	try {
+		// Mantiene los timestamps en UTC, igual que el adaptador Prisma (ver migrate.js).
+		await connection.query("SET time_zone = '+00:00'");
+
 		let creados = 0;
 
 		for (const { numero, puntosRequeridos } of NIVELES) {
