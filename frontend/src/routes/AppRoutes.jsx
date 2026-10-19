@@ -26,6 +26,8 @@ import TeacherLayout from "../layouts/TeacherLayout.jsx";
 import TeacherDashboardPage from "../pages/teacher/TeacherDashboardPage.jsx";
 import GroupsPage from "../pages/teacher/GroupsPage.jsx";
 import GroupDetailPage from "../pages/teacher/GroupDetailPage.jsx";
+import GroupStatsPage from "../pages/teacher/GroupStatsPage.jsx";
+import StudentStatsPage from "../pages/teacher/StudentStatsPage.jsx";
 
 // Placeholder temporal del panel de estudiante: su dashboard completo se
 // construye en un sprint posterior. Por ahora aterriza acá y puede ir a su perfil.
@@ -69,6 +71,8 @@ function AppRoutes() {
 					<Route path="/docente" element={<TeacherDashboardPage />} />
 					<Route path="/docente/grupos" element={<GroupsPage />} />
 					<Route path="/docente/grupos/:grupoId" element={<GroupDetailPage />} />
+					<Route path="/docente/grupos/:grupoId/estadisticas" element={<GroupStatsPage />} />
+					<Route path="/docente/estudiantes/:estudianteId/estadisticas" element={<StudentStatsPage />} />
 				</Route>
 			</Route>
 
