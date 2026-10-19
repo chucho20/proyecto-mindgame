@@ -78,3 +78,11 @@ export async function setEstado(id, estado) {
 export async function remove(id) {
 	await prisma.mensajePositivo.deleteMany({ where: { id: Number(id) } });
 }
+
+export async function countAll() {
+	return prisma.mensajePositivo.count();
+}
+
+export async function countActivos() {
+	return prisma.mensajePositivo.count({ where: { estado: "activa" } });
+}

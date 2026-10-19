@@ -39,4 +39,25 @@ router.put("/actividades/:id", adminController.actualizarActividad);
 router.put("/actividades/:id/estado", adminController.cambiarEstadoActividad);
 router.delete("/actividades/:id", adminController.eliminarActividad);
 
+router.get("/recompensas", adminController.listarRecompensas);
+router.get("/recompensas/:id", adminController.obtenerRecompensa);
+router.post("/recompensas", adminController.crearRecompensa);
+router.put("/recompensas/:id", adminController.actualizarRecompensa);
+router.put("/recompensas/:id/estado", adminController.cambiarEstadoRecompensa);
+router.delete("/recompensas/:id", adminController.eliminarRecompensa);
+
+router.get("/logros", adminController.listarLogros);
+router.get("/logros/:id", adminController.obtenerLogro);
+router.post("/logros", adminController.crearLogro);
+router.put("/logros/:id", adminController.actualizarLogro);
+router.put("/logros/:id/estado", adminController.cambiarEstadoLogro);
+router.delete("/logros/:id", adminController.eliminarLogro);
+
+router.get("/mensajes-positivos", adminController.listarMensajesPositivos);
+router.get("/mensajes-positivos/:id", adminController.obtenerMensajePositivo);
+router.post("/mensajes-positivos", adminController.crearMensajePositivo);
+router.put("/mensajes-positivos/:id", adminController.actualizarMensajePositivo);
+router.put("/mensajes-positivos/:id/estado", adminController.cambiarEstadoMensajePositivo);
+router.delete("/mensajes-positivos/:id", adminController.eliminarMensajePositivo);
+
 export default router;

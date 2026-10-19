@@ -1,5 +1,11 @@
+import AppError from "../utils/AppError.js";
 import { esViolacionUnica } from "../utils/dbErrors.js";
 import { cumpleCondicion } from "../utils/condiciones.js";
+import {
+	ESTADOS_PROGRESION,
+	normalizarItemProgresion,
+	validarItemProgresion,
+} from "../utils/validacionesProgresion.js";
 import * as recompensaRepository from "../repositories/recompensa.repository.js";
 import * as recompensaObtenidaRepository from "../repositories/recompensaObtenida.repository.js";
 
@@ -69,4 +75,55 @@ export async function listarParaEstudiante(usuarioId) {
 			.filter((recompensa) => !obtenidasIds.has(recompensa.id))
 			.map((recompensa) => aRecompensaEstudiante(recompensa)),
 	};
+}
+
+// --- Admin CRUD ---
+
+export async function listarAdmin() {
+	return recompensaRepository.findAllAdmin();
+}
+
+export async function obtenerAdmin(id) {
+	const recompensa = await recompensaRepository.findById(id);
+
+	if (!recompensa) {
+		throw new AppError("Recompensa no encontrada.", 404);
+	}
+
+	return recompensa;
+}
+
+export async function crear(data) {
+	const errors = validarItemProgresion(data, { esCreacion: true });
+
+	if (errors.length > 0) {
+		throw new AppError("Datos de recompensa inválidos.", 400, errors);
+	}
+
+	return recompensaRepository.create({ ...normalizarItemProgresion(data), estado: "activa" });
+}
+
+export async function actualizar(id, data) {
+	await obtenerAdmin(id);
+
+	const errors = validarItemProgresion(data, { esCreacion: false });
+	if (errors.length > 0) {
+		throw new AppError("Datos de recompensa inválidos.", 400, errors);
+	}
+
+	return recompensaRepository.update(id, normalizarItemProgresion(data));
+}
+
+export async function cambiarEstado(id, estado) {
+	if (!ESTADOS_PROGRESION.includes(estado)) {
+		throw new AppError("Estado inválido. Debe ser 'activa' o 'inactiva'.", 400);
+	}
+
+	await obtenerAdmin(id);
+	return recompensaRepository.setEstado(id, estado);
+}
+
+export async function eliminar(id) {
+	await obtenerAdmin(id);
+	await recompensaRepository.remove(id);
 }
