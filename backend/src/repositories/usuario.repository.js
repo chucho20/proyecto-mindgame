@@ -1,18 +1,52 @@
-import pool from "../config/db.js";
+import prisma from "../config/prisma.js";
+import { normalizarId } from "../utils/dbIds.js";
+
+// Los repositorios son la capa anticorrupción entre Prisma (camelCase) y el
+// resto del backend / API (snake_case, igual que las columnas de la tabla).
+// Este mapper devuelve exactamente la misma "fila" que devolvía `SELECT *`
+// con mysql2, para que servicios, controllers y frontend no cambien.
+function aFilaUsuario(usuario) {
+	if (!usuario) {
+		return null;
+	}
+
+	return {
+		id: usuario.id,
+		nombre_completo: usuario.nombreCompleto,
+		correo: usuario.correo,
+		nombre_usuario: usuario.nombreUsuario,
+		password_hash: usuario.passwordHash,
+		edad: usuario.edad,
+		grado_curso: usuario.gradoCurso,
+		rol: usuario.rol,
+		avatar: usuario.avatar,
+		// mysql2 devolvía los BOOLEAN (TINYINT(1)) como 0/1, no como true/false.
+		acepta_tratamiento_datos: Number(usuario.aceptaTratamientoDatos),
+		created_at: usuario.createdAt,
+		updated_at: usuario.updatedAt,
+		puntos_totales: usuario.puntosTotales,
+		nivel_actual: usuario.nivelActual,
+	};
+}
 
 export async function findByEmail(correo) {
-	const [rows] = await pool.query("SELECT * FROM usuarios WHERE correo = ? LIMIT 1", [correo]);
-	return rows[0] || null;
+	const usuario = await prisma.usuario.findUnique({ where: { correo } });
+	return aFilaUsuario(usuario);
 }
 
 export async function findByUsername(nombreUsuario) {
-	const [rows] = await pool.query("SELECT * FROM usuarios WHERE nombre_usuario = ? LIMIT 1", [nombreUsuario]);
-	return rows[0] || null;
+	const usuario = await prisma.usuario.findUnique({ where: { nombreUsuario } });
+	return aFilaUsuario(usuario);
 }
 
 export async function findById(id) {
-	const [rows] = await pool.query("SELECT * FROM usuarios WHERE id = ? LIMIT 1", [id]);
-	return rows[0] || null;
+	const idNormalizado = normalizarId(id);
+	if (idNormalizado === null) {
+		return null;
+	}
+
+	const usuario = await prisma.usuario.findUnique({ where: { id: idNormalizado } });
+	return aFilaUsuario(usuario);
 }
 
 export async function create({
@@ -26,56 +60,42 @@ export async function create({
 	avatar,
 	aceptaTratamientoDatos,
 }) {
-	const [result] = await pool.query(
-		`INSERT INTO usuarios
-			(nombre_completo, correo, nombre_usuario, password_hash, edad, grado_curso, rol, avatar, acepta_tratamiento_datos)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-		[
+	const usuario = await prisma.usuario.create({
+		data: {
 			nombreCompleto,
 			correo,
 			nombreUsuario,
 			passwordHash,
-			edad ?? null,
-			gradoCurso ?? null,
+			edad: edad ?? null,
+			gradoCurso: gradoCurso ?? null,
 			rol,
-			avatar ?? null,
-			aceptaTratamientoDatos,
-		],
-	);
+			avatar: avatar ?? null,
+			aceptaTratamientoDatos: Boolean(aceptaTratamientoDatos),
+		},
+	});
 
-	return findById(result.insertId);
+	return aFilaUsuario(usuario);
 }
 
 export async function update(id, fields) {
-	const allowedColumns = {
-		nombreCompleto: "nombre_completo",
-		edad: "edad",
-		gradoCurso: "grado_curso",
-		avatar: "avatar",
-	};
+	// Solo estos campos son editables desde el perfil; `undefined` significa
+	// "no tocar" y `null` significa "dejar en NULL".
+	const data = {};
 
-	const setClauses = [];
-	const values = [];
-
-	for (const [key, column] of Object.entries(allowedColumns)) {
+	for (const key of ["nombreCompleto", "edad", "gradoCurso", "avatar"]) {
 		if (fields[key] !== undefined) {
-			setClauses.push(`${column} = ?`);
-			values.push(fields[key]);
+			data[key] = fields[key];
 		}
 	}
 
-	if (setClauses.length === 0) {
-		return findById(id);
+	if (Object.keys(data).length > 0) {
+		await prisma.usuario.updateMany({ where: { id: Number(id) }, data });
 	}
-
-	values.push(id);
-
-	await pool.query(`UPDATE usuarios SET ${setClauses.join(", ")} WHERE id = ?`, values);
 
 	return findById(id);
 }
 
 export async function updatePassword(id, passwordHash) {
-	await pool.query("UPDATE usuarios SET password_hash = ? WHERE id = ?", [passwordHash, id]);
+	await prisma.usuario.updateMany({ where: { id: Number(id) }, data: { passwordHash } });
 	return findById(id);
 }
