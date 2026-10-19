@@ -1,4 +1,5 @@
 import AppError from "../utils/AppError.js";
+import { esViolacionUnica } from "../utils/dbErrors.js";
 import * as actividadRepository from "../repositories/actividad.repository.js";
 import * as actividadCompletadaRepository from "../repositories/actividadCompletada.repository.js";
 import * as misionRepository from "../repositories/mision.repository.js";
@@ -34,7 +35,7 @@ export async function completar(actividadId, usuarioId) {
 		// Completar dos veces la misma actividad no es un error de negocio: es
 		// idempotente. El UNIQUE (usuario_id, actividad_id) evita duplicados en
 		// carrera y acá simplemente lo ignoramos en vez de romper el flujo.
-		if (!(error && error.code === "ER_DUP_ENTRY")) {
+		if (!esViolacionUnica(error)) {
 			throw error;
 		}
 	}
