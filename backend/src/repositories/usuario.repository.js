@@ -99,3 +99,28 @@ export async function updatePassword(id, passwordHash) {
 	await prisma.usuario.updateMany({ where: { id: Number(id) }, data: { passwordHash } });
 	return findById(id);
 }
+
+/**
+ * Suma puntos al total del usuario con un incremento atómico en la base
+ * (`puntos_totales = puntos_totales + n`), así dos respuestas simultáneas no
+ * se pisan entre sí. Devuelve la fila actualizada.
+ */
+export async function sumarPuntos(id, puntos) {
+	await prisma.usuario.updateMany({
+		where: { id: Number(id) },
+		data: { puntosTotales: { increment: Number(puntos) } },
+	});
+	return findById(id);
+}
+
+/**
+ * Persiste `nivel_actual` solo si el nuevo nivel es MAYOR que el guardado: el
+ * nivel nunca baja. Devuelve la fila actualizada.
+ */
+export async function subirNivel(id, nivel) {
+	await prisma.usuario.updateMany({
+		where: { id: Number(id), nivelActual: { lt: Number(nivel) } },
+		data: { nivelActual: Number(nivel) },
+	});
+	return findById(id);
+}
