@@ -56,14 +56,19 @@ export async function completar(actividadId, usuarioId) {
 	}
 
 	// Solo la primera vez que se completa la actividad suma puntos (RF-014).
+	const puntosDeLaActividad = actividad.puntos > 0 ? actividad.puntos : 0;
+	const nivelAnterior = puntosDeLaActividad > 0 ? await progresoService.obtenerNivelActual(usuarioId) : null;
 	let esPrimeraVez = true;
 
 	try {
-		await actividadCompletadaRepository.create(usuarioId, actividadId);
+		// La fila de actividad completada y la suma de puntos se confirman en una
+		// sola transacción (ver createConPuntos): no puede quedar una sin la otra.
+		await actividadCompletadaRepository.createConPuntos(usuarioId, actividadId, puntosDeLaActividad);
 	} catch (error) {
 		// Completar dos veces la misma actividad no es un error de negocio: es
 		// idempotente. El UNIQUE (usuario_id, actividad_id) evita duplicados en
-		// carrera y acá simplemente lo ignoramos en vez de romper el flujo.
+		// carrera; la transacción se revierte sin sumar puntos y acá simplemente lo
+		// ignoramos en vez de romper el flujo.
 		if (!esViolacionUnica(error)) {
 			throw error;
 		}
@@ -75,10 +80,14 @@ export async function completar(actividadId, usuarioId) {
 	}
 
 	// El UNIQUE hace de candado: aunque dos requests lleguen a la vez, solo una
-	// logra insertar la fila y por lo tanto solo una suma los puntos.
-	const puntosObtenidos = esPrimeraVez && actividad.puntos > 0 ? actividad.puntos : 0;
+	// logra insertar la fila y por lo tanto solo una suma los puntos. Nivel,
+	// recompensas y logros se evalúan aparte, de forma idempotente (GET /api/progreso
+	// lo repite si este paso no llega a correr).
+	const puntosObtenidos = esPrimeraVez ? puntosDeLaActividad : 0;
 	const progreso =
-		puntosObtenidos > 0 ? await progresoService.asignarPuntos(usuarioId, puntosObtenidos) : null;
+		puntosObtenidos > 0
+			? await progresoService.evaluarProgresionTrasPuntos(usuarioId, puntosObtenidos, nivelAnterior)
+			: null;
 
 	return { completada: true, puntos_obtenidos: puntosObtenidos, progreso };
 }

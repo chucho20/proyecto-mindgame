@@ -60,33 +60,60 @@ export async function reevaluarProgresion(usuarioId) {
 }
 
 /**
+ * Nivel guardado del usuario. Los flujos que suman puntos dentro de su propia
+ * transacción lo leen ANTES, para informar el nivel anterior en la respuesta.
+ */
+export async function obtenerNivelActual(usuarioId) {
+	const usuario = await usuarioRepository.findById(usuarioId);
+	if (!usuario) {
+		throw new AppError("Usuario no encontrado.", 404);
+	}
+
+	return usuario.nivel_actual;
+}
+
+/**
+ * Evalúa nivel, recompensas y logros DESPUÉS de que los puntos ya se sumaron a
+ * `usuarios.puntos_totales` (dentro de la misma transacción que registró el
+ * intento o la actividad completada). Es un paso idempotente derivado del total
+ * guardado: si el proceso se cae antes de llegar acá, `GET /api/progreso` vuelve
+ * a ejecutar `reevaluarProgresion` y deja nivel, recompensas y logros al día.
+ */
+export async function evaluarProgresionTrasPuntos(usuarioId, puntosAgregados, nivelAnterior) {
+	const resultado = await reevaluarProgresion(usuarioId);
+
+	return {
+		puntos_agregados: puntosAgregados,
+		puntos_totales: resultado.puntos_totales,
+		nivel_anterior: nivelAnterior,
+		nivel_actual: resultado.nivel_actual,
+		subio_de_nivel: resultado.nivel_actual > nivelAnterior,
+		recompensas_nuevas: resultado.recompensas_nuevas,
+		logros_nuevos: resultado.logros_nuevos,
+	};
+}
+
+/**
  * Suma puntos al usuario (RF-014), recalcula su nivel (RF-016) y otorga las
  * recompensas y logros que desbloquee (RF-015). Quien llama decide CUÁNDO
  * corresponde dar puntos (no duplicar por una misma acción); este método
  * solo ejecuta la suma.
+ *
+ * La suma y la evaluación NO son una sola transacción: sirve para otorgar puntos
+ * "sueltos". Los flujos que además persisten algo que impide repetir el premio
+ * (intento de reto, actividad completada) deben sumar los puntos en SU transacción
+ * y llamar después a `evaluarProgresionTrasPuntos`.
  */
 export async function asignarPuntos(usuarioId, puntos) {
 	if (!Number.isInteger(puntos) || puntos <= 0) {
 		throw new AppError("Los puntos a asignar deben ser un número entero mayor que cero.", 400);
 	}
 
-	const antes = await usuarioRepository.findById(usuarioId);
-	if (!antes) {
-		throw new AppError("Usuario no encontrado.", 404);
-	}
+	const nivelAnterior = await obtenerNivelActual(usuarioId);
 
 	await usuarioRepository.sumarPuntos(usuarioId, puntos);
-	const resultado = await reevaluarProgresion(usuarioId);
 
-	return {
-		puntos_agregados: puntos,
-		puntos_totales: resultado.puntos_totales,
-		nivel_anterior: antes.nivel_actual,
-		nivel_actual: resultado.nivel_actual,
-		subio_de_nivel: resultado.nivel_actual > antes.nivel_actual,
-		recompensas_nuevas: resultado.recompensas_nuevas,
-		logros_nuevos: resultado.logros_nuevos,
-	};
+	return evaluarProgresionTrasPuntos(usuarioId, puntos, nivelAnterior);
 }
 
 /**
@@ -96,6 +123,11 @@ export async function asignarPuntos(usuarioId, puntos) {
  * que lee la ProgressPage del frontend.
  */
 export async function consultarProgreso(usuarioId) {
+	// Autocuración: el nivel, las recompensas y los logros se derivan de los puntos
+	// guardados. Si una respuesta se cayó después de confirmar los puntos pero antes
+	// de evaluarlos, acá se corrige (idempotente: no duplica nada ni baja el nivel).
+	await reevaluarProgresion(usuarioId);
+
 	const [usuario, niveles, misionesCompletadas] = await Promise.all([
 		usuarioRepository.findById(usuarioId),
 		nivelRepository.findAll(),

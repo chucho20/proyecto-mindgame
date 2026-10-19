@@ -76,11 +76,15 @@ export async function countRetosCorrectosPorMision(usuarioId, misionId) {
  * `puntos_obtenidos` queda en `puntosPrimerAcierto`; en cualquier otro caso
  * queda en 0 (respuesta incorrecta o acierto repetido).
  *
- * Todo ocurre en una transacción que primero bloquea la fila del usuario
- * (un UPDATE sin cambios reales, que en InnoDB toma el lock de la fila hasta el
- * commit). Así dos requests simultáneas del mismo usuario (por ejemplo un doble
- * clic en "responder") se serializan, la segunda ve el acierto de la primera y
- * no vuelve a sumar puntos. Devuelve la fila del intento creado.
+ * Todo ocurre en una transacción, incluida la suma de esos puntos a
+ * `usuarios.puntos_totales`: el intento y los puntos se confirman juntos o no se
+ * confirma nada, así un fallo intermedio no deja un intento "ya puntuado" sin sus
+ * puntos. Si el intento es correcto, antes de decidir se bloquea la fila del
+ * usuario (un UPDATE sin cambios reales, que en InnoDB toma el lock de la fila
+ * hasta el commit): dos requests simultáneas del mismo usuario (por ejemplo un
+ * doble clic en "responder") se serializan, la segunda ve el acierto de la primera
+ * y no vuelve a sumar puntos. Las respuestas incorrectas no necesitan serializarse.
+ * Devuelve la fila del intento creado.
  */
 export async function createConPuntosDelPrimerAcierto({
 	usuarioId,
@@ -93,20 +97,20 @@ export async function createConPuntosDelPrimerAcierto({
 	const retoIdNumero = Number(retoId);
 
 	const intento = await prisma.$transaction(async (tx) => {
-		await tx.usuario.updateMany({
-			where: { id: usuarioIdNumero },
-			data: { puntosTotales: { increment: 0 } },
-		});
-
 		let puntosObtenidos = 0;
 		if (esCorrecto) {
+			await tx.usuario.updateMany({
+				where: { id: usuarioIdNumero },
+				data: { puntosTotales: { increment: 0 } },
+			});
+
 			const aciertosPrevios = await tx.intentoReto.count({
 				where: { usuarioId: usuarioIdNumero, retoId: retoIdNumero, esCorrecto: true },
 			});
 			puntosObtenidos = aciertosPrevios === 0 ? puntosPrimerAcierto : 0;
 		}
 
-		return tx.intentoReto.create({
+		const creado = await tx.intentoReto.create({
 			data: {
 				usuarioId: usuarioIdNumero,
 				retoId: retoIdNumero,
@@ -115,6 +119,15 @@ export async function createConPuntosDelPrimerAcierto({
 				puntosObtenidos,
 			},
 		});
+
+		if (puntosObtenidos > 0) {
+			await tx.usuario.updateMany({
+				where: { id: usuarioIdNumero },
+				data: { puntosTotales: { increment: puntosObtenidos } },
+			});
+		}
+
+		return creado;
 	});
 
 	return aFilaIntentoReto(intento);

@@ -76,7 +76,10 @@ export async function responder(retoId, usuarioId, respuestaUsuario) {
 	// Regla de puntos (RF-014): un reto suma puntos SOLO la primera vez que se
 	// responde bien. Los aciertos repetidos y las respuestas incorrectas no
 	// suman, para que no se puedan "farmear" puntos repitiendo el mismo reto.
-	// El repositorio lo decide de forma atómica (ver createConPuntosDelPrimerAcierto).
+	// El repositorio lo decide y suma los puntos a usuarios.puntos_totales en la misma
+	// transacción que registra el intento (ver createConPuntosDelPrimerAcierto).
+	const nivelAnterior = esCorrecto ? await progresoService.obtenerNivelActual(usuarioId) : null;
+
 	const intento = await intentoRetoRepository.createConPuntosDelPrimerAcierto({
 		usuarioId,
 		retoId,
@@ -91,8 +94,10 @@ export async function responder(retoId, usuarioId, respuestaUsuario) {
 	if (esCorrecto) {
 		await misionService.actualizarProgresoSiCompleta(reto.mision_id, usuarioId);
 
+		// Los puntos ya quedaron guardados; nivel, recompensas y logros se evalúan en un
+		// paso idempotente aparte (GET /api/progreso lo repite si este paso no llega a correr).
 		if (puntosObtenidos > 0) {
-			progreso = await progresoService.asignarPuntos(usuarioId, puntosObtenidos);
+			progreso = await progresoService.evaluarProgresionTrasPuntos(usuarioId, puntosObtenidos, nivelAnterior);
 		}
 	}
 

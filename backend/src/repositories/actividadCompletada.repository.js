@@ -43,6 +43,38 @@ export async function create(usuarioId, actividadId) {
 	return aFilaActividadCompletada(completada);
 }
 
+/**
+ * Marca la actividad como completada y suma sus puntos a `usuarios.puntos_totales`
+ * en la MISMA transacción: la fila y los puntos se confirman juntos o no se
+ * confirma nada, así un fallo intermedio no deja la actividad "ya completada" sin
+ * sus puntos. Si ya estaba completada, el UNIQUE (usuario_id + actividad_id)
+ * lanza `P2002`, la transacción se revierte entera (sin sumar nada) y el error
+ * sube al caller, que lo trata como éxito idempotente.
+ *
+ * El UPDATE de puntos va PRIMERO a propósito: toma el lock de la fila del usuario
+ * y serializa las transacciones simultáneas del mismo usuario. Si el INSERT fuera
+ * primero, varias requests duplicadas esperarían a la vez por la misma clave
+ * UNIQUE y InnoDB resolvería la carrera abortando a algunas por deadlock (500)
+ * en vez de dejarlas fallar limpiamente con `P2002`.
+ */
+export async function createConPuntos(usuarioId, actividadId, puntos) {
+	const usuarioIdNumero = Number(usuarioId);
+
+	const completada = await prisma.$transaction(async (tx) => {
+		// Con 0 puntos el increment no cambia nada, pero igual toma el lock de la fila.
+		await tx.usuario.updateMany({
+			where: { id: usuarioIdNumero },
+			data: { puntosTotales: { increment: puntos > 0 ? Number(puntos) : 0 } },
+		});
+
+		return tx.actividadCompletada.create({
+			data: { usuarioId: usuarioIdNumero, actividadId: Number(actividadId) },
+		});
+	});
+
+	return aFilaActividadCompletada(completada);
+}
+
 export async function findAllByUsuario(usuarioId) {
 	const usuarioIdNormalizado = normalizarId(usuarioId);
 	if (usuarioIdNormalizado === null) {
