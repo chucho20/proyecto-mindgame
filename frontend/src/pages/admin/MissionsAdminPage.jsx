@@ -7,9 +7,22 @@ import MissionForm from "../../components/admin/MissionForm/MissionForm.jsx";
 import PageHeader from "../../components/layout/PageHeader/PageHeader.jsx";
 import "./MissionsAdminPage.css";
 
+const CATEGORIA_LABEL = { historica: "Histórica", convivencia: "Convivencia" };
+
 const COLUMNS = [
 	{ key: "titulo", label: "Título" },
 	{ key: "descripcion", label: "Descripción", render: (row) => row.descripcion || "—" },
+	{
+		key: "categoria",
+		label: "Categoría",
+		render: (row) => (
+			<span
+				className={`missions-admin-page__category missions-admin-page__category--${row.categoria || "historica"}`}
+			>
+				{CATEGORIA_LABEL[row.categoria] || CATEGORIA_LABEL.historica}
+			</span>
+		),
+	},
 	{ key: "orden", label: "Orden" },
 	{ key: "estado", label: "Estado", render: (row) => <StatusBadge estado={row.estado} /> },
 ];
@@ -108,7 +121,7 @@ function MissionsAdminPage() {
 		<div className="missions-admin-page">
 			<PageHeader
 				title="Misiones"
-				description="Creá y administrá las misiones históricas que exploran los estudiantes."
+				description="Creá y administrá las misiones históricas y de convivencia que exploran los estudiantes."
 				actions={
 					<button type="button" className="missions-admin-page__new" onClick={abrirNueva}>
 						+ Nueva misión

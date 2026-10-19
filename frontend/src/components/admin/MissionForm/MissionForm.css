@@ -17,7 +17,8 @@
 }
 
 .mission-form__field input,
-.mission-form__field textarea {
+.mission-form__field textarea,
+.mission-form__field select {
 	padding: 0.6rem 0.8rem;
 	border: 1px solid var(--color-slate-300);
 	border-radius: var(--radius-sm);
@@ -28,7 +29,8 @@
 }
 
 .mission-form__field input:focus,
-.mission-form__field textarea:focus {
+.mission-form__field textarea:focus,
+.mission-form__field select:focus {
 	outline: none;
 	border-color: var(--color-primary-600);
 	box-shadow: var(--shadow-focus);
