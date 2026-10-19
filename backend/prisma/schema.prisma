@@ -8,23 +8,27 @@ datasource db {
 }
 
 model Usuario {
-  id                     Int                    @id @default(autoincrement())
-  nombreCompleto         String                 @map("nombre_completo") @db.VarChar(150)
-  correo                 String                 @unique(map: "uq_usuarios_correo") @db.VarChar(150)
-  nombreUsuario          String                 @unique(map: "uq_usuarios_nombre_usuario") @map("nombre_usuario") @db.VarChar(50)
-  passwordHash           String                 @map("password_hash") @db.VarChar(255)
+  id                     Int                   @id @default(autoincrement())
+  nombreCompleto         String                @map("nombre_completo") @db.VarChar(150)
+  correo                 String                @unique(map: "uq_usuarios_correo") @db.VarChar(150)
+  nombreUsuario          String                @unique(map: "uq_usuarios_nombre_usuario") @map("nombre_usuario") @db.VarChar(50)
+  passwordHash           String                @map("password_hash") @db.VarChar(255)
   edad                   Int?
-  gradoCurso             String?                @map("grado_curso") @db.VarChar(50)
+  gradoCurso             String?               @map("grado_curso") @db.VarChar(50)
   rol                    RolUsuario
-  avatar                 String?                @db.VarChar(100)
-  aceptaTratamientoDatos Boolean                @map("acepta_tratamiento_datos")
-  createdAt              DateTime               @default(now()) @map("created_at") @db.DateTime(0)
-  updatedAt              DateTime               @default(now()) @map("updated_at") @db.DateTime(0)
+  avatar                 String?               @db.VarChar(100)
+  aceptaTratamientoDatos Boolean               @map("acepta_tratamiento_datos")
+  createdAt              DateTime              @default(now()) @map("created_at") @db.DateTime(0)
+  updatedAt              DateTime              @default(now()) @map("updated_at") @db.DateTime(0)
+  puntosTotales          Int                   @default(0) @map("puntos_totales")
+  nivelActual            Int                   @default(1) @map("nivel_actual")
   actividadesCompletadas ActividadCompletada[]
   historiasCompletadas   HistoriaCompletada[]
   intentosRetos          IntentoReto[]
+  logrosObtenidos        LogroObtenido[]
   passwordResets         PasswordReset[]
   progresoMisiones       ProgresoMision[]
+  recompensasObtenidas   RecompensaObtenida[]
 
   @@map("usuarios")
 }
@@ -51,11 +55,13 @@ model Mision {
   estado           EstadoMision     @default(activa)
   createdAt        DateTime         @default(now()) @map("created_at") @db.DateTime(0)
   updatedAt        DateTime         @default(now()) @map("updated_at") @db.DateTime(0)
+  categoria        CategoriaMision  @default(historica)
   actividades      Actividad[]
   historias        Historia[]
   progresoMisiones ProgresoMision[]
   retos            Reto[]
 
+  @@index([categoria], map: "idx_misiones_categoria")
   @@index([estado], map: "idx_misiones_estado")
   @@map("misiones")
 }
@@ -101,6 +107,7 @@ model Reto {
   estado            EstadoReto    @default(activo)
   createdAt         DateTime      @default(now()) @map("created_at") @db.DateTime(0)
   updatedAt         DateTime      @default(now()) @map("updated_at") @db.DateTime(0)
+  retroalimentacion String?       @db.Text
   intentosRetos     IntentoReto[]
   mision            Mision        @relation(fields: [misionId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_retos_mision")
 
@@ -125,16 +132,18 @@ model IntentoReto {
 }
 
 model Actividad {
-  id                     Int                    @id @default(autoincrement())
-  misionId               Int?                   @map("mision_id")
-  titulo                 String                 @db.VarChar(150)
-  descripcion            String?                @db.Text
-  tipo                   String                 @db.VarChar(50)
-  orden                  Int                    @default(0)
-  estado                 EstadoActividad        @default(activa)
-  createdAt              DateTime               @default(now()) @map("created_at") @db.DateTime(0)
-  updatedAt              DateTime               @default(now()) @map("updated_at") @db.DateTime(0)
-  mision                 Mision?                @relation(fields: [misionId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_actividades_mision")
+  id                     Int                   @id @default(autoincrement())
+  misionId               Int?                  @map("mision_id")
+  titulo                 String                @db.VarChar(150)
+  descripcion            String?               @db.Text
+  tipo                   String                @db.VarChar(50)
+  orden                  Int                   @default(0)
+  estado                 EstadoActividad       @default(activa)
+  createdAt              DateTime              @default(now()) @map("created_at") @db.DateTime(0)
+  updatedAt              DateTime              @default(now()) @map("updated_at") @db.DateTime(0)
+  retroalimentacion      String?               @db.Text
+  puntos                 Int                   @default(0)
+  mision                 Mision?               @relation(fields: [misionId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_actividades_mision")
   actividadesCompletadas ActividadCompletada[]
 
   @@index([misionId], map: "idx_actividades_mision_id")
@@ -169,6 +178,86 @@ model ProgresoMision {
   @@unique([usuarioId, misionId], map: "uq_progreso_misiones_usuario_mision")
   @@index([misionId], map: "fk_progreso_misiones_mision")
   @@map("progreso_misiones")
+}
+
+model Nivel {
+  id               Int      @id @default(autoincrement())
+  numero           Int      @unique(map: "uq_niveles_numero")
+  puntosRequeridos Int      @map("puntos_requeridos")
+  createdAt        DateTime @default(now()) @map("created_at") @db.DateTime(0)
+  updatedAt        DateTime @default(now()) @map("updated_at") @db.DateTime(0)
+
+  @@map("niveles")
+}
+
+model Recompensa {
+  id                   Int                  @id @default(autoincrement())
+  nombre               String               @db.VarChar(150)
+  descripcion          String?              @db.Text
+  icono                String?              @db.VarChar(100)
+  condicionTipo        TipoCondicion        @map("condicion_tipo")
+  condicionValor       Int                  @map("condicion_valor")
+  estado               EstadoRecompensa     @default(activa)
+  createdAt            DateTime             @default(now()) @map("created_at") @db.DateTime(0)
+  updatedAt            DateTime             @default(now()) @map("updated_at") @db.DateTime(0)
+  recompensasObtenidas RecompensaObtenida[]
+
+  @@index([estado], map: "idx_recompensas_estado")
+  @@map("recompensas")
+}
+
+model RecompensaObtenida {
+  id           Int        @id @default(autoincrement())
+  usuarioId    Int        @map("usuario_id")
+  recompensaId Int        @map("recompensa_id")
+  obtenidaEn   DateTime   @default(now()) @map("obtenida_en") @db.DateTime(0)
+  recompensa   Recompensa @relation(fields: [recompensaId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_recompensas_obtenidas_recompensa")
+  usuario      Usuario    @relation(fields: [usuarioId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_recompensas_obtenidas_usuario")
+
+  @@unique([usuarioId, recompensaId], map: "uq_recompensas_obtenidas_usuario_recompensa")
+  @@index([recompensaId], map: "fk_recompensas_obtenidas_recompensa")
+  @@map("recompensas_obtenidas")
+}
+
+model Logro {
+  id              Int             @id @default(autoincrement())
+  nombre          String          @db.VarChar(150)
+  descripcion     String?         @db.Text
+  icono           String?         @db.VarChar(100)
+  condicionTipo   TipoCondicion   @map("condicion_tipo")
+  condicionValor  Int             @map("condicion_valor")
+  estado          EstadoLogro     @default(activa)
+  createdAt       DateTime        @default(now()) @map("created_at") @db.DateTime(0)
+  updatedAt       DateTime        @default(now()) @map("updated_at") @db.DateTime(0)
+  logrosObtenidos LogroObtenido[]
+
+  @@index([estado], map: "idx_logros_estado")
+  @@map("logros")
+}
+
+model LogroObtenido {
+  id         Int      @id @default(autoincrement())
+  usuarioId  Int      @map("usuario_id")
+  logroId    Int      @map("logro_id")
+  obtenidoEn DateTime @default(now()) @map("obtenido_en") @db.DateTime(0)
+  logro      Logro    @relation(fields: [logroId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_logros_obtenidos_logro")
+  usuario    Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_logros_obtenidos_usuario")
+
+  @@unique([usuarioId, logroId], map: "uq_logros_obtenidos_usuario_logro")
+  @@index([logroId], map: "fk_logros_obtenidos_logro")
+  @@map("logros_obtenidos")
+}
+
+model MensajePositivo {
+  id        Int                   @id @default(autoincrement())
+  contenido String                @db.Text
+  contexto  String                @db.VarChar(100)
+  estado    EstadoMensajePositivo @default(activa)
+  createdAt DateTime              @default(now()) @map("created_at") @db.DateTime(0)
+  updatedAt DateTime              @default(now()) @map("updated_at") @db.DateTime(0)
+
+  @@index([contexto, estado], map: "idx_mensajes_positivos_contexto_estado")
+  @@map("mensajes_positivos")
 }
 
 enum TipoReto {
@@ -208,4 +297,29 @@ enum RolUsuario {
 enum EstadoReto {
   activo
   inactivo
+}
+
+enum CategoriaMision {
+  historica
+  convivencia
+}
+
+enum TipoCondicion {
+  puntos
+  nivel
+}
+
+enum EstadoRecompensa {
+  activa
+  inactiva
+}
+
+enum EstadoLogro {
+  activa
+  inactiva
+}
+
+enum EstadoMensajePositivo {
+  activa
+  inactiva
 }
