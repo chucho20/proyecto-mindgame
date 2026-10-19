@@ -1,0 +1,34 @@
+.progression-feedback {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+}
+
+.progression-feedback__celebration {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1);
+	margin: 0;
+	padding: 0.6rem 0.8rem;
+	list-style: none;
+	border-radius: var(--radius-sm);
+	background: var(--color-accent-50);
+	color: #92400e;
+	font-size: 0.85rem;
+	font-weight: 700;
+}
+
+.progression-feedback__text {
+	margin: 0;
+	padding: 0.6rem 0.8rem;
+	border-radius: var(--radius-sm);
+	background: var(--color-primary-50);
+	color: var(--color-slate-700);
+	font-size: 0.85rem;
+	line-height: 1.5;
+}
+
+.progression-feedback__label {
+	font-weight: 700;
+	color: var(--color-primary-700);
+}

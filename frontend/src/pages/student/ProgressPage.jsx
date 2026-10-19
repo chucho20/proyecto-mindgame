@@ -51,13 +51,17 @@ function ProgressPage() {
 
 		const puntos = Number(progress.puntos ?? progress.xp ?? progress.experiencia ?? progress.currentXp ?? 0);
 
-		const siguienteNivel = Number(
-			progress.siguiente_nivel ?? progress.nextLevel ?? progress.nivel_siguiente ?? nivel + 1,
-		);
+		// En el nivel máximo el backend devuelve `nivel_maximo: true` y
+		// `siguiente_nivel` / `puntos_siguiente_nivel` en null: no hay siguiente umbral.
+		const nivelMaximo = progress.nivel_maximo === true;
 
-		const puntosSiguienteNivel = Number(
-			progress.puntos_siguiente_nivel ?? progress.nextLevelXp ?? progress.xp_siguiente_nivel ?? 0,
-		);
+		const siguienteNivel = nivelMaximo
+			? null
+			: Number(progress.siguiente_nivel ?? progress.nextLevel ?? progress.nivel_siguiente ?? nivel + 1);
+
+		const puntosSiguienteNivel = nivelMaximo
+			? null
+			: Number(progress.puntos_siguiente_nivel ?? progress.nextLevelXp ?? progress.xp_siguiente_nivel ?? 0);
 
 		const misiones = Array.isArray(progress.misiones_completadas)
 			? progress.misiones_completadas
@@ -75,6 +79,7 @@ function ProgressPage() {
 		return {
 			nivel,
 			puntos,
+			nivelMaximo,
 			siguienteNivel,
 			puntosSiguienteNivel,
 			misiones,
@@ -104,6 +109,7 @@ function ProgressPage() {
 				<article className="progress-page__stat">
 					<span className="progress-page__stat-label">Nivel actual</span>
 					<strong className="progress-page__stat-value">{datos.nivel}</strong>
+					{datos.nivelMaximo ? <span className="progress-page__stat-note">¡Nivel máximo!</span> : null}
 				</article>
 
 				<article className="progress-page__stat">
@@ -120,13 +126,19 @@ function ProgressPage() {
 			<section className="progress-page__section">
 				<h2 className="progress-page__section-title">Avance de nivel</h2>
 
-				<XpBar level={datos.nivel} currentXp={datos.puntos} nextLevelXp={datos.puntosSiguienteNivel} />
+				<XpBar
+					level={datos.nivel}
+					currentXp={datos.puntos}
+					nextLevelXp={datos.puntosSiguienteNivel}
+					maxLevel={datos.nivelMaximo}
+				/>
 
 				<LevelProgress
 					level={datos.nivel}
 					nextLevel={datos.siguienteNivel}
 					currentXp={datos.puntos}
 					nextLevelXp={datos.puntosSiguienteNivel}
+					maxLevel={datos.nivelMaximo}
 				/>
 			</section>
 
