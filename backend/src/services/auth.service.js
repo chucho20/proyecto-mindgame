@@ -47,6 +47,33 @@ export async function register(data) {
 	const correo = data.correo.trim().toLowerCase();
 	const nombreUsuario = data.nombreUsuario.trim();
 
+	const rolSolicitado = data.rol;
+
+// El registro público no debe permitir crear administradores.
+if (rolSolicitado === "admin") {
+	throw new AppError(
+		"No está permitido registrar administradores desde este endpoint.",
+		403
+	);
+}
+
+// El rol docente requiere un código de autorización.
+if (rolSolicitado === "docente") {
+	const codigoDocente = data.codigoDocente;
+	const codigoAutorizacion = env.docenteRegistrationCode;
+
+	if (
+		!codigoAutorizacion ||
+		typeof codigoDocente !== "string" ||
+		codigoDocente.trim() !== codigoAutorizacion
+	) {
+		throw new AppError(
+			"No estás autorizado para registrarte como docente.",
+			403
+		);
+	}
+}
+
 	const existingByEmail = await usuarioRepository.findByEmail(correo);
 	if (existingByEmail) {
 		throw new AppError("Ya existe una cuenta registrada con ese correo.", 409);
@@ -168,3 +195,4 @@ export async function resetPassword(token, newPassword) {
 
 	return { message: "Contraseña restablecida correctamente." };
 }
+
