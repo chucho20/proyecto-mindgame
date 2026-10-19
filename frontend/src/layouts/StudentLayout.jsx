@@ -11,8 +11,9 @@ const NAV_ITEMS = [
 	{ label: "Misiones", to: "/estudiante/misiones", icon: "🗺️" },
 	{ label: "Retos", icon: "🧩", disabled: true },
 	{ label: "Actividades", icon: "🎲", disabled: true },
-	{ label: "Mi progreso", icon: "📈", disabled: false },
-	{ label: "Logros", icon: "🏆", disabled: true },
+	{ label: "Mi progreso", to: "/estudiante/progreso", icon: "📈" },
+	{ label: "Logros", to: "/estudiante/logros", icon: "🏆" },
+	{ label: "Recompensas", to: "/estudiante/recompensas", icon: "🎁" },
 	{ label: "Convivencia", icon: "🤝", disabled: true },
 	{ label: "Mi perfil", to: "/perfil", icon: "👤" },
 ];
@@ -20,8 +21,9 @@ const NAV_ITEMS = [
 /**
  * Layout compartido de las pantallas de estudiante: sidebar claro en
  * desktop/tablet, navegación inferior en mobile (ver responsive.css).
- * Solo "Inicio", "Misiones", "Mi perfil" y "Cerrar sesión" están habilitados
- * este sprint — el resto muestra la leyenda honesta del proyecto.
+ * Están habilitados "Inicio", "Misiones", "Mi progreso", "Logros",
+ * "Recompensas", "Mi perfil" y "Cerrar sesión"; el resto (Retos, Actividades,
+ * Convivencia) muestra la leyenda honesta del proyecto.
  */
 function StudentLayout() {
 	const { user, logout } = useAuth();

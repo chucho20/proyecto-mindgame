@@ -1,0 +1,95 @@
+.progression-section {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-4);
+	margin-top: var(--space-8);
+}
+
+.progression-section__header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--space-4);
+}
+
+.progression-section__title {
+	margin: 0;
+	font-family: var(--font-heading);
+	font-size: 1.25rem;
+	color: var(--color-slate-800);
+}
+
+.progression-section__description {
+	margin: var(--space-1) 0 0;
+	font-size: 0.875rem;
+	color: var(--color-slate-500);
+}
+
+.progression-section__count {
+	display: flex;
+	flex-shrink: 0;
+	align-items: center;
+	justify-content: center;
+	min-width: 36px;
+	height: 36px;
+	padding: 0 var(--space-2);
+	box-sizing: border-box;
+	background: var(--color-primary-50);
+	border: 1px solid var(--color-primary-600);
+	border-radius: var(--radius-full);
+	font-weight: 700;
+	color: var(--color-primary-700);
+}
+
+.progression-section__grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(min(100%, 20rem), 1fr));
+	gap: var(--space-4);
+}
+
+.progression-section__empty {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	padding: var(--space-6);
+	background: var(--color-bg);
+	border: 1px dashed var(--color-border);
+	border-radius: var(--radius-lg);
+	text-align: center;
+}
+
+.progression-section__empty-icon {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 3.5rem;
+	height: 3.5rem;
+	margin-bottom: var(--space-3);
+	border-radius: var(--radius-full);
+	background: var(--color-primary-50);
+	font-size: 1.7rem;
+}
+
+.progression-section__empty h3 {
+	margin: 0;
+	font-size: 1rem;
+	color: var(--color-slate-700);
+}
+
+.progression-section__empty p {
+	max-width: 480px;
+	margin: var(--space-2) 0 0;
+	font-size: 0.875rem;
+	line-height: 1.5;
+	color: var(--color-slate-500);
+}
+
+@media (max-width: 767px) {
+	.progression-section {
+		margin-top: var(--space-6);
+	}
+
+	.progression-section__title {
+		font-size: 1.1rem;
+	}
+}

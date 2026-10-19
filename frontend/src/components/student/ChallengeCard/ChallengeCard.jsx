@@ -1,5 +1,6 @@
 import { useState } from "react";
 
+import ProgressionFeedback from "../ProgressionFeedback/ProgressionFeedback.jsx";
 import "./ChallengeCard.css";
 
 const TIPO_LABEL = {
@@ -8,6 +9,28 @@ const TIPO_LABEL = {
 	relacion_elementos: "Relación de elementos",
 	orden_cronologico: "Orden cronológico",
 };
+
+/**
+ * Un reto suma puntos solo la primera vez que se acierta: un acierto repetido
+ * llega con `puntosObtenidos: 0` y no debe decir "Sumaste 0 puntos". Y "ya habías
+ * ganado los puntos" solo es cierto si el reto vale puntos: un reto de 0 puntos
+ * simplemente se celebra.
+ */
+function mensajeResultado(resultado, reto) {
+	if (!resultado.esCorrecto) {
+		return "No es correcto todavía, ¡probá de nuevo!";
+	}
+
+	if (resultado.puntosObtenidos > 0) {
+		return `¡Correcto! Sumaste ${resultado.puntosObtenidos} ${resultado.puntosObtenidos === 1 ? "punto" : "puntos"}.`;
+	}
+
+	if (reto.puntos > 0) {
+		return "¡Correcto! Ya habías ganado los puntos de este reto.";
+	}
+
+	return "¡Correcto!";
+}
 
 function moveItem(list, index, direction) {
 	const newIndex = index + direction;
@@ -238,21 +261,29 @@ function ChallengeCard({ reto, onResponder }) {
 
 			{renderInteraccion()}
 
-			{error ? <p className="challenge-card__error">{error}</p> : null}
+			{/* La región en vivo existe desde el primer render: así el lector de pantalla anuncia el texto al insertarse. */}
+			<div className="challenge-card__live" aria-live="polite">
+				{error ? <p className="challenge-card__error">{error}</p> : null}
 
-			{resultado ? (
-				<p
-					className={
-						resultado.esCorrecto
-							? "challenge-card__result challenge-card__result--ok"
-							: "challenge-card__result challenge-card__result--fail"
-					}
-				>
-					{resultado.esCorrecto
-						? `¡Correcto! Sumaste ${resultado.puntosObtenidos} puntos.`
-						: "No es correcto todavía, ¡probá de nuevo!"}
-				</p>
-			) : null}
+				{resultado ? (
+					<>
+						<p
+							className={
+								resultado.esCorrecto
+									? "challenge-card__result challenge-card__result--ok"
+									: "challenge-card__result challenge-card__result--fail"
+							}
+						>
+							{mensajeResultado(resultado, reto)}
+						</p>
+
+						<ProgressionFeedback
+							progreso={resultado.progreso}
+							retroalimentacion={resultado.retroalimentacion}
+						/>
+					</>
+				) : null}
+			</div>
 		</div>
 	);
 }
