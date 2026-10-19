@@ -1,10 +1,14 @@
 import "./LevelProgress.css";
 
-const LevelProgress = ({ level = 1, nextLevel, currentXp = 0, nextLevelXp = 0 }) => {
+/**
+ * Recorrido nivel actual → siguiente nivel. En el nivel máximo (`maxLevel`) no
+ * existe un siguiente nivel: se muestra "Nivel máximo" con la línea completa.
+ */
+const LevelProgress = ({ level = 1, nextLevel, currentXp = 0, nextLevelXp = 0, maxLevel = false }) => {
 	const current = Math.max(Number(currentXp) || 0, 0);
 	const next = Math.max(Number(nextLevelXp) || 0, 0);
 
-	const calculatedProgress = next > 0 ? Math.min((current / next) * 100, 100) : 0;
+	const calculatedProgress = maxLevel ? 100 : next > 0 ? Math.min((current / next) * 100, 100) : 0;
 
 	return (
 		<section className="level-progress" aria-label="Progreso de nivel">
@@ -20,20 +24,44 @@ const LevelProgress = ({ level = 1, nextLevel, currentXp = 0, nextLevelXp = 0 })
 				</div>
 
 				<div className="level-progress__level level-progress__level--next">
-					<span className="level-progress__eyebrow">Siguiente nivel</span>
+					{maxLevel ? (
+						<>
+							<span className="level-progress__eyebrow">Meta</span>
 
-					<span className="level-progress__number">{nextLevel ?? Number(level) + 1}</span>
+							<span className="level-progress__number" aria-label="Nivel máximo">
+								🏆
+							</span>
+						</>
+					) : (
+						<>
+							<span className="level-progress__eyebrow">Siguiente nivel</span>
+
+							<span className="level-progress__number">{nextLevel ?? Number(level) + 1}</span>
+						</>
+					)}
 				</div>
 			</div>
 
 			<div className="level-progress__xp">
-				<span>
-					<strong>{current}</strong> / {next} XP
-				</span>
+				{maxLevel ? (
+					<>
+						<span>
+							<strong>{current}</strong> XP
+						</span>
 
-				<span className="level-progress__remaining">
-					{next > current ? `${next - current} XP restantes` : "¡Listo para subir de nivel!"}
-				</span>
+						<span className="level-progress__remaining">¡Nivel máximo alcanzado!</span>
+					</>
+				) : (
+					<>
+						<span>
+							<strong>{current}</strong> / {next} XP
+						</span>
+
+						<span className="level-progress__remaining">
+							{next > current ? `${next - current} XP restantes` : "¡Listo para subir de nivel!"}
+						</span>
+					</>
+				)}
 			</div>
 		</section>
 	);
