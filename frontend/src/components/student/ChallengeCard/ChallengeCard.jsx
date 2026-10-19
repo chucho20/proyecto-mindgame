@@ -12,9 +12,11 @@ const TIPO_LABEL = {
 
 /**
  * Un reto suma puntos solo la primera vez que se acierta: un acierto repetido
- * llega con `puntosObtenidos: 0` y no debe decir "Sumaste 0 puntos".
+ * llega con `puntosObtenidos: 0` y no debe decir "Sumaste 0 puntos". Y "ya habías
+ * ganado los puntos" solo es cierto si el reto vale puntos: un reto de 0 puntos
+ * simplemente se celebra.
  */
-function mensajeResultado(resultado) {
+function mensajeResultado(resultado, reto) {
 	if (!resultado.esCorrecto) {
 		return "No es correcto todavía, ¡probá de nuevo!";
 	}
@@ -23,7 +25,11 @@ function mensajeResultado(resultado) {
 		return `¡Correcto! Sumaste ${resultado.puntosObtenidos} ${resultado.puntosObtenidos === 1 ? "punto" : "puntos"}.`;
 	}
 
-	return "¡Correcto! Ya habías ganado los puntos de este reto.";
+	if (reto.puntos > 0) {
+		return "¡Correcto! Ya habías ganado los puntos de este reto.";
+	}
+
+	return "¡Correcto!";
 }
 
 function moveItem(list, index, direction) {
@@ -255,27 +261,29 @@ function ChallengeCard({ reto, onResponder }) {
 
 			{renderInteraccion()}
 
-			{error ? <p className="challenge-card__error">{error}</p> : null}
+			{/* La región en vivo existe desde el primer render: así el lector de pantalla anuncia el texto al insertarse. */}
+			<div className="challenge-card__live" aria-live="polite">
+				{error ? <p className="challenge-card__error">{error}</p> : null}
 
-			{resultado ? (
-				<>
-					<p
-						role="status"
-						className={
-							resultado.esCorrecto
-								? "challenge-card__result challenge-card__result--ok"
-								: "challenge-card__result challenge-card__result--fail"
-						}
-					>
-						{mensajeResultado(resultado)}
-					</p>
+				{resultado ? (
+					<>
+						<p
+							className={
+								resultado.esCorrecto
+									? "challenge-card__result challenge-card__result--ok"
+									: "challenge-card__result challenge-card__result--fail"
+							}
+						>
+							{mensajeResultado(resultado, reto)}
+						</p>
 
-					<ProgressionFeedback
-						progreso={resultado.progreso}
-						retroalimentacion={resultado.retroalimentacion}
-					/>
-				</>
-			) : null}
+						<ProgressionFeedback
+							progreso={resultado.progreso}
+							retroalimentacion={resultado.retroalimentacion}
+						/>
+					</>
+				) : null}
+			</div>
 		</div>
 	);
 }
