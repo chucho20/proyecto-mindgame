@@ -5,7 +5,14 @@ import * as intentoRetoRepository from "../repositories/intentoReto.repository.j
 import { obtenerEvaluador } from "./evaluadores/evaluadorRegistry.js";
 import * as misionService from "./mision.service.js";
 import * as progresoService from "./progreso.service.js";
-import { esEnteroValido } from "../utils/validators.js";
+import * as mensajePositivoService from "./mensajePositivo.service.js";
+import { CONTEXTO_RETO_COMPLETADO } from "../constants/convivencia.js";
+import {
+	esEnteroValido,
+	esTextoOpcionalValido,
+	LONGITUD_MAXIMA_TEXTO,
+	normalizarTextoOpcional,
+} from "../utils/validators.js";
 
 const TIPOS_VALIDOS = ["seleccion_multiple", "verdadero_falso", "relacion_elementos", "orden_cronologico"];
 
@@ -101,9 +108,27 @@ export async function responder(retoId, usuarioId, respuestaUsuario) {
 		}
 	}
 
+	// Recién ahora, con la respuesta ya dada, se entrega la explicación del reto
+	// (RF-018). Y solo una respuesta correcta en una misión de convivencia dispara un
+	// mensaje positivo (RF-013).
+	let mensajePositivo = null;
+	if (esCorrecto) {
+		mensajePositivo = await mensajePositivoService.obtenerTextoParaMision(
+			reto.mision_id,
+			CONTEXTO_RETO_COMPLETADO,
+		);
+	}
+
 	// `progreso` (puntos totales, nivel, recompensas y logros nuevos) es null si
-	// esta respuesta no sumó puntos.
-	return { esCorrecto, puntosObtenidos, progreso };
+	// esta respuesta no sumó puntos. `mensajePositivo` es un texto o null: el
+	// controller lo publica como `positive_message` junto a `resultado`.
+	return {
+		esCorrecto,
+		puntosObtenidos,
+		progreso,
+		retroalimentacion: reto.retroalimentacion ?? null,
+		mensajePositivo,
+	};
 }
 
 // --- Admin CRUD ---
@@ -145,12 +170,18 @@ function validarReto(data, { esCreacion }) {
 		errors.push("La respuesta correcta es obligatoria.");
 	}
 
-	if (data.puntos !== undefined && data.puntos !== null && !esEnteroValido(data.puntos, { min: 0 })) {
+	// `null` no es "sin cambios" ni "usar el valor por defecto": Number(null) daría 0 y
+	// pisaría el valor guardado, así que se rechaza igual que cualquier otro valor inválido.
+	if (data.puntos !== undefined && !esEnteroValido(data.puntos, { min: 0 })) {
 		errors.push("Los puntos deben ser un número entero mayor o igual a 0.");
 	}
 
-	if (data.orden !== undefined && data.orden !== null && !esEnteroValido(data.orden)) {
+	if (data.orden !== undefined && !esEnteroValido(data.orden)) {
 		errors.push("El orden debe ser un número entero.");
+	}
+
+	if (!esTextoOpcionalValido(data.retroalimentacion)) {
+		errors.push(`La retroalimentación debe ser texto de hasta ${LONGITUD_MAXIMA_TEXTO} caracteres.`);
 	}
 
 	return errors;
@@ -177,6 +208,7 @@ export async function crear(data) {
 		puntos: data.puntos !== undefined ? Number(data.puntos) : 10,
 		orden: data.orden !== undefined ? Number(data.orden) : 0,
 		estado: "activo",
+		retroalimentacion: normalizarTextoOpcional(data.retroalimentacion) ?? null,
 	});
 }
 
@@ -195,6 +227,7 @@ export async function actualizar(id, data) {
 		respuestaCorrecta: data.respuestaCorrecta,
 		puntos: data.puntos !== undefined ? Number(data.puntos) : undefined,
 		orden: data.orden !== undefined ? Number(data.orden) : undefined,
+		retroalimentacion: normalizarTextoOpcional(data.retroalimentacion),
 	});
 }
 
