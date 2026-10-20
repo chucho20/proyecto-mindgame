@@ -1,0 +1,109 @@
+name: CI
+
+# Validaciones automáticas para evitar que vuelva a romperse main por:
+#   - un schema.prisma inválido (p. ej. modelos duplicados tras un merge)
+#   - errores de sintaxis/enlace en el backend (p. ej. "export default" duplicado)
+#   - errores de lint en backend o frontend
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+# Cancela ejecuciones anteriores de la misma rama/PR cuando llega un push nuevo.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  NODE_VERSION: "24"
+
+jobs:
+  backend:
+    name: backend
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      # Valores ficticios: solo sirven para que prisma7.config.ts arme una URL.
+      # `validate` y `generate` no se conectan a ninguna base de datos.
+      - name: Validar schema de Prisma
+        run: npx prisma validate --config prisma7.config.ts
+        env:
+          DB_USER: ci
+          DB_PASSWORD: ci
+          DB_HOST: localhost
+          DB_PORT: "3306"
+          DB_NAME: ci
+
+      - name: Generar cliente de Prisma
+        run: npx prisma generate --config prisma7.config.ts
+        env:
+          DB_USER: ci
+          DB_PASSWORD: ci
+          DB_HOST: localhost
+          DB_PORT: "3306"
+          DB_NAME: ci
+
+      # Atrapa errores de sintaxis como un "export default" duplicado.
+      - name: Chequeo de sintaxis (node --check)
+        shell: bash
+        run: |
+          set -e
+          find src database -name '*.js' -not -path 'src/generated/*' -print0 \
+            | while IFS= read -r -d '' archivo; do
+                node --check "$archivo" || { echo "::error file=backend/$archivo::Error de sintaxis"; exit 1; }
+              done
+
+      - name: Lint (ESLint)
+        run: npx eslint .
+
+      # Importa la app de Express sin levantar el servidor ni conectar a la base
+      # de datos (el cliente de Prisma y el pool son perezosos). Detecta errores
+      # de enlace entre módulos: imports/exports inexistentes, ciclos rotos, etc.
+      - name: Smoke test de arranque (importar app sin escuchar)
+        run: node --input-type=module -e "await import('./src/app.js'); console.log('app.js importado correctamente'); process.exit(0)"
+        env:
+          JWT_SECRET: ci-secret-no-real
+          DB_USER: ci
+          DB_PASSWORD: ci
+          DB_HOST: localhost
+          DB_PORT: "3306"
+          DB_NAME: ci
+
+  frontend:
+    name: frontend
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Lint (ESLint)
+        run: npm run lint
