@@ -1,0 +1,135 @@
+.game-room {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-5);
+	min-width: 0;
+}
+
+.game-room__header {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: var(--space-3);
+}
+
+.game-room__heading {
+	min-width: 0;
+	flex: 1 1 220px;
+}
+
+.game-room__eyebrow {
+	margin: 0;
+	color: var(--color-success-700);
+	font-size: 0.78rem;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+}
+
+.game-room__title {
+	margin: var(--space-1) 0;
+	font-family: var(--font-heading);
+	font-size: 1.5rem;
+	color: var(--color-slate-800);
+	overflow-wrap: anywhere;
+}
+
+.game-room__title:focus {
+	outline: none;
+}
+
+.game-room__title:focus-visible {
+	box-shadow: var(--shadow-focus);
+	border-radius: var(--radius-sm);
+}
+
+.game-room__meta {
+	margin: 0;
+	color: var(--color-slate-500);
+	font-size: 0.9rem;
+}
+
+.game-room__instructions {
+	margin: 0;
+	color: var(--color-slate-700);
+	font-size: 0.95rem;
+	line-height: 1.5;
+	white-space: pre-wrap;
+	overflow-wrap: anywhere;
+}
+
+.game-room__form {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+}
+
+.game-room__label {
+	font-size: 0.85rem;
+	font-weight: 700;
+	color: var(--color-slate-700);
+}
+
+.game-room__row {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--space-2);
+}
+
+.game-room__input {
+	flex: 1;
+	min-width: 180px;
+	padding: 0.6rem 0.8rem;
+	border: 1px solid var(--color-slate-300);
+	border-radius: var(--radius-sm);
+	font: inherit;
+	font-size: 0.9rem;
+	box-sizing: border-box;
+	background: #fff;
+}
+
+.game-room__input:focus {
+	outline: none;
+	border-color: var(--color-primary-600);
+	box-shadow: var(--shadow-focus);
+}
+
+.game-room__input:disabled {
+	cursor: not-allowed;
+	opacity: 0.65;
+}
+
+.game-room__grid {
+	display: grid;
+	grid-template-columns: 1fr;
+	gap: var(--space-4);
+}
+
+@media (min-width: 900px) {
+	.game-room__grid {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+}
+
+.game-room__results {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.game-room__result {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1);
+	padding: 0.5rem 0.7rem;
+	background: var(--color-slate-50);
+	border: 1px solid var(--color-slate-200);
+	border-radius: var(--radius-sm);
+	font-size: 0.88rem;
+	color: var(--color-slate-700);
+	overflow-wrap: anywhere;
+}
