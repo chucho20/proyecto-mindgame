@@ -22,15 +22,6 @@ model Usuario {
   updatedAt              DateTime              @default(now()) @map("updated_at") @db.DateTime(0)
   puntosTotales          Int                   @default(0) @map("puntos_totales")
   nivelActual            Int                   @default(1) @map("nivel_actual")
-  avatar                 String?                @db.VarChar(100)
-  aceptaTratamientoDatos Boolean                @map("acepta_tratamiento_datos")
-
-  puntosTotales          Int                    @default(0) @map("puntos_totales")
-  nivelActual            Int                    @default(1) @map("nivel_actual")
-
-  createdAt              DateTime               @default(now()) @map("created_at") @db.DateTime(0)
-  updatedAt              DateTime               @default(now()) @map("updated_at") @db.DateTime(0)
-
   actividadesCompletadas ActividadCompletada[]
   historiasCompletadas   HistoriaCompletada[]
   intentosRetos          IntentoReto[]
@@ -40,8 +31,6 @@ model Usuario {
   recompensasObtenidas   RecompensaObtenida[]
   gruposCreados          Grupo[]               @relation("DocenteGrupos")
   gruposEstudiante       GrupoEstudiante[]     @relation("EstudianteGrupos")
-  recompensasObtenidas   RecompensaObtenida[]
-  logrosObtenidos        LogroObtenido[]
 
   @@map("usuarios")
 }
@@ -53,14 +42,7 @@ model PasswordReset {
   expiraEn  DateTime @map("expira_en") @db.DateTime(0)
   usado     Boolean  @default(false)
   createdAt DateTime @default(now()) @map("created_at") @db.DateTime(0)
-
-  usuario Usuario @relation(
-    fields: [usuarioId],
-    references: [id],
-    onDelete: Cascade,
-    onUpdate: NoAction,
-    map: "fk_password_resets_usuario"
-  )
+  usuario   Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_password_resets_usuario")
 
   @@index([usuarioId], map: "fk_password_resets_usuario")
   @@index([tokenHash], map: "idx_password_resets_token_hash")
@@ -73,11 +55,9 @@ model Mision {
   descripcion      String?          @db.Text
   orden            Int              @default(0)
   estado           EstadoMision     @default(activa)
-  categoria        CategoriaMision  @default(historica)
   createdAt        DateTime         @default(now()) @map("created_at") @db.DateTime(0)
   updatedAt        DateTime         @default(now()) @map("updated_at") @db.DateTime(0)
   categoria        CategoriaMision  @default(historica)
-
   actividades      Actividad[]
   historias        Historia[]
   progresoMisiones ProgresoMision[]
@@ -97,15 +77,7 @@ model Historia {
   estado               EstadoHistoria       @default(activa)
   createdAt            DateTime             @default(now()) @map("created_at") @db.DateTime(0)
   updatedAt            DateTime             @default(now()) @map("updated_at") @db.DateTime(0)
-
-  mision               Mision               @relation(
-    fields: [misionId],
-    references: [id],
-    onDelete: Cascade,
-    onUpdate: NoAction,
-    map: "fk_historias_mision"
-  )
-
+  mision               Mision               @relation(fields: [misionId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_historias_mision")
   historiasCompletadas HistoriaCompletada[]
 
   @@index([misionId], map: "idx_historias_mision_id")
@@ -117,22 +89,8 @@ model HistoriaCompletada {
   usuarioId    Int      @map("usuario_id")
   historiaId   Int      @map("historia_id")
   completadaEn DateTime @default(now()) @map("completada_en") @db.DateTime(0)
-
-  historia Historia @relation(
-    fields: [historiaId],
-    references: [id],
-    onDelete: Cascade,
-    onUpdate: NoAction,
-    map: "fk_historias_completadas_historia"
-  )
-
-  usuario Usuario @relation(
-    fields: [usuarioId],
-    references: [id],
-    onDelete: Cascade,
-    onUpdate: NoAction,
-    map: "fk_historias_completadas_usuario"
-  )
+  historia     Historia @relation(fields: [historiaId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_historias_completadas_historia")
+  usuario      Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_historias_completadas_usuario")
 
   @@unique([usuarioId, historiaId], map: "uq_historias_completadas_usuario_historia")
   @@index([historiaId], map: "fk_historias_completadas_historia")
@@ -144,7 +102,6 @@ model Reto {
   misionId          Int           @map("mision_id")
   tipo              TipoReto
   enunciado         String        @db.Text
-  retroalimentacion String?       @db.Text
   opciones          Json?
   respuestaCorrecta Json          @map("respuesta_correcta")
   puntos            Int           @default(10)
@@ -153,16 +110,8 @@ model Reto {
   createdAt         DateTime      @default(now()) @map("created_at") @db.DateTime(0)
   updatedAt         DateTime      @default(now()) @map("updated_at") @db.DateTime(0)
   retroalimentacion String?       @db.Text
-
   intentosRetos     IntentoReto[]
-
-  mision Mision @relation(
-    fields: [misionId],
-    references: [id],
-    onDelete: Cascade,
-    onUpdate: NoAction,
-    map: "fk_retos_mision"
-  )
+  mision            Mision        @relation(fields: [misionId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_retos_mision")
 
   @@index([misionId], map: "idx_retos_mision_id")
   @@map("retos")
@@ -176,22 +125,8 @@ model IntentoReto {
   esCorrecto      Boolean  @map("es_correcto")
   puntosObtenidos Int      @default(0) @map("puntos_obtenidos")
   resueltoEn      DateTime @default(now()) @map("resuelto_en") @db.DateTime(0)
-
-  reto Reto @relation(
-    fields: [retoId],
-    references: [id],
-    onDelete: Cascade,
-    onUpdate: NoAction,
-    map: "fk_intentos_retos_reto"
-  )
-
-  usuario Usuario @relation(
-    fields: [usuarioId],
-    references: [id],
-    onDelete: Cascade,
-    onUpdate: NoAction,
-    map: "fk_intentos_retos_usuario"
-  )
+  reto            Reto     @relation(fields: [retoId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_intentos_retos_reto")
+  usuario         Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_intentos_retos_usuario")
 
   @@index([retoId], map: "fk_intentos_retos_reto")
   @@index([usuarioId, retoId], map: "idx_intentos_retos_usuario_reto")
@@ -211,25 +146,6 @@ model Actividad {
   retroalimentacion      String?               @db.Text
   puntos                 Int                   @default(0)
   mision                 Mision?               @relation(fields: [misionId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_actividades_mision")
-  id                     Int                    @id @default(autoincrement())
-  misionId               Int?                   @map("mision_id")
-  titulo                 String                 @db.VarChar(150)
-  descripcion            String?                @db.Text
-  retroalimentacion      String?                @db.Text
-  tipo                   String                 @db.VarChar(50)
-  orden                  Int                    @default(0)
-  estado                 EstadoActividad        @default(activa)
-  createdAt              DateTime               @default(now()) @map("created_at") @db.DateTime(0)
-  updatedAt              DateTime               @default(now()) @map("updated_at") @db.DateTime(0)
-
-  mision Mision? @relation(
-    fields: [misionId],
-    references: [id],
-    onDelete: Cascade,
-    onUpdate: NoAction,
-    map: "fk_actividades_mision"
-  )
-
   actividadesCompletadas ActividadCompletada[]
 
   @@index([misionId], map: "idx_actividades_mision_id")
@@ -241,22 +157,8 @@ model ActividadCompletada {
   usuarioId    Int       @map("usuario_id")
   actividadId  Int       @map("actividad_id")
   completadaEn DateTime  @default(now()) @map("completada_en") @db.DateTime(0)
-
-  actividad Actividad @relation(
-    fields: [actividadId],
-    references: [id],
-    onDelete: Cascade,
-    onUpdate: NoAction,
-    map: "fk_actividades_completadas_actividad"
-  )
-
-  usuario Usuario @relation(
-    fields: [usuarioId],
-    references: [id],
-    onDelete: Cascade,
-    onUpdate: NoAction,
-    map: "fk_actividades_completadas_usuario"
-  )
+  actividad    Actividad @relation(fields: [actividadId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_actividades_completadas_actividad")
+  usuario      Usuario   @relation(fields: [usuarioId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_actividades_completadas_usuario")
 
   @@unique([usuarioId, actividadId], map: "uq_actividades_completadas_usuario_actividad")
   @@index([actividadId], map: "fk_actividades_completadas_actividad")
@@ -272,22 +174,8 @@ model ProgresoMision {
   completadaEn DateTime?      @map("completada_en") @db.DateTime(0)
   createdAt    DateTime       @default(now()) @map("created_at") @db.DateTime(0)
   updatedAt    DateTime       @default(now()) @map("updated_at") @db.DateTime(0)
-
-  mision Mision @relation(
-    fields: [misionId],
-    references: [id],
-    onDelete: Cascade,
-    onUpdate: NoAction,
-    map: "fk_progreso_misiones_mision"
-  )
-
-  usuario Usuario @relation(
-    fields: [usuarioId],
-    references: [id],
-    onDelete: Cascade,
-    onUpdate: NoAction,
-    map: "fk_progreso_misiones_usuario"
-  )
+  mision       Mision         @relation(fields: [misionId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_progreso_misiones_mision")
+  usuario      Usuario        @relation(fields: [usuarioId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_progreso_misiones_usuario")
 
   @@unique([usuarioId, misionId], map: "uq_progreso_misiones_usuario_mision")
   @@index([misionId], map: "fk_progreso_misiones_mision")
@@ -374,126 +262,11 @@ model MensajePositivo {
   @@map("mensajes_positivos")
 }
 
-model Nivel {
-  id               Int      @id @default(autoincrement())
-  numero           Int      @unique
-  nombre           String   @db.VarChar(100)
-  puntosRequeridos Int      @map("puntos_requeridos")
-  createdAt        DateTime @default(now()) @map("created_at") @db.DateTime(0)
-
-  @@map("niveles")
-}
-
-model Recompensa {
-  id             Int             @id @default(autoincrement())
-  nombre         String          @db.VarChar(150)
-  descripcion    String?         @db.Text
-  icono          String?         @db.VarChar(255)
-  condicionTipo  CondicionTipo   @map("condicion_tipo")
-  condicionValor Int             @map("condicion_valor")
-  estado         EstadoContenido @default(activa)
-  createdAt      DateTime        @default(now()) @map("created_at") @db.DateTime(0)
-  updatedAt      DateTime        @default(now()) @map("updated_at") @db.DateTime(0)
-
-  obtenidas RecompensaObtenida[]
-
-  @@map("recompensas")
-}
-
-model RecompensaObtenida {
-  id           Int      @id @default(autoincrement())
-  usuarioId    Int      @map("usuario_id")
-  recompensaId Int      @map("recompensa_id")
-  obtenidaEn   DateTime @default(now()) @map("obtenida_en") @db.DateTime(0)
-
-  usuario Usuario @relation(
-    fields: [usuarioId],
-    references: [id],
-    onDelete: Cascade,
-    onUpdate: NoAction,
-    map: "fk_recompensas_obtenidas_usuario"
-  )
-
-  recompensa Recompensa @relation(
-    fields: [recompensaId],
-    references: [id],
-    onDelete: Cascade,
-    onUpdate: NoAction,
-    map: "fk_recompensas_obtenidas_recompensa"
-  )
-
-  @@unique([usuarioId, recompensaId])
-  @@index([recompensaId])
-  @@index([usuarioId])
-  @@map("recompensas_obtenidas")
-}
-
-model Logro {
-  id             Int             @id @default(autoincrement())
-  nombre         String          @db.VarChar(150)
-  descripcion    String?         @db.Text
-  icono          String?         @db.VarChar(255)
-  condicionTipo  CondicionTipo   @map("condicion_tipo")
-  condicionValor Int             @map("condicion_valor")
-  estado         EstadoContenido @default(activa)
-  createdAt      DateTime        @default(now()) @map("created_at") @db.DateTime(0)
-  updatedAt      DateTime        @default(now()) @map("updated_at") @db.DateTime(0)
-
-  obtenidos LogroObtenido[]
-
-  @@map("logros")
-}
-
-model LogroObtenido {
-  id         Int      @id @default(autoincrement())
-  usuarioId  Int      @map("usuario_id")
-  logroId    Int      @map("logro_id")
-  obtenidoEn DateTime @default(now()) @map("obtenido_en") @db.DateTime(0)
-
-  usuario Usuario @relation(
-    fields: [usuarioId],
-    references: [id],
-    onDelete: Cascade,
-    onUpdate: NoAction,
-    map: "fk_logros_obtenidos_usuario"
-  )
-
-  logro Logro @relation(
-    fields: [logroId],
-    references: [id],
-    onDelete: Cascade,
-    onUpdate: NoAction,
-    map: "fk_logros_obtenidos_logro"
-  )
-
-  @@unique([usuarioId, logroId])
-  @@index([logroId])
-  @@index([usuarioId])
-  @@map("logros_obtenidos")
-}
-
-model MensajePositivo {
-  id        Int             @id @default(autoincrement())
-  contenido String          @db.Text
-  contexto  String          @db.VarChar(100)
-  estado    EstadoContenido @default(activa)
-  createdAt DateTime        @default(now()) @map("created_at") @db.DateTime(0)
-  updatedAt DateTime        @default(now()) @map("updated_at") @db.DateTime(0)
-
-  @@index([contexto], map: "idx_mensajes_positivos_contexto")
-  @@map("mensajes_positivos")
-}
-
 enum TipoReto {
   seleccion_multiple
   verdadero_falso
   relacion_elementos
   orden_cronologico
-}
-
-enum CategoriaMision {
-  historica
-  convivencia
 }
 
 enum EstadoProgreso {
@@ -580,14 +353,4 @@ model GrupoEstudiante {
   @@unique([grupoId, estudianteId], map: "uq_grupo_estudiantes_grupo_estudiante")
   @@index([estudianteId], map: "idx_grupo_estudiantes_estudiante_id")
   @@map("grupo_estudiantes")
-}
-
-enum CondicionTipo {
-  puntos
-  nivel
-}
-
-enum EstadoContenido {
-  activa
-  inactiva
 }
