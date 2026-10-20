@@ -1,4 +1,5 @@
-import { verifyToken } from "../utils/jwt.util.js";
+import { autenticarToken, SesionInvalidaError } from "../services/sesion.service.js";
+import { registrarError } from "../utils/logger.js";
 
 // Solo estudiantes y docentes participan en actividades grupales; el administrador no usa salas.
 const ROLES_PERMITIDOS = ["estudiante", "docente"];
@@ -17,7 +18,7 @@ function errorDeHandshake(codigo, mensaje) {
  * la identidad en `socket.data.user = { id, rol }`; la identidad y el rol NUNCA se
  * leen de los eventos que mande el cliente.
  */
-export default function socketAuthMiddleware(socket, next) {
+export default async function socketAuthMiddleware(socket, next) {
 	const crudo = socket.handshake?.auth?.token;
 
 	if (typeof crudo !== "string" || crudo.length === 0 || crudo.length > LONGITUD_MAXIMA_TOKEN) {
@@ -26,20 +27,26 @@ export default function socketAuthMiddleware(socket, next) {
 
 	const token = crudo.startsWith("Bearer ") ? crudo.slice("Bearer ".length) : crudo;
 
-	let payload;
+	let sesion;
 	try {
-		payload = verifyToken(token);
-	} catch (_error) {
-		return next(errorDeHandshake("token_invalido", "No autorizado. Token inválido o expirado."));
+		// Misma validación que la API REST: firma, vigencia y que el usuario exista con el mismo rol.
+		sesion = await autenticarToken(token);
+	} catch (error) {
+		if (error instanceof SesionInvalidaError) {
+			return next(errorDeHandshake("token_invalido", "No autorizado. Token inválido o expirado."));
+		}
+
+		registrarError("socketAuth.middleware", error);
+		return next(errorDeHandshake("error_interno", "No se pudo validar la sesión. Intentá de nuevo."));
 	}
 
-	if (!Number.isInteger(payload?.id) || payload.id <= 0 || !ROLES_PERMITIDOS.includes(payload.rol)) {
+	if (!ROLES_PERMITIDOS.includes(sesion.rol)) {
 		return next(errorDeHandshake("rol_no_permitido", "Tu rol no puede usar las actividades en tiempo real."));
 	}
 
-	socket.data.user = { id: payload.id, rol: payload.rol };
+	socket.data.user = { id: sesion.id, rol: sesion.rol };
 	// `exp` está en segundos desde epoch; se usa para cortar los eventos de una sesión vencida.
-	socket.data.tokenExpiraEn = typeof payload.exp === "number" ? payload.exp * 1000 : null;
+	socket.data.tokenExpiraEn = sesion.exp * 1000;
 
 	return next();
 }

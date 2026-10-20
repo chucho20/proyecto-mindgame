@@ -7,6 +7,7 @@ import {
 import socketAuthMiddleware from "../middlewares/socketAuth.middleware.js";
 import * as salaService from "../services/sala.service.js";
 import AppError from "../utils/AppError.js";
+import { registrarError } from "../utils/logger.js";
 
 /**
  * Capa de transporte de las actividades grupales en tiempo real (RF-019). Acá solo hay cableado:
@@ -40,7 +41,7 @@ function aErrorDeRespuesta(error) {
 		};
 	}
 
-	console.error("Error inesperado en sockets:", error);
+	registrarError("sockets", error);
 	return {
 		codigo: "error_interno",
 		mensaje: "Ocurrió un error inesperado. Intentá de nuevo más tarde.",
@@ -178,7 +179,7 @@ export default async function registerGameSocket(io) {
 	try {
 		await salaService.cerrarSalasHuerfanas();
 	} catch (error) {
-		console.error("No se pudieron cerrar las salas huérfanas al arrancar:", error.message);
+		registrarError("cierre de salas huérfanas al arrancar", error);
 	}
 
 	setInterval(() => salaService.cerrarSalasVencidas(), INTERVALO_MANTENIMIENTO_MS).unref();
@@ -240,7 +241,7 @@ export default async function registerGameSocket(io) {
 			try {
 				salaService.manejarDesconexion(socket.id);
 			} catch (error) {
-				console.error("Error inesperado en sockets al desconectar:", error);
+				registrarError("sockets al desconectar", error);
 			}
 		});
 	});

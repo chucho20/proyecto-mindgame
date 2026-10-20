@@ -39,3 +39,24 @@ export async function findValidByTokenHash(tokenHash) {
 export async function markAsUsed(id) {
 	await prisma.passwordReset.updateMany({ where: { id: Number(id) }, data: { usado: true } });
 }
+
+/**
+ * Consume el token de forma atómica: la condición `usado = false` va en el propio UPDATE, así que de dos
+ * peticiones simultáneas con el mismo enlace solo una obtiene `true` (un solo uso, sin carrera).
+ */
+export async function claimUnused(id) {
+	const { count } = await prisma.passwordReset.updateMany({
+		where: { id: Number(id), usado: false, expiraEn: { gt: new Date() } },
+		data: { usado: true },
+	});
+
+	return count === 1;
+}
+
+/** Invalida los enlaces de restablecimiento pendientes de un usuario (al pedir uno nuevo o al cambiar la clave). */
+export async function invalidateAllForUser(usuarioId) {
+	await prisma.passwordReset.updateMany({
+		where: { usuarioId: Number(usuarioId), usado: false },
+		data: { usado: true },
+	});
+}

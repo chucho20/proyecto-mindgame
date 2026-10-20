@@ -1,9 +1,12 @@
 /**
  * Middleware factory que restringe el acceso a los roles indicados (RF-029).
  * Debe usarse después de authMiddleware, ya que depende de req.user.
+ *
+ * Falla cerrado: sin roles indicados nadie pasa. El middleware expone `roles` para que
+ * `scripts/listar-rutas.js` pueda auditar qué rol protege cada ruta.
  */
 export function requireRole(...roles) {
-	return (req, res, next) => {
+	const middleware = (req, res, next) => {
 		if (!req.user) {
 			return res.status(401).json({ message: "No autorizado." });
 		}
@@ -14,6 +17,9 @@ export function requireRole(...roles) {
 
 		return next();
 	};
+
+	middleware.roles = roles;
+	return middleware;
 }
 
 export default requireRole;

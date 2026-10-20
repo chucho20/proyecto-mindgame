@@ -49,6 +49,19 @@ export async function findById(id) {
 	return aFilaUsuario(usuario);
 }
 
+/**
+ * Consulta mínima para autenticar cada petición: solo `id` y `rol` (una lectura por clave primaria).
+ * Devuelve `null` si el usuario ya no existe.
+ */
+export async function findAuthById(id) {
+	const idNormalizado = normalizarId(id);
+	if (idNormalizado === null) {
+		return null;
+	}
+
+	return prisma.usuario.findUnique({ where: { id: idNormalizado }, select: { id: true, rol: true } });
+}
+
 export async function create({
 	nombreCompleto,
 	correo,

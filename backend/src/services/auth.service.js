@@ -11,6 +11,7 @@ import {
 import { comparePassword, hashPassword } from "../utils/password.util.js";
 import { signToken } from "../utils/jwt.util.js";
 import { esViolacionUnica } from "../utils/dbErrors.js";
+import { registrarError } from "../utils/logger.js";
 import * as usuarioRepository from "../repositories/usuario.repository.js";
 import * as passwordResetRepository from "../repositories/passwordReset.repository.js";
 import { sendPasswordResetEmail } from "./mail.service.js";
@@ -159,6 +160,8 @@ export async function forgotPassword(correo) {
 		const tokenHash = hashToken(plainToken);
 		const expiraEn = new Date(Date.now() + env.resetTokenExpiresMin * 60 * 1000);
 
+		// Solo vale el último enlace pedido: los anteriores quedan invalidados.
+		await passwordResetRepository.invalidateAllForUser(usuario.id);
 		await passwordResetRepository.create({
 			usuarioId: usuario.id,
 			tokenHash,
@@ -170,7 +173,7 @@ export async function forgotPassword(correo) {
 		// No esperamos el envío del correo: el tiempo de red del SMTP no debe
 		// filtrar si la cuenta existe (RF-003). Los errores de envío solo se logean.
 		sendPasswordResetEmail(usuario.correo, resetLink).catch((error) => {
-			console.error("Error enviando correo de restablecimiento:", error);
+			registrarError("envío del correo de restablecimiento", error);
 		});
 	}
 
@@ -196,8 +199,17 @@ export async function resetPassword(token, newPassword) {
 
 	const passwordHash = await hashPassword(newPassword);
 
+	// Un solo uso real: el enlace se consume de forma atómica ANTES de cambiar la contraseña. Si dos
+	// peticiones llegan a la vez con el mismo enlace, solo una lo consigue.
+	const consumido = await passwordResetRepository.claimUnused(resetRecord.id);
+
+	if (!consumido) {
+		throw new AppError("El enlace de restablecimiento es inválido o expiró.", 400);
+	}
+
 	await usuarioRepository.updatePassword(resetRecord.usuario_id, passwordHash);
-	await passwordResetRepository.markAsUsed(resetRecord.id);
+	// Cualquier otro enlace pendiente de la cuenta deja de servir.
+	await passwordResetRepository.invalidateAllForUser(resetRecord.usuario_id);
 
 	return { message: "Contraseña restablecida correctamente." };
 }

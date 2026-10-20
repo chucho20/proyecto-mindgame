@@ -1,5 +1,6 @@
 import AppError from "../utils/AppError.js";
 import { CATEGORIA_CONVIVENCIA, CONTEXTOS_CONOCIDOS } from "../constants/convivencia.js";
+import { registrarError } from "../utils/logger.js";
 import { LONGITUD_MAXIMA_TEXTO } from "../utils/validators.js";
 import * as mensajePositivoRepository from "../repositories/mensajePositivo.repository.js";
 import * as misionRepository from "../repositories/mision.repository.js";
@@ -43,7 +44,7 @@ export async function obtenerTextoParaMision(misionId, contexto) {
 		const mensaje = await obtenerAleatorioPorContexto(contexto);
 		return mensaje ? mensaje.contenido : null;
 	} catch (error) {
-		console.error("Error inesperado al elegir el mensaje positivo:", error);
+		registrarError("elegir el mensaje positivo", error);
 		return null;
 	}
 }
