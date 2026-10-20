@@ -86,6 +86,17 @@ jobs:
           DB_PORT: "3306"
           DB_NAME: ci
 
+      # Falla si alguna ruta sensible queda sin autenticación o sin el rol correcto (no abre servidor ni base).
+      - name: Auditoría de protección de rutas
+        run: npm run routes:audit
+        env:
+          JWT_SECRET: ci-secret-no-real
+          DB_USER: ci
+          DB_PASSWORD: ci
+          DB_HOST: localhost
+          DB_PORT: "3306"
+          DB_NAME: ci
+
   frontend:
     name: frontend
     runs-on: ubuntu-latest

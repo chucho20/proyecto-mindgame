@@ -3,6 +3,7 @@ import crypto from "node:crypto";
 import AppError from "../utils/AppError.js";
 import { esViolacionUnica } from "../utils/dbErrors.js";
 import { normalizarId } from "../utils/dbIds.js";
+import { registrarError } from "../utils/logger.js";
 import { esEnteroValido } from "../utils/validators.js";
 import {
 	ALFABETO_CODIGO_SALA,
@@ -960,7 +961,7 @@ async function otorgarPuntos(sala, filas) {
 					}
 				} catch (error) {
 					// Un fallo al premiar a un estudiante no debe impedir terminar la actividad de los demás.
-					console.error(`No se pudieron otorgar los puntos de la sala ${sala.id}:`, error.message);
+					registrarError(`otorgar los puntos de la sala ${sala.id}`, error);
 				}
 			}),
 		);
@@ -1040,7 +1041,7 @@ function alExpirarGracia(sala, participante) {
 }
 
 function registrarFalloDeCierre(error) {
-	console.error("Error inesperado en sockets al cerrar una sala:", error);
+	registrarError("sockets al cerrar una sala", error);
 }
 
 // Cierre iniciado por el servidor (docente ausente o sala vencida): sin puntos ni participación.
@@ -1051,7 +1052,7 @@ async function cerrarPorSistema(sala, motivo) {
 	try {
 		await salaRepository.cerrar(sala.id);
 	} catch (error) {
-		console.error(`No se pudo cerrar la sala ${sala.id} en la base de datos:`, error.message);
+		registrarError(`cerrar la sala ${sala.id} en la base de datos`, error);
 	}
 
 	try {

@@ -1,4 +1,5 @@
 import AppError from "./AppError.js";
+import { registrarError } from "./logger.js";
 
 /**
  * Manejo de errores compartido por todos los controllers (mismo comportamiento
@@ -13,6 +14,7 @@ export default function handleError(res, error, context = "controller") {
 		});
 	}
 
-	console.error(`Error inesperado en ${context}:`, error);
+	// Al cliente nunca le llega el detalle (SQL, Prisma, trazas): solo un mensaje genérico.
+	registrarError(context, error);
 	return res.status(500).json({ message: "Ocurrió un error inesperado. Intentá de nuevo más tarde." });
 }

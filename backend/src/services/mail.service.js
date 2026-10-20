@@ -1,6 +1,7 @@
 import nodemailer from "nodemailer";
 
 import env from "../config/env.js";
+import { registrarError } from "../utils/logger.js";
 
 function isSmtpConfigured() {
 	return Boolean(env.smtp.host && env.smtp.port && env.smtp.user && env.smtp.password);
@@ -36,7 +37,14 @@ function getTransporter() {
  * en consola en lugar de enviar el correo, para no bloquear el desarrollo local.
  */
 export async function sendPasswordResetEmail(to, resetLink) {
+	// El enlace contiene el token de un solo uso: en producción nunca se escribe en el log. Solo el modo
+	// consola de desarrollo lo muestra, porque ahí reemplaza al correo.
 	if (!isSmtpConfigured() || shouldUseConsoleFallback()) {
+		if (env.isProduction) {
+			console.error("[mail.service] SMTP no configurado: no se pudo enviar el correo de restablecimiento.");
+			return { delivered: false, mode: "none" };
+		}
+
 		console.log("=== [mail.service] Enlace de restablecimiento de contraseña (modo consola) ===");
 		console.log(`Destinatario: ${to}`);
 		console.log(`Enlace: ${resetLink}`);
@@ -49,17 +57,15 @@ export async function sendPasswordResetEmail(to, resetLink) {
 			from: env.smtp.from,
 			to,
 			subject: "Restablecer contraseña - MindGame",
-			text: `Recibimos una solicitud para restablecer tu contraseña. Usá el siguiente enlace (válido por tiempo limitado): ${resetLink}\n\nSi no solicitaste esto, podés ignorar este correo.`,
+			text: `Recibimos una solicitud para restablecer tu contraseña. Usá el siguiente enlace (válido por tiempo limitado): ${resetLink}
+
+Si no solicitaste esto, podés ignorar este correo.`,
 			html: `<p>Recibimos una solicitud para restablecer tu contraseña.</p><p><a href="${resetLink}">Hacé clic acá para restablecerla</a></p><p>Si no solicitaste esto, podés ignorar este correo.</p>`,
 		});
 
 		return { delivered: true, mode: "smtp" };
 	} catch (error) {
-		console.error(
-			"Error al enviar el correo de restablecimiento, se usa fallback de consola:",
-			error.message,
-		);
-		console.log(`Enlace: ${resetLink}`);
-		return { delivered: false, mode: "console", error: error.message };
+		registrarError("envío del correo de restablecimiento", error);
+		return { delivered: false, mode: "none" };
 	}
 }

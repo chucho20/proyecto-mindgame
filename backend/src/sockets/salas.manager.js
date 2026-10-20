@@ -1,4 +1,5 @@
 import { GRACIA_DOCENTE_MS, GRACIA_ESTUDIANTE_MS, MAX_EVENTOS_RECIENTES } from "../constants/salas.js";
+import { registrarError } from "../utils/logger.js";
 
 /**
  * Registro en memoria de las salas abiertas (RF-019). No hace entrada/salida ni emite eventos:
@@ -306,7 +307,7 @@ export function programarExpiracion(sala, participante, alExpirar) {
 			alExpirar(sala, participante);
 		} catch (error) {
 			// Un error dentro de un timer no debe tumbar el proceso.
-			console.error("Error inesperado en sockets al expirar la reconexión:", error);
+			registrarError("sockets al expirar la reconexión", error);
 		}
 	}, espera);
 
