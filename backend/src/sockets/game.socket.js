@@ -1,5 +1,4 @@
 import {
-	obtenerSala,
 	marcarDesconectado,
 	reasignarAnfitrion,
 	programarExpiracion,
