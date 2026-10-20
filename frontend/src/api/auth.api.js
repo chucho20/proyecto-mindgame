@@ -9,6 +9,7 @@ export async function register({
 	gradoCurso,
 	rol,
 	aceptaTratamientoDatos,
+	codigoDocente,
 }) {
 	const { data } = await api.post("/auth/register", {
 		nombreCompleto,
@@ -19,6 +20,7 @@ export async function register({
 		gradoCurso,
 		rol,
 		aceptaTratamientoDatos,
+		codigoDocente,
 	});
 
 	return data;

@@ -51,7 +51,9 @@ const env = {
 		email: process.env.ADMIN_EMAIL || "",
 		password: process.env.ADMIN_PASSWORD || "",
 	},
-	docenteRegistrationCode: process.env.DOCENTE_REGISTRATION_CODE,
+
+	// Código que debe presentar quien se registra como docente. Vacío = registro de docentes deshabilitado.
+	docenteRegistrationCode: (process.env.DOCENTE_REGISTRATION_CODE || "").trim(),
 };
 
 export default env;

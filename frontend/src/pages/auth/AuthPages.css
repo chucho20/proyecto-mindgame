@@ -38,6 +38,11 @@
 	box-shadow: var(--shadow-focus);
 }
 
+.auth-form__hint {
+	font-size: 0.78rem;
+	color: var(--color-slate-600);
+}
+
 .auth-form__row {
 	display: grid;
 	grid-template-columns: 1fr 1fr;

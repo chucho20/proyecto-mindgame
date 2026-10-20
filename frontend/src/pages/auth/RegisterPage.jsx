@@ -19,6 +19,7 @@ const INITIAL_FORM = {
 	password: "",
 	edad: "",
 	gradoCurso: "",
+	codigoDocente: "",
 	aceptaTratamientoDatos: false,
 };
 
@@ -34,13 +35,22 @@ function RegisterPage() {
 		setForm((prev) => ({ ...prev, [field]: value }));
 	}
 
+	function selectRole(rol) {
+		// Al volver a estudiante se descarta el código para no enviarlo por error.
+		setForm((prev) => ({ ...prev, rol, codigoDocente: rol === "docente" ? prev.codigoDocente : "" }));
+	}
+
 	async function handleSubmit(event) {
 		event.preventDefault();
 		setError("");
 		setSubmitting(true);
 
 		try {
-			await register(form);
+			// El código solo viaja cuando la cuenta es de docente.
+			await register({
+				...form,
+				codigoDocente: form.rol === "docente" ? form.codigoDocente.trim() : undefined,
+			});
 			navigate("/login", {
 				replace: true,
 				state: { registered: true },
@@ -82,12 +92,31 @@ function RegisterPage() {
 									? "auth-form__role-option auth-form__role-option--active"
 									: "auth-form__role-option"
 							}
-							onClick={() => updateField("rol", option.value)}
+							onClick={() => selectRole(option.value)}
 						>
 							{option.label}
 						</button>
 					))}
 				</div>
+
+				{form.rol === "docente" ? (
+					<div className="auth-form__field">
+						<label htmlFor="codigoDocente">Código de docente</label>
+						<input
+							id="codigoDocente"
+							type="password"
+							value={form.codigoDocente}
+							onChange={(event) => updateField("codigoDocente", event.target.value)}
+							autoComplete="off"
+							aria-required="true"
+							aria-describedby="codigoDocente-ayuda"
+							required
+						/>
+						<small id="codigoDocente-ayuda" className="auth-form__hint">
+							Te lo entrega el administrador de la institución
+						</small>
+					</div>
+				) : null}
 
 				<div className="auth-form__field">
 					<label htmlFor="nombreCompleto">Nombre completo</label>
