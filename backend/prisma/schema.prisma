@@ -8,29 +8,31 @@ datasource db {
 }
 
 model Usuario {
-  id                     Int                   @id @default(autoincrement())
-  nombreCompleto         String                @map("nombre_completo") @db.VarChar(150)
-  correo                 String                @unique(map: "uq_usuarios_correo") @db.VarChar(150)
-  nombreUsuario          String                @unique(map: "uq_usuarios_nombre_usuario") @map("nombre_usuario") @db.VarChar(50)
-  passwordHash           String                @map("password_hash") @db.VarChar(255)
-  edad                   Int?
-  gradoCurso             String?               @map("grado_curso") @db.VarChar(50)
-  rol                    RolUsuario
-  avatar                 String?               @db.VarChar(100)
-  aceptaTratamientoDatos Boolean               @map("acepta_tratamiento_datos")
-  createdAt              DateTime              @default(now()) @map("created_at") @db.DateTime(0)
-  updatedAt              DateTime              @default(now()) @map("updated_at") @db.DateTime(0)
-  puntosTotales          Int                   @default(0) @map("puntos_totales")
-  nivelActual            Int                   @default(1) @map("nivel_actual")
-  actividadesCompletadas ActividadCompletada[]
-  historiasCompletadas   HistoriaCompletada[]
-  intentosRetos          IntentoReto[]
-  logrosObtenidos        LogroObtenido[]
-  passwordResets         PasswordReset[]
-  progresoMisiones       ProgresoMision[]
-  recompensasObtenidas   RecompensaObtenida[]
-  gruposCreados          Grupo[]               @relation("DocenteGrupos")
-  gruposEstudiante       GrupoEstudiante[]     @relation("EstudianteGrupos")
+  id                      Int                   @id @default(autoincrement())
+  nombreCompleto          String                @map("nombre_completo") @db.VarChar(150)
+  correo                  String                @unique(map: "uq_usuarios_correo") @db.VarChar(150)
+  nombreUsuario           String                @unique(map: "uq_usuarios_nombre_usuario") @map("nombre_usuario") @db.VarChar(50)
+  passwordHash            String                @map("password_hash") @db.VarChar(255)
+  edad                    Int?
+  gradoCurso              String?               @map("grado_curso") @db.VarChar(50)
+  rol                     RolUsuario
+  avatar                  String?               @db.VarChar(100)
+  aceptaTratamientoDatos  Boolean               @map("acepta_tratamiento_datos")
+  createdAt               DateTime              @default(now()) @map("created_at") @db.DateTime(0)
+  updatedAt               DateTime              @default(now()) @map("updated_at") @db.DateTime(0)
+  puntosTotales           Int                   @default(0) @map("puntos_totales")
+  nivelActual             Int                   @default(1) @map("nivel_actual")
+  actividadesCompletadas  ActividadCompletada[]
+  historiasCompletadas    HistoriaCompletada[]
+  intentosRetos           IntentoReto[]
+  logrosObtenidos         LogroObtenido[]
+  passwordResets          PasswordReset[]
+  progresoMisiones        ProgresoMision[]
+  recompensasObtenidas    RecompensaObtenida[]
+  gruposCreados           Grupo[]               @relation("DocenteGrupos")
+  gruposEstudiante        GrupoEstudiante[]     @relation("EstudianteGrupos")
+  salasCreadas            Sala[]                @relation("DocenteSalas")
+  participacionesGrupales ParticipacionGrupal[]
 
   @@map("usuarios")
 }
@@ -147,6 +149,7 @@ model Actividad {
   puntos                 Int                   @default(0)
   mision                 Mision?               @relation(fields: [misionId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_actividades_mision")
   actividadesCompletadas ActividadCompletada[]
+  salas                  Sala[]
 
   @@index([misionId], map: "idx_actividades_mision_id")
   @@map("actividades")
@@ -336,6 +339,7 @@ model Grupo {
 
   docente     Usuario           @relation("DocenteGrupos", fields: [docenteId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_grupos_docente")
   estudiantes GrupoEstudiante[]
+  salas       Sala[]
 
   @@index([docenteId], map: "idx_grupos_docente_id")
   @@map("grupos")
@@ -353,4 +357,57 @@ model GrupoEstudiante {
   @@unique([grupoId, estudianteId], map: "uq_grupo_estudiantes_grupo_estudiante")
   @@index([estudianteId], map: "idx_grupo_estudiantes_estudiante_id")
   @@map("grupo_estudiantes")
+}
+
+model Sala {
+  id              Int        @id @default(autoincrement())
+  codigo          String     @unique(map: "uq_salas_codigo") @db.VarChar(20)
+  actividadId     Int        @map("actividad_id")
+  grupoId         Int        @map("grupo_id")
+  docenteId       Int        @map("docente_id")
+  estado          EstadoSala @default(esperando)
+  capacidadMinima Int        @default(1) @map("capacidad_minima")
+  iniciadaEn      DateTime?  @map("iniciada_en") @db.DateTime(0)
+  finalizadaEn    DateTime?  @map("finalizada_en") @db.DateTime(0)
+  createdAt       DateTime   @default(now()) @map("created_at") @db.DateTime(0)
+  updatedAt       DateTime   @default(now()) @map("updated_at") @db.DateTime(0)
+
+  actividad       Actividad             @relation(fields: [actividadId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_salas_actividad")
+  grupo           Grupo                 @relation(fields: [grupoId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_salas_grupo")
+  docente         Usuario               @relation("DocenteSalas", fields: [docenteId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_salas_docente")
+  participaciones ParticipacionGrupal[]
+
+  @@index([grupoId, estado], map: "idx_salas_grupo_estado")
+  @@index([docenteId, estado], map: "idx_salas_docente_estado")
+  @@index([actividadId], map: "idx_salas_actividad_id")
+  @@map("salas")
+}
+
+model ParticipacionGrupal {
+  id              Int                 @id @default(autoincrement())
+  salaId          Int                 @map("sala_id")
+  usuarioId       Int                 @map("usuario_id")
+  estado          EstadoParticipacion
+  resultado       Json
+  puntosObtenidos Int                 @default(0) @map("puntos_obtenidos")
+  createdAt       DateTime            @default(now()) @map("created_at") @db.DateTime(0)
+
+  sala    Sala    @relation(fields: [salaId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_participaciones_grupales_sala")
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_participaciones_grupales_usuario")
+
+  @@unique([salaId, usuarioId], map: "uq_participaciones_grupales_sala_usuario")
+  @@index([usuarioId], map: "idx_participaciones_grupales_usuario_id")
+  @@map("participaciones_grupales")
+}
+
+enum EstadoSala {
+  esperando
+  en_curso
+  finalizada
+  cerrada
+}
+
+enum EstadoParticipacion {
+  completo
+  abandono
 }
