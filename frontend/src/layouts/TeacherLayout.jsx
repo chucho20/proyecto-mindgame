@@ -5,6 +5,7 @@ import { useAuth } from "../context/AuthContext.js";
 import Sidebar from "../components/layout/Sidebar/Sidebar.jsx";
 import Header from "../components/layout/Header/Header.jsx";
 import MobileNavigation from "../components/layout/MobileNavigation/MobileNavigation.jsx";
+import SalaActivaBanner from "../components/realtime/SalaActivaBanner/SalaActivaBanner.jsx";
 
 const NAV_ITEMS = [
 	{ label: "Inicio", to: "/docente", icon: "🏠", end: true },
@@ -53,6 +54,7 @@ function TeacherLayout() {
 			<div className="app-layout__content">
 				<Header user={user} onLogout={handleLogout} loggingOut={loggingOut} />
 				<main className="app-layout__main">
+					<SalaActivaBanner />
 					<Outlet />
 				</main>
 			</div>
