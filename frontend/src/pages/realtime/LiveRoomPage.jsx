@@ -44,6 +44,7 @@ function LiveRoomPage() {
 	const tituloRef = useRef(null);
 	const salaActualRef = useRef(null);
 	const [errorCarga, setErrorCarga] = useState("");
+	const [otraSalaId, setOtraSalaId] = useState(null);
 	const [reintentos, setReintentos] = useState(0);
 
 	const enSalaCorrecta = Boolean(sala) && String(sala.id) === String(salaId);
@@ -64,17 +65,18 @@ function LiveRoomPage() {
 		let cancelled = false;
 
 		async function recuperar() {
+			setErrorCarga("");
+
 			if (String(salaActualRef.current) === String(salaId)) {
 				return;
 			}
-
-			setErrorCarga("");
 
 			try {
 				await restaurarSala(salaId);
 			} catch (error) {
 				if (!cancelled) {
 					setErrorCarga(mensajeDeErrorSala(error, "No pudimos entrar a la sala."));
+					setOtraSalaId(error?.codigo === "ya_en_otra_sala" ? (error.datos?.sala_id ?? null) : null);
 				}
 			}
 		}
@@ -109,6 +111,14 @@ function LiveRoomPage() {
 			<div className="live-room-page__state">
 				<p className="rt-notice rt-notice--error" role="alert">
 					{errorCarga}
+					{otraSalaId ? (
+						<>
+							{" "}
+							<Link to={`${rol === "docente" ? "/docente" : "/estudiante"}/salas/${otraSalaId}`}>
+								Ir a la otra sala
+							</Link>
+						</>
+					) : null}
 				</p>
 				<div className="rt-actions">
 					<button
@@ -182,7 +192,8 @@ function LiveRoomPage() {
 		<div className="live-room-page">
 			{/* Siempre en el DOM: los lectores de pantalla solo anuncian cambios de una región que ya existía. */}
 			<div className="visually-hidden" role="status" aria-live="polite" aria-atomic="true">
-				{contexto.anuncio?.texto}
+				{/* La key nueva en cada anuncio hace que un texto repetido se vuelva a leer. */}
+				{contexto.anuncio ? <span key={contexto.anuncio.id}>{contexto.anuncio.texto}</span> : null}
 			</div>
 
 			<ConnectionStatus

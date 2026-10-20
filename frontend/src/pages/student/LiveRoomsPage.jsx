@@ -20,7 +20,7 @@ const INTERVALO_DE_ACTUALIZACION_MS = 8000;
 function LiveRoomsPage() {
 	const idPrefix = useId();
 	const navigate = useNavigate();
-	const { listarDisponibles, unirseASala, sala: salaActual, fin } = useSala();
+	const { listarDisponibles, unirseASala, cerrarSiOcioso, sala: salaActual, fin } = useSala();
 	const [salas, setSalas] = useState([]);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState("");
@@ -71,6 +71,9 @@ function LiveRoomsPage() {
 			clearInterval(intervalo);
 		};
 	}, [listarDisponibles, reloadKey]);
+
+	// Al salir de la pantalla sin haber entrado a una sala no hace falta seguir conectado.
+	useEffect(() => cerrarSiOcioso, [cerrarSiOcioso]);
 
 	async function unirse(datos, idParaBloquear) {
 		setEntrandoId(idParaBloquear);

@@ -17,7 +17,8 @@ export function resolverUrlSocket() {
 
 	const api = import.meta.env.VITE_API_URL;
 
-	return api ? api.replace(/\/api\/?$/, "") || URL_POR_DEFECTO : URL_POR_DEFECTO;
+	// Con una URL relativa (`/api`, detrás de un proxy) el socket va al mismo origen: cadena vacía.
+	return api === undefined || api === "" ? URL_POR_DEFECTO : api.replace(/\/api\/?$/, "");
 }
 
 /**

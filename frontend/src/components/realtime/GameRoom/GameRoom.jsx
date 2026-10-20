@@ -95,6 +95,14 @@ function GameRoom({
 		}
 	}
 
+	// Abrir o cerrar un diálogo descarta los errores de intentos anteriores (cada uno muestra solo el suyo).
+	function abrirDialogo(tipo) {
+		finalizar.limpiarError();
+		cerrar.limpiarError();
+		salir.limpiarError();
+		setConfirmando(tipo);
+	}
+
 	async function handleConfirmar() {
 		if (confirmando === "finalizar") {
 			await finalizar.ejecutar();
@@ -110,7 +118,8 @@ function GameRoom({
 	}
 
 	const dialogoOcupado = finalizar.ocupado || cerrar.ocupado || salir.ocupado;
-	const dialogoError = finalizar.error || cerrar.error || salir.error;
+	const dialogoError =
+		{ finalizar: finalizar.error, cerrar: cerrar.error, salir: salir.error }[confirmando] ?? "";
 
 	return (
 		<div className="game-room">
@@ -202,7 +211,7 @@ function GameRoom({
 						>
 							{terminar.ocupado ? "Enviando..." : "Terminé"}
 						</button>
-						<button type="button" className="rt-btn rt-btn--danger" onClick={() => setConfirmando("salir")}>
+						<button type="button" className="rt-btn rt-btn--danger" onClick={() => abrirDialogo("salir")}>
 							Salir de la sala
 						</button>
 					</div>
@@ -252,11 +261,11 @@ function GameRoom({
 						<button
 							type="button"
 							className="rt-btn rt-btn--primary"
-							onClick={() => setConfirmando("finalizar")}
+							onClick={() => abrirDialogo("finalizar")}
 						>
 							Finalizar actividad
 						</button>
-						<button type="button" className="rt-btn rt-btn--danger" onClick={() => setConfirmando("cerrar")}>
+						<button type="button" className="rt-btn rt-btn--danger" onClick={() => abrirDialogo("cerrar")}>
 							Cerrar sala sin finalizar
 						</button>
 					</div>
@@ -305,7 +314,7 @@ function GameRoom({
 					busy={dialogoOcupado}
 					error={dialogoError}
 					onConfirm={handleConfirmar}
-					onCancel={() => setConfirmando(null)}
+					onCancel={() => abrirDialogo(null)}
 				>
 					<p>
 						Se registra la participación de cada estudiante y se otorgan los puntos de la actividad a quienes
@@ -326,7 +335,7 @@ function GameRoom({
 					busy={dialogoOcupado}
 					error={dialogoError}
 					onConfirm={handleConfirmar}
-					onCancel={() => setConfirmando(null)}
+					onCancel={() => abrirDialogo(null)}
 				>
 					<p>La actividad se cancela: no se registra la participación ni se otorgan puntos.</p>
 					<p>Si querés que cuenten los resultados, usá "Finalizar actividad".</p>
@@ -341,7 +350,7 @@ function GameRoom({
 					busy={dialogoOcupado}
 					error={dialogoError}
 					onConfirm={handleConfirmar}
-					onCancel={() => setConfirmando(null)}
+					onCancel={() => abrirDialogo(null)}
 				>
 					<p>
 						La actividad está en curso. Si salís, queda constancia de que la abandonaste y no recibís puntos.

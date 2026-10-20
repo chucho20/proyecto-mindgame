@@ -21,7 +21,7 @@ function LiveSetupPage() {
 	const { grupoId } = useParams();
 	const navigate = useNavigate();
 	const idPrefix = useId();
-	const { crearSala, listarDisponibles, sala: salaActual, fin } = useSala();
+	const { crearSala, listarDisponibles, cerrarSiOcioso, sala: salaActual, fin } = useSala();
 	const [grupo, setGrupo] = useState(null);
 	const [actividades, setActividades] = useState([]);
 	const [loading, setLoading] = useState(true);
@@ -97,6 +97,9 @@ function LiveSetupPage() {
 			cancelled = true;
 		};
 	}, [listarDisponibles]);
+
+	// Al salir de la pantalla sin haber creado una sala no hace falta seguir conectado.
+	useEffect(() => cerrarSiOcioso, [cerrarSiOcioso]);
 
 	const salaPropia = salaAbierta ?? (salaActual && !fin ? { sala_id: salaActual.id, ...salaActual } : null);
 

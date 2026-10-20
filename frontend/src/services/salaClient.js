@@ -4,6 +4,7 @@ import { CODIGOS_DE_CONEXION_FATALES, graciaDeRol, mensajeDeCodigoSala } from ".
 const ESPERA_DE_CONEXION_MS = 10_000;
 const ESPERA_ENTRE_REINTENTOS_MS = 1500;
 const MAX_REINTENTOS_DE_REUNION = 5;
+const REINTENTOS_POR_SALA_CERRADA = 2;
 
 // Eventos de presencia del servidor y su nombre en el reducer.
 const PRESENCIAS = {
@@ -99,32 +100,51 @@ export function crearClienteSala(notificar, credencialesIniciales) {
 
 	// Una sala que ya no admite reentrar: se muestra la pantalla que corresponde. Devuelve si la resolvió.
 	async function resolverSalaTerminada(s, id, error) {
+		// Si el socket ya está en OTRA sala viva no se toca su estado: el aviso va a quien pidió esta pantalla.
+		const propia = salaId === null || salaId === id;
+
 		if (error.codigo === "sala_finalizada") {
-			const { sala } = await emitirConAck(s, "sala:estado", { sala_id: id });
-			soltarSala();
-			notificar.dispatch({
-				tipo: "finalizada",
-				payload: { sala_id: id, resultados: sala.resultados ?? [], finalizada_en: sala.finalizada_en },
-				forzar: true,
-			});
-			return true;
+			// El resumen guardado solo lo ve quien participó: si no hay, se muestra la actividad terminada sin resultados.
+			const resumen = await emitirConAck(s, "sala:estado", { sala_id: id }).catch(() => null);
+
+			if (propia) {
+				soltarSala();
+				notificar.dispatch({
+					tipo: "finalizada",
+					payload: {
+						sala_id: id,
+						resultados: resumen?.sala?.resultados ?? [],
+						finalizada_en: resumen?.sala?.finalizada_en ?? null,
+					},
+					forzar: true,
+				});
+			}
+
+			return propia;
 		}
 
 		if (error.codigo === "sala_cerrada") {
-			soltarSala();
-			notificar.dispatch({
-				tipo: "cerrada",
-				payload: { sala_id: id, motivo: credenciales.rol === "docente" ? "docente_ausente" : "desconocido" },
-				rol: credenciales.rol,
-				forzar: true,
-			});
-			return true;
+			if (propia) {
+				soltarSala();
+				// No se sabe por qué se cerró (el servidor no lo dice al reentrar): mensaje neutro.
+				notificar.dispatch({
+					tipo: "cerrada",
+					payload: { sala_id: id, motivo: "desconocido" },
+					rol: credenciales.rol,
+					forzar: true,
+				});
+			}
+
+			return propia;
 		}
 
 		if (error.codigo === "sala_no_encontrada") {
-			soltarSala();
-			notificar.dispatch({ tipo: "no_encontrada", salaId: id });
-			return true;
+			if (propia) {
+				soltarSala();
+				notificar.dispatch({ tipo: "no_encontrada", salaId: id });
+			}
+
+			return propia;
 		}
 
 		return false;
@@ -162,7 +182,9 @@ export function crearClienteSala(notificar, credencialesIniciales) {
 				return;
 			}
 
-			const resuelta = await resolverSalaTerminada(s, id, error).catch(() => false);
+			// Mientras el servidor termina de finalizar (otorga puntos) responde "cerrada": se reintenta antes de darla por cerrada.
+			const enFinalizacion = error.codigo === "sala_cerrada" && intento < REINTENTOS_POR_SALA_CERRADA;
+			const resuelta = enFinalizacion ? false : await resolverSalaTerminada(s, id, error).catch(() => false);
 
 			if (resuelta || socket !== s || salaId !== id) {
 				return;
@@ -201,6 +223,7 @@ export function crearClienteSala(notificar, credencialesIniciales) {
 
 	function registrarEventos(s) {
 		s.on("connect", () => {
+			clearTimeout(temporizadorDeReunion);
 			notificar.conexion("conectado");
 			notificar.errorConexion(null);
 
@@ -213,6 +236,8 @@ export function crearClienteSala(notificar, credencialesIniciales) {
 			if (socket !== s) {
 				return;
 			}
+
+			clearTimeout(temporizadorDeReunion);
 
 			if (salaId) {
 				registrarCaida();
@@ -334,6 +359,15 @@ export function crearClienteSala(notificar, credencialesIniciales) {
 
 	// --- Acciones ---
 
+	// La sala pudo liberarse (cerrada o finalizada) mientras la persona tocaba un botón.
+	function exigirSala() {
+		if (!salaId) {
+			throw new ErrorSala("no_estas_en_sala");
+		}
+
+		return salaId;
+	}
+
 	async function crearSala({ grupoId, actividadId, capacidadMinima }) {
 		const s = await conectar();
 		const { sala } = await emitirConAck(s, "sala:crear", {
@@ -360,27 +394,36 @@ export function crearClienteSala(notificar, credencialesIniciales) {
 	async function restaurarSala(id) {
 		const s = await conectar();
 
-		try {
-			const { sala } = await emitirConAck(s, "sala:unirse", { sala_id: Number(id) });
-			entrarEnSala(sala);
-			return "ok";
-		} catch (error) {
-			if (error.codigo === "sala_finalizada") {
-				await resolverSalaTerminada(s, Number(id), error);
-				return "finalizada";
-			}
+		// Ya hay otra sala viva en este socket: no se la pisa al abrir el enlace de otra.
+		if (salaId !== null && salaId !== Number(id)) {
+			throw new ErrorSala("ya_en_otra_sala", { datos: { sala_id: salaId } });
+		}
 
-			if (error.codigo === "sala_cerrada") {
-				await resolverSalaTerminada(s, Number(id), error);
-				return "cerrada";
-			}
+		for (let intento = 0; ; intento += 1) {
+			try {
+				const { sala } = await emitirConAck(s, "sala:unirse", { sala_id: Number(id) });
+				entrarEnSala(sala);
+				return "ok";
+			} catch (error) {
+				// "Cerrada" puede ser la sala terminando de finalizar (otorga puntos): se reintenta antes de darla por cerrada.
+				if (error.codigo === "sala_cerrada" && intento < REINTENTOS_POR_SALA_CERRADA) {
+					await new Promise((resolver) => setTimeout(resolver, ESPERA_ENTRE_REINTENTOS_MS));
+					continue;
+				}
 
-			if (error.codigo === "sala_no_encontrada") {
-				await resolverSalaTerminada(s, Number(id), error);
-				return "no_encontrada";
-			}
+				const resultado = {
+					sala_finalizada: "finalizada",
+					sala_cerrada: "cerrada",
+					sala_no_encontrada: "no_encontrada",
+				}[error.codigo];
 
-			throw error;
+				if (!resultado) {
+					throw error;
+				}
+
+				await resolverSalaTerminada(s, Number(id), error);
+				return resultado;
+			}
 		}
 	}
 
@@ -403,7 +446,7 @@ export function crearClienteSala(notificar, credencialesIniciales) {
 	}
 
 	async function cerrarSala() {
-		const id = salaId;
+		const id = exigirSala();
 		await emitirConAck(socket, "sala:cerrar", { sala_id: id });
 		soltarSala();
 		notificar.dispatch({ tipo: "cerrada", payload: { sala_id: id, motivo: "docente" }, rol: "docente" });
@@ -411,14 +454,14 @@ export function crearClienteSala(notificar, credencialesIniciales) {
 
 	async function definirInstrucciones(instrucciones) {
 		const respuesta = await emitirConAck(socket, "actividad:instrucciones", {
-			sala_id: salaId,
+			sala_id: exigirSala(),
 			instrucciones,
 		});
 		return respuesta.instrucciones;
 	}
 
 	async function iniciarActividad() {
-		const id = salaId;
+		const id = exigirSala();
 		const respuesta = await emitirConAck(socket, "actividad:iniciar", { sala_id: id });
 		notificar.dispatch({
 			tipo: "iniciada",
@@ -429,7 +472,7 @@ export function crearClienteSala(notificar, credencialesIniciales) {
 
 	async function enviarEvento(tipo, datos) {
 		const respuesta = await emitirConAck(socket, "actividad:evento", {
-			sala_id: salaId,
+			sala_id: exigirSala(),
 			tipo,
 			...(datos ? { datos } : {}),
 		});
@@ -437,7 +480,7 @@ export function crearClienteSala(notificar, credencialesIniciales) {
 	}
 
 	async function enviarResultado(resultado) {
-		await emitirConAck(socket, "actividad:resultado", { sala_id: salaId, resultado });
+		await emitirConAck(socket, "actividad:resultado", { sala_id: exigirSala(), resultado });
 	}
 
 	// Se manda sala_id para que un reintento funcione aunque la sala ya no esté en memoria (es idempotente).
@@ -458,6 +501,13 @@ export function crearClienteSala(notificar, credencialesIniciales) {
 		notificar.errorConexion(null);
 		avisar(null);
 		notificar.dispatch({ tipo: "reiniciar" });
+	}
+
+	/** Cierra la conexión si no hay una sala abierta (al salir de las pantallas de listado/alta de salas). */
+	function cerrarSiOcioso() {
+		if (!salaId) {
+			destruirSocket();
+		}
 	}
 
 	/** Limpieza al desmontar o cerrar sesión: cierra el socket sin tocar el estado de React. */
@@ -483,6 +533,7 @@ export function crearClienteSala(notificar, credencialesIniciales) {
 		enviarResultado,
 		finalizarActividad,
 		reiniciar,
+		cerrarSiOcioso,
 		destruir,
 	};
 }

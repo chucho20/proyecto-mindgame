@@ -49,11 +49,14 @@ export function useAccionDeSala(accion, { enfriamientoMs = 0 } = {}) {
 				resultado = { ok: false, error: fallo };
 			}
 
+			// El resultado se devuelve enseguida (quien llama navega o limpia su campo ya); la espera solo mantiene `ocupado`.
 			if (espera > 0) {
-				await new Promise((resolver) => setTimeout(resolver, espera));
-			}
-
-			if (montadoRef.current) {
+				setTimeout(() => {
+					if (montadoRef.current) {
+						setOcupado(false);
+					}
+				}, espera);
+			} else if (montadoRef.current) {
 				setOcupado(false);
 			}
 
