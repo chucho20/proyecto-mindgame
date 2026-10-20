@@ -55,6 +55,18 @@ function resumirGuardas(manejadores) {
 function recorrerRouter(stack, prefijo, guardasDelRouter, filas) {
 	for (const capa of stack) {
 		if (!capa.route) {
+			// Un router anidado no se recorre: se marca para que alguien lo revise a mano.
+			if (Array.isArray(capa.handle?.stack)) {
+				filas.push({
+					metodo: "*",
+					ruta: `${prefijo} (router anidado)`,
+					autenticada: false,
+					roles: null,
+					anidado: true,
+				});
+				continue;
+			}
+
 			// Middleware a nivel de router (`router.use(...)`): protege las rutas que se declaran después.
 			guardasDelRouter.push(capa.handle);
 			continue;
@@ -92,6 +104,13 @@ for (const [prefijo, router] of MONTAJES) {
 const violaciones = [];
 
 for (const fila of filas) {
+	if (fila.anidado) {
+		violaciones.push(
+			`${fila.ruta}: el auditor no recorre routers anidados; auditalo a mano o ampliá el script.`,
+		);
+		continue;
+	}
+
 	const clave = `${fila.metodo} ${fila.ruta}`;
 	const rolEsperado = ROL_POR_PREFIJO.find(([prefijo]) => fila.ruta.startsWith(`${prefijo}/`))?.[1];
 

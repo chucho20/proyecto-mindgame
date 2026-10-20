@@ -5,6 +5,7 @@ import {
 	VENTANA_EVENTOS_MS,
 } from "../constants/salas.js";
 import socketAuthMiddleware from "../middlewares/socketAuth.middleware.js";
+import { sesionSigueVigente } from "../services/sesion.service.js";
 import * as salaService from "../services/sala.service.js";
 import AppError from "../utils/AppError.js";
 import { registrarError } from "../utils/logger.js";
@@ -22,6 +23,9 @@ import { registrarError } from "../utils/logger.js";
 const nombreRoom = (salaId) => `sala:${salaId}`;
 
 const conexionesPorUsuario = new Map();
+
+// Cada cuánto se vuelve a comprobar en la base que el usuario de un socket abierto exista con el mismo rol.
+const REVALIDAR_USUARIO_CADA_MS = 30_000;
 
 function aErrorDeRespuesta(error) {
 	if (error instanceof salaService.ErrorDeSala) {
@@ -54,11 +58,21 @@ function errorDeSocket(codigo, mensaje, status) {
 }
 
 // El token se verificó al conectar; si venció mientras el socket seguía abierto, se corta la sesión.
-function verificarSesionVigente(socket) {
+async function verificarSesionVigente(socket) {
 	const expiraEn = socket.data.tokenExpiraEn;
 
 	if (expiraEn !== null && Date.now() > expiraEn) {
 		throw errorDeSocket("sesion_expirada", "Tu sesión venció. Iniciá sesión de nuevo.", 401);
+	}
+
+	// Un usuario borrado o con el rol cambiado pierde el acceso del socket en menos de 30 s, igual que en REST.
+	const ahora = Date.now();
+	if (ahora - (socket.data.usuarioVerificadoEn ?? 0) > REVALIDAR_USUARIO_CADA_MS) {
+		if (!(await sesionSigueVigente(socket.data.user))) {
+			throw errorDeSocket("sesion_expirada", "Tu sesión ya no es válida. Iniciá sesión de nuevo.", 401);
+		}
+
+		socket.data.usuarioVerificadoEn = ahora;
 	}
 }
 
@@ -120,7 +134,7 @@ function registrarEvento(socket, nombre, manejador) {
 		let respuesta;
 
 		try {
-			verificarSesionVigente(socket);
+			await verificarSesionVigente(socket);
 			verificarRitmo(socket);
 			respuesta = { ok: true, ...(await manejador(payload)) };
 		} catch (error) {
@@ -140,14 +154,30 @@ function registrarEvento(socket, nombre, manejador) {
 }
 
 // Máximo de sockets simultáneos por usuario (varias pestañas sí, cientos no).
+// El cupo se RESERVA de forma síncrona acá (no en "connection"): la validación del handshake es asíncrona y
+// una ráfaga de conexiones simultáneas pasaría todas el control si el contador se incrementara después.
 function limitarConexionesPorUsuario(socket, next) {
-	const total = conexionesPorUsuario.get(socket.data.user.id) ?? 0;
+	const usuarioId = socket.data.user.id;
+	const total = conexionesPorUsuario.get(usuarioId) ?? 0;
 
 	if (total >= MAX_SOCKETS_POR_USUARIO) {
 		const error = new Error("Demasiadas conexiones abiertas con tu cuenta.");
 		error.data = { codigo: "demasiadas_conexiones" };
 		return next(error);
 	}
+
+	conexionesPorUsuario.set(usuarioId, total + 1);
+
+	// El cupo se libera una sola vez, cuando se cierra la conexión (aunque nunca llegue a "connection").
+	let liberado = false;
+	socket.conn.once("close", () => {
+		if (liberado) return;
+		liberado = true;
+
+		const restantes = (conexionesPorUsuario.get(usuarioId) ?? 1) - 1;
+		if (restantes > 0) conexionesPorUsuario.set(usuarioId, restantes);
+		else conexionesPorUsuario.delete(usuarioId);
+	});
 
 	return next();
 }
@@ -189,7 +219,7 @@ export default async function registerGameSocket(io) {
 
 	io.on("connection", (socket) => {
 		const usuario = socket.data.user;
-		conexionesPorUsuario.set(usuario.id, (conexionesPorUsuario.get(usuario.id) ?? 0) + 1);
+		socket.data.usuarioVerificadoEn = Date.now();
 
 		console.log("Usuario conectado:", socket.id);
 
@@ -233,10 +263,6 @@ export default async function registerGameSocket(io) {
 		socket.on("disconnect", () => {
 			console.log("Usuario desconectado:", socket.id);
 			if (timerSesion) clearTimeout(timerSesion);
-
-			const restantes = (conexionesPorUsuario.get(usuario.id) ?? 1) - 1;
-			if (restantes > 0) conexionesPorUsuario.set(usuario.id, restantes);
-			else conexionesPorUsuario.delete(usuario.id);
 
 			try {
 				salaService.manejarDesconexion(socket.id);

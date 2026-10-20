@@ -44,6 +44,13 @@ function claveDeCuenta(req) {
 	return `${ipKeyGenerator(req.ip)}|${correo}`;
 }
 
+/** Login: TODOS los intentos por IP (también los exitosos), con un tope alto contra la saturación de bcrypt. */
+export const limitarLoginTotalPorIp = crearLimitador({
+	limit: env.rateLimit.loginTotalMax,
+	mensaje:
+		"Demasiados intentos de inicio de sesión desde esta red. Esperá unos minutos antes de volver a intentarlo.",
+});
+
 /** Login: intentos fallidos por IP. Va ANTES de leer el cuerpo de la petición. */
 export const limitarLoginPorIp = crearLimitador({
 	limit: env.rateLimit.loginMax,
@@ -69,6 +76,19 @@ export const limitarRegistro = crearLimitador({
 export const limitarRecuperacion = crearLimitador({
 	limit: env.rateLimit.passwordResetMax,
 	mensaje: "Hiciste demasiadas solicitudes de recuperación. Esperá unos minutos e intentá de nuevo.",
+});
+
+// Clave solo por correo: el límite vale aunque el atacante rote de IP. Responde igual exista o no la cuenta.
+function claveDeCorreo(req) {
+	return typeof req.body?.correo === "string" ? req.body.correo.trim().toLowerCase().slice(0, 150) : "";
+}
+
+/** "Olvidé mi contraseña": solicitudes por correo, desde cualquier IP. Necesita el cuerpo ya leído. */
+export const limitarRecuperacionPorCuenta = crearLimitador({
+	limit: env.rateLimit.passwordResetAccountMax,
+	keyGenerator: claveDeCorreo,
+	mensaje:
+		"Hiciste demasiadas solicitudes de recuperación para este correo. Esperá unos minutos e intentá de nuevo.",
 });
 
 /** Restablecer contraseña: adivinar tokens. Solo cuentan los intentos fallidos. */

@@ -1,7 +1,7 @@
 // Los mensajes de error de Prisma/mysql2 pueden incluir los valores de la consulta (hashes de contraseña,
 // correos) y un error de red puede traer cabeceras: antes de escribir en el log se tapan los secretos conocidos.
 const PATRONES_SECRETOS = [
-	[/eyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]*/g, "[jwt]"],
+	[/eyJ[A-Za-z0-9_-]{8,2000}\.[A-Za-z0-9_-]{8,2000}\.[A-Za-z0-9_-]{0,2000}/g, "[jwt]"],
 	[/\$2[abxy]\$\d{2}\$[./A-Za-z0-9]{53}/g, "[hash]"],
 	[/Bearer\s+[A-Za-z0-9._~+/=-]+/gi, "Bearer [token]"],
 	[/\b[a-f0-9]{64}\b/gi, "[token]"],

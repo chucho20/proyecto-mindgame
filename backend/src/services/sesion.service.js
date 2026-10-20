@@ -36,3 +36,12 @@ export async function autenticarToken(token) {
 
 	return { id: usuario.id, rol: usuario.rol, exp: payload.exp };
 }
+
+/**
+ * Vuelve a comprobar que el usuario de una sesión ya abierta (socket) siga existiendo con el mismo rol.
+ * Devuelve `false` si fue borrado o cambió de rol; los errores de la base se propagan.
+ */
+export async function sesionSigueVigente({ id, rol }) {
+	const usuario = await usuarioRepository.findAuthById(id);
+	return Boolean(usuario) && usuario.rol === rol;
+}

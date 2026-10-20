@@ -69,14 +69,16 @@ if (motivosSecretoDebil.length > 0) {
 // --- JWT_EXPIRES_IN: segundos ("3600") o número + unidad ("30m", "12h", "1d") ---
 
 const JWT_EXPIRES_IN = (process.env.JWT_EXPIRES_IN || "1d").trim();
-const JWT_VIGENCIA_REGEX = /^(\d+)\s?(s|m|h|d)?$/;
-const SEGUNDOS_POR_UNIDAD = { s: 1, m: 60, h: 3600, d: 86400 };
+const JWT_VIGENCIA_REGEX = /^(\d+)\s?(s|m|h|d|w)?$/;
+const SEGUNDOS_POR_UNIDAD = { s: 1, m: 60, h: 3600, d: 86400, w: 604800 };
 const JWT_VIGENCIA_MAXIMA_SEGUNDOS = 7 * 86400;
 
 const vigenciaCoincide = JWT_VIGENCIA_REGEX.exec(JWT_EXPIRES_IN);
 
 if (!vigenciaCoincide || Number(vigenciaCoincide[1]) === 0) {
-	console.error(`JWT_EXPIRES_IN inválido: usá segundos ("3600") o un número con unidad s, m, h o d ("1d").`);
+	console.error(
+		`JWT_EXPIRES_IN inválido: usá segundos ("3600") o un número con unidad s, m, h, d o w ("1d").`,
+	);
 	process.exit(1);
 }
 
@@ -112,7 +114,7 @@ function leerBooleano(nombre, porDefecto = false) {
 
 // Origen = esquema + host + puerto, sin barra final ni ruta (así lo envía el navegador en `Origin`).
 function normalizarOrigen(origen) {
-	return origen.trim().replace(/\/+$/, "");
+	return origen.trim().replace(/\/+$/, "").toLowerCase();
 }
 
 // `trust proxy` de Express: número de saltos ("1"), o los valores de Express ("loopback", "10.0.0.0/8").
@@ -120,7 +122,7 @@ function normalizarOrigen(origen) {
 function leerTrustProxy() {
 	const crudo = (process.env.TRUST_PROXY || "").trim();
 
-	if (crudo === "" || crudo.toLowerCase() === "false") return false;
+	if (crudo === "" || crudo.toLowerCase() === "false" || crudo === "0") return false;
 	if (crudo.toLowerCase() === "true") return 1;
 	if (/^\d+$/.test(crudo)) return Number(crudo);
 	return crudo;
@@ -170,6 +172,12 @@ if (isProduction && corsOrigins.some((origen) => !origen.startsWith("https://"))
 const trustProxy = leerTrustProxy();
 const forceHttps = leerBooleano("FORCE_HTTPS");
 
+if (isProduction && trustProxy === false) {
+	console.warn(
+		"[seguridad] Aviso: TRUST_PROXY sin definir en producción: detrás de un proxy, los límites de intentos tratarían a todos los usuarios como una sola IP.",
+	);
+}
+
 if (forceHttps && trustProxy === false) {
 	console.warn(
 		"[seguridad] Aviso: FORCE_HTTPS=true sin TRUST_PROXY: detrás de un proxy TLS todas las peticiones se verían como HTTP y serían rechazadas.",
@@ -184,12 +192,17 @@ const rateLimit = {
 	windowMs: leerEntero("RATE_LIMIT_WINDOW_MS", 15 * 60 * 1000, { min: 1000 }),
 	// Intentos de login FALLIDOS por IP (los exitosos no cuentan: en un colegio muchos alumnos comparten IP).
 	loginMax: leerEntero("LOGIN_RATE_LIMIT_MAX", 30),
+	// Tope de TODOS los intentos de login por IP (también los exitosos): frena el uso del login como
+	// herramienta para saturar bcrypt con cuentas propias.
+	loginTotalMax: leerEntero("LOGIN_RATE_LIMIT_TOTAL_MAX", 300),
 	// Intentos de login fallidos por cuenta (correo) e IP.
 	loginAccountMax: leerEntero("LOGIN_ACCOUNT_RATE_LIMIT_MAX", 8),
 	// Registros por IP (un aula entera puede registrarse desde la misma red).
 	registerMax: leerEntero("REGISTER_RATE_LIMIT_MAX", 30),
 	// Solicitudes de "olvidé mi contraseña" y de restablecimiento por IP.
 	passwordResetMax: leerEntero("PASSWORD_RESET_RATE_LIMIT_MAX", 10),
+	// Solicitudes de recuperación por correo (desde cualquier IP): evita bombardear la bandeja de una persona.
+	passwordResetAccountMax: leerEntero("PASSWORD_RESET_ACCOUNT_RATE_LIMIT_MAX", 3),
 };
 
 const env = {
@@ -218,7 +231,8 @@ const env = {
 
 	jwt: {
 		secret: process.env.JWT_SECRET,
-		expiresIn: JWT_EXPIRES_IN,
+		// Siempre en segundos (número): jsonwebtoken interpreta un texto sin unidad ("3600") como milisegundos.
+		expiresIn: vigenciaEnSegundos,
 		issuer: (process.env.JWT_ISSUER || "mindgame-api").trim(),
 		audience: (process.env.JWT_AUDIENCE || "mindgame-app").trim(),
 	},
@@ -236,7 +250,7 @@ const env = {
 		from: process.env.SMTP_FROM || "MindGame <no-reply@mindgame.local>",
 	},
 
-	resetTokenExpiresMin: Number(process.env.RESET_TOKEN_EXPIRES_MIN) || 30,
+	resetTokenExpiresMin: leerEntero("RESET_TOKEN_EXPIRES_MIN", 30, { min: 1, max: 1440 }),
 
 	admin: {
 		email: process.env.ADMIN_EMAIL || "",

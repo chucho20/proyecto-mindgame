@@ -1,7 +1,7 @@
 import { Router } from "express";
 
 import * as authController from "../controllers/auth.controller.js";
-import { limitarLoginPorCuenta } from "../middlewares/rateLimit.middleware.js";
+import { limitarLoginPorCuenta, limitarRecuperacionPorCuenta } from "../middlewares/rateLimit.middleware.js";
 
 const router = Router();
 
@@ -10,7 +10,7 @@ const router = Router();
 router.post("/register", authController.register);
 router.post("/login", limitarLoginPorCuenta, authController.login);
 router.post("/logout", authController.logout);
-router.post("/forgot-password", authController.forgotPassword);
+router.post("/forgot-password", limitarRecuperacionPorCuenta, authController.forgotPassword);
 router.post("/reset-password", authController.resetPassword);
 
 export default router;

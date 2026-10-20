@@ -57,8 +57,10 @@ export function esConexionSegura(req) {
 		return false;
 	}
 
+	// Se toma el ÚLTIMO valor: es el que agregó el proxy más cercano; los anteriores pueden venir del cliente.
 	const protocolo = String(req.headers?.["x-forwarded-proto"] ?? "")
-		.split(",")[0]
+		.split(",")
+		.pop()
 		.trim()
 		.toLowerCase();
 	return protocolo === "https" || protocolo === "wss";
@@ -69,7 +71,11 @@ export function esConexionSegura(req) {
  * de salud de las plataformas suelen entrar por HTTP interno.
  */
 export function exigirHttps(req, res, next) {
-	if (!env.forceHttps || esConexionSegura(req) || req.path === "/api/health") {
+	if (
+		!env.forceHttps ||
+		esConexionSegura(req) ||
+		req.path.toLowerCase().replace(/\/+$/, "") === "/api/health"
+	) {
 		return next();
 	}
 

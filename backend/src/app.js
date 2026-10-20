@@ -12,6 +12,7 @@ import grupoRoutes from "./routes/grupo.routes.js";
 import { manejadorDeErrores, rutaNoEncontrada } from "./middlewares/error.middleware.js";
 import {
 	limitarLoginPorIp,
+	limitarLoginTotalPorIp,
 	limitarRecuperacion,
 	limitarRegistro,
 	limitarRestablecimiento,
@@ -53,7 +54,7 @@ app.use(rechazarOrigenNoPermitido);
 app.use(cors(opcionesCors));
 
 // Los límites por IP corren ANTES de leer el cuerpo: una IP bloqueada no obliga al servidor a procesarlo.
-app.post("/api/auth/login", limitarLoginPorIp);
+app.post("/api/auth/login", limitarLoginTotalPorIp, limitarLoginPorIp);
 app.post("/api/auth/register", limitarRegistro);
 app.post("/api/auth/forgot-password", limitarRecuperacion);
 app.post("/api/auth/reset-password", limitarRestablecimiento);

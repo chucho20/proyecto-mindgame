@@ -53,6 +53,17 @@ export async function claimUnused(id) {
 	return count === 1;
 }
 
+/** Invalida los enlaces pendientes del usuario y crea el nuevo en una sola transacción: queda uno solo vigente. */
+export async function replaceForUser({ usuarioId, tokenHash, expiraEn }) {
+	await prisma.$transaction([
+		prisma.passwordReset.updateMany({
+			where: { usuarioId: Number(usuarioId), usado: false },
+			data: { usado: true },
+		}),
+		prisma.passwordReset.create({ data: { usuarioId: Number(usuarioId), tokenHash, expiraEn } }),
+	]);
+}
+
 /** Invalida los enlaces de restablecimiento pendientes de un usuario (al pedir uno nuevo o al cambiar la clave). */
 export async function invalidateAllForUser(usuarioId) {
 	await prisma.passwordReset.updateMany({
