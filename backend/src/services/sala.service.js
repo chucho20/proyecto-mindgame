@@ -354,6 +354,12 @@ async function crearSalaReservada(usuarioJwt, socketId, { grupoId, actividadId, 
 			capacidadMinima,
 		});
 
+		// El socket pudo caerse mientras se esperaba la base de datos: no se registra a un participante fantasma.
+		if (!emisor.estaConectado(socketId)) {
+			await salaRepository.cerrar(fila.id);
+			throw new ErrorDeSala("conexion_perdida", "Se perdió la conexión mientras se creaba la sala.", 409);
+		}
+
 		const sala = registro.registrarSala({
 			id: fila.id,
 			codigo: fila.codigo,
@@ -505,6 +511,11 @@ export async function unirseASala(usuarioJwt, socketId, payload) {
 		throw new ErrorDeSala("sala_llena", "La sala está llena.", 409);
 	}
 
+	// Igual que al crear: si el socket ya no existe (se cayó durante los `await`), no se lo agrega.
+	if (!emisor.estaConectado(socketId)) {
+		throw new ErrorDeSala("conexion_perdida", "Se perdió la conexión. Volvé a intentar.", 409);
+	}
+
 	const { participante, yaEstaba, reconexion, socketAnterior } = registro.agregarParticipante(
 		sala,
 		usuario,
@@ -557,7 +568,7 @@ export async function salirDeSala(usuarioJwt, payload) {
 	// Salir de una sala que ya no existe (o de la que ya saliste) no es un error: el resultado es el mismo.
 	const participante = sala?.participantes.get(usuarioJwt.id);
 	if (!sala || !participante || participante.abandono) {
-		return { sala_id: sala?.id ?? null, salio: false };
+		return { sala_id: participante ? sala.id : null, salio: false };
 	}
 
 	if (sala.finalizacion) {
@@ -862,38 +873,59 @@ async function ejecutarFinalizacion(sala) {
 	const confirmada = await salaRepository.finalizarConParticipaciones(sala.id, ahora, filas);
 
 	if (!confirmada) {
-		throw new ErrorDeSala("estado_invalido", "La actividad no está en curso.", 409);
-	}
+		// Puede que una finalización anterior sí se haya confirmado (por ejemplo, se perdió su respuesta):
+		// si la base ya la da por finalizada se limpia la sala y se devuelve lo guardado.
+		const fila = await salaRepository.findById(sala.id);
 
-	// Desde acá la finalización ya es definitiva: nada de lo que sigue puede dejar la sala a medias.
-	const puntosPorUsuario = await otorgarPuntos(sala, filas);
-
-	const resultados = estudiantes.map((participante) => ({
-		usuario_id: participante.usuarioId,
-		nombre_usuario: participante.nombreUsuario,
-		estado: participante.abandono ? "abandono" : "completo",
-		puntos_obtenidos: puntosPorUsuario.get(participante.usuarioId)?.puntos ?? 0,
-		eventos_enviados: participante.eventosEnviados,
-	}));
-
-	for (const participante of estudiantes) {
-		const premio = puntosPorUsuario.get(participante.usuarioId);
-
-		if (participante.socketId && premio?.detalle) {
-			emisor.aSocket(participante.socketId, "actividad:recompensa", { sala_id: sala.id, ...premio.detalle });
+		if (fila?.estado !== "finalizada") {
+			throw new ErrorDeSala("estado_invalido", "La actividad no está en curso.", 409);
 		}
+
+		const participaciones = await participacionGrupalRepository.findBySala(sala.id);
+		emisor.vaciarSala(sala.id);
+		registro.eliminarSala(sala.id);
+		return { finalizada_en: aIso(fila.finalizada_en), resultados: participaciones.map(aResultado) };
 	}
 
-	const finalizadaEn = aIso(ahora);
-	emisor.aSala(sala.id, "actividad:finalizada", {
-		sala_id: sala.id,
-		finalizada_en: finalizadaEn,
-		resultados,
-	});
-	emisor.vaciarSala(sala.id);
-	registro.eliminarSala(sala.id);
+	// Desde acá la finalización ya es definitiva: pase lo que pase, la sala se libera al terminar.
+	// Los resultados se arman con la foto de arriba (lo que se guardó), no con el estado vivo, que
+	// puede cambiar mientras se otorgan los puntos.
+	sala.estado = "finalizada";
 
-	return { finalizada_en: finalizadaEn, resultados };
+	try {
+		const puntosPorUsuario = await otorgarPuntos(sala, filas);
+
+		const resultados = estudiantes.map((participante, indice) => ({
+			usuario_id: participante.usuarioId,
+			nombre_usuario: participante.nombreUsuario,
+			estado: filas[indice].estado,
+			puntos_obtenidos: puntosPorUsuario.get(participante.usuarioId)?.puntos ?? 0,
+			eventos_enviados: filas[indice].resultado.eventos_enviados,
+		}));
+
+		for (const participante of estudiantes) {
+			const premio = puntosPorUsuario.get(participante.usuarioId);
+
+			if (participante.socketId && premio?.detalle) {
+				emisor.aSocket(participante.socketId, "actividad:recompensa", {
+					sala_id: sala.id,
+					...premio.detalle,
+				});
+			}
+		}
+
+		const finalizadaEn = aIso(ahora);
+		emisor.aSala(sala.id, "actividad:finalizada", {
+			sala_id: sala.id,
+			finalizada_en: finalizadaEn,
+			resultados,
+		});
+
+		return { finalizada_en: finalizadaEn, resultados };
+	} finally {
+		emisor.vaciarSala(sala.id);
+		registro.eliminarSala(sala.id);
+	}
 }
 
 // Puntos de la actividad para quien la completó. `actividadService.completar` suma una sola vez por
@@ -993,15 +1025,22 @@ export function manejarDesconexion(socketId) {
 
 function alExpirarGracia(sala, participante) {
 	if (participante.rol === "docente") {
-		// Si ya se está finalizando o cerrando, esa operación termina la sala por su cuenta.
-		if (!sala.ocupada && !sala.finalizacion) {
-			void cerrarPorSistema(sala, "docente_ausente");
+		// Con otra operación en curso (iniciar, finalizar) se vuelve a esperar: si esa operación falla, la
+		// sala no puede quedar abierta sin docente.
+		if (sala.ocupada || sala.finalizacion) {
+			registro.programarExpiracion(sala, participante, alExpirarGracia);
+		} else {
+			cerrarPorSistema(sala, "docente_ausente").catch(registrarFalloDeCierre);
 		}
 		return;
 	}
 
 	registro.quitarParticipante(sala, participante.usuarioId, { marcarAbandono: sala.estado === "en_curso" });
 	emitirParticipantes(sala, "sala:participante_expirado", { usuario_id: participante.usuarioId });
+}
+
+function registrarFalloDeCierre(error) {
+	console.error("Error inesperado en sockets al cerrar una sala:", error);
 }
 
 // Cierre iniciado por el servidor (docente ausente o sala vencida): sin puntos ni participación.
@@ -1015,7 +1054,11 @@ async function cerrarPorSistema(sala, motivo) {
 		console.error(`No se pudo cerrar la sala ${sala.id} en la base de datos:`, error.message);
 	}
 
-	difundirCierre(sala, motivo);
+	try {
+		difundirCierre(sala, motivo);
+	} finally {
+		sala.ocupada = false;
+	}
 }
 
 /** Cierra las salas que llevan abiertas demasiado tiempo (se llama periódicamente). */
@@ -1023,7 +1066,7 @@ export function cerrarSalasVencidas() {
 	const limite = Date.now() - MAX_VIDA_SALA_MS;
 
 	for (const sala of registro.listarSalas()) {
-		if (sala.creadaEn < limite) void cerrarPorSistema(sala, "tiempo_agotado");
+		if (sala.creadaEn < limite) cerrarPorSistema(sala, "tiempo_agotado").catch(registrarFalloDeCierre);
 	}
 }
 

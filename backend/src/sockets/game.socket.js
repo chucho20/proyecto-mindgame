@@ -61,6 +61,31 @@ function verificarSesionVigente(socket) {
 	}
 }
 
+// Corta el socket en el instante en que vence el JWT (setTimeout admite hasta ~24,8 días).
+function programarCorteDeSesion(socket) {
+	const expiraEn = socket.data.tokenExpiraEn;
+	if (expiraEn === null) return null;
+
+	const espera = Math.min(Math.max(expiraEn - Date.now(), 0), 2 ** 31 - 1);
+	const timer = setTimeout(() => socket.disconnect(true), espera);
+	timer.unref?.();
+	return timer;
+}
+
+// Ventana fija por socket: cuenta los eventos entrantes de los últimos `VENTANA_EVENTOS_MS`.
+function contarEventoEntrante(socket) {
+	const ahora = Date.now();
+	const ventana = socket.data.ventanaTotal;
+
+	if (!ventana || ahora - ventana.inicio >= VENTANA_EVENTOS_MS) {
+		socket.data.ventanaTotal = { inicio: ahora, cuenta: 1 };
+		return 1;
+	}
+
+	ventana.cuenta += 1;
+	return ventana.cuenta;
+}
+
 // Ventana fija por socket: evita que un cliente sature al servidor con mensajes.
 function verificarRitmo(socket) {
 	const ahora = Date.now();
@@ -138,6 +163,9 @@ export default async function registerGameSocket(io) {
 		unirSocket(socketId, salaId) {
 			io.sockets.sockets.get(socketId)?.join(nombreRoom(salaId));
 		},
+		estaConectado(socketId) {
+			return io.sockets.sockets.has(socketId);
+		},
 		sacarSocket(socketId, salaId) {
 			io.sockets.sockets.get(socketId)?.leave(nombreRoom(salaId));
 		},
@@ -163,6 +191,16 @@ export default async function registerGameSocket(io) {
 		conexionesPorUsuario.set(usuario.id, (conexionesPorUsuario.get(usuario.id) ?? 0) + 1);
 
 		console.log("Usuario conectado:", socket.id);
+
+		// Un socket pasivo (que solo escucha) también debe caerse cuando vence su token.
+		const timerSesion = programarCorteDeSesion(socket);
+
+		// Cuenta TODOS los eventos entrantes (también los que no tienen handler) para cortar a quien inunda.
+		socket.onAny(() => {
+			if (contarEventoEntrante(socket) > LIMITE_EVENTOS_POR_VENTANA * 3) {
+				socket.disconnect(true);
+			}
+		});
 
 		// Sala: crear, entrar, salir, consultar y cerrar.
 		registrarEvento(socket, "sala:crear", (payload) => salaService.crearSala(usuario, socket.id, payload));
@@ -193,6 +231,7 @@ export default async function registerGameSocket(io) {
 
 		socket.on("disconnect", () => {
 			console.log("Usuario desconectado:", socket.id);
+			if (timerSesion) clearTimeout(timerSesion);
 
 			const restantes = (conexionesPorUsuario.get(usuario.id) ?? 1) - 1;
 			if (restantes > 0) conexionesPorUsuario.set(usuario.id, restantes);
