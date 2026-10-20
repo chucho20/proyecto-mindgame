@@ -23,12 +23,15 @@ import ProgressPage from "../pages/student/ProgressPage.jsx";
 import AchievementsPage from "../pages/student/AchievementsPage.jsx";
 import RewardsPage from "../pages/student/RewardsPage.jsx";
 import MyGroupsPage from "../pages/student/MyGroupsPage.jsx";
+import LiveRoomsPage from "../pages/student/LiveRoomsPage.jsx";
+import LiveRoomPage from "../pages/realtime/LiveRoomPage.jsx";
 import TeacherLayout from "../layouts/TeacherLayout.jsx";
 import TeacherDashboardPage from "../pages/teacher/TeacherDashboardPage.jsx";
 import GroupsPage from "../pages/teacher/GroupsPage.jsx";
 import GroupDetailPage from "../pages/teacher/GroupDetailPage.jsx";
 import GroupStatsPage from "../pages/teacher/GroupStatsPage.jsx";
 import StudentStatsPage from "../pages/teacher/StudentStatsPage.jsx";
+import LiveSetupPage from "../pages/teacher/LiveSetupPage.jsx";
 
 // Placeholder temporal del panel de estudiante: su dashboard completo se
 // construye en un sprint posterior. Por ahora aterriza acá y puede ir a su perfil.
@@ -65,6 +68,8 @@ function AppRoutes() {
 					<Route path="/estudiante/logros" element={<AchievementsPage />} />
 					<Route path="/estudiante/recompensas" element={<RewardsPage />} />
 					<Route path="/estudiante/grupos" element={<MyGroupsPage />} />
+					<Route path="/estudiante/en-vivo" element={<LiveRoomsPage />} />
+					<Route path="/estudiante/salas/:salaId" element={<LiveRoomPage />} />
 				</Route>
 			</Route>
 
@@ -74,6 +79,8 @@ function AppRoutes() {
 					<Route path="/docente/grupos" element={<GroupsPage />} />
 					<Route path="/docente/grupos/:grupoId" element={<GroupDetailPage />} />
 					<Route path="/docente/grupos/:grupoId/estadisticas" element={<GroupStatsPage />} />
+					<Route path="/docente/grupos/:grupoId/en-vivo" element={<LiveSetupPage />} />
+					<Route path="/docente/salas/:salaId" element={<LiveRoomPage />} />
 					<Route path="/docente/estudiantes/:estudianteId/estadisticas" element={<StudentStatsPage />} />
 				</Route>
 			</Route>

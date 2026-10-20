@@ -172,9 +172,14 @@ function GroupDetailPage() {
 				title={grupo.nombre}
 				description="Estudiantes que se unieron con el código de este grupo."
 				actions={
-					<Link to={`/docente/grupos/${grupo.id}/estadisticas`} className="teacher-page__primary">
-						Ver estadísticas del grupo
-					</Link>
+					<div className="teacher-page__actions-row">
+						<Link to={`/docente/grupos/${grupo.id}/en-vivo`} className="teacher-page__primary">
+							Iniciar actividad en vivo
+						</Link>
+						<Link to={`/docente/grupos/${grupo.id}/estadisticas`} className="teacher-page__secondary">
+							Ver estadísticas del grupo
+						</Link>
+					</div>
 				}
 			/>
 

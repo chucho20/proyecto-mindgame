@@ -1,3 +1,4 @@
+import * as actividadService from "../services/actividad.service.js";
 import * as grupoService from "../services/grupo.service.js";
 import * as estadisticasDocenteService from "../services/estadisticasDocente.service.js";
 import handleError from "../utils/handleError.js";
@@ -45,6 +46,15 @@ export async function retirarEstudiante(req, res) {
 	try {
 		await grupoService.retirarEstudiante(req.user.id, req.params.id, req.params.estudianteId);
 		return res.status(200).json({ message: "Estudiante retirado del grupo." });
+	} catch (error) {
+		return handleError(res, error, "teacher.controller");
+	}
+}
+
+export async function listarActividades(req, res) {
+	try {
+		const actividades = await actividadService.listarActivasParaDocente();
+		return res.status(200).json({ actividades });
 	} catch (error) {
 		return handleError(res, error, "teacher.controller");
 	}

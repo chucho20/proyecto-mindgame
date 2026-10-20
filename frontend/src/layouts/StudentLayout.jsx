@@ -5,12 +5,13 @@ import { useAuth } from "../context/AuthContext.js";
 import Sidebar from "../components/layout/Sidebar/Sidebar.jsx";
 import Header from "../components/layout/Header/Header.jsx";
 import MobileNavigation from "../components/layout/MobileNavigation/MobileNavigation.jsx";
+import SalaActivaBanner from "../components/realtime/SalaActivaBanner/SalaActivaBanner.jsx";
 
 const NAV_ITEMS = [
 	{ label: "Inicio", to: "/estudiante", icon: "🏠", end: true },
 	{ label: "Misiones", to: "/estudiante/misiones", icon: "🗺️" },
 	{ label: "Retos", icon: "🧩", disabled: true },
-	{ label: "Actividades", icon: "🎲", disabled: true },
+	{ label: "Actividades en vivo", to: "/estudiante/en-vivo", icon: "🎲" },
 	{ label: "Mi progreso", to: "/estudiante/progreso", icon: "📈" },
 	{ label: "Logros", to: "/estudiante/logros", icon: "🏆" },
 	{ label: "Recompensas", to: "/estudiante/recompensas", icon: "🎁" },
@@ -23,8 +24,8 @@ const NAV_ITEMS = [
  * Layout compartido de las pantallas de estudiante: sidebar claro en
  * desktop/tablet, navegación inferior en mobile (ver responsive.css).
  * Están habilitados "Inicio", "Misiones", "Mi progreso", "Logros",
- * "Recompensas", "Mis grupos", "Mi perfil" y "Cerrar sesión"; el resto (Retos, Actividades,
- * Convivencia) muestra la leyenda honesta del proyecto.
+ * "Recompensas", "Mis grupos", "Actividades en vivo", "Mi perfil" y "Cerrar sesión"; el resto
+ * (Retos, Convivencia) muestra la leyenda honesta del proyecto.
  */
 function StudentLayout() {
 	const { user, logout } = useAuth();
@@ -62,6 +63,7 @@ function StudentLayout() {
 			<div className="app-layout__content">
 				<Header user={user} onLogout={handleLogout} loggingOut={loggingOut} />
 				<main className="app-layout__main">
+					<SalaActivaBanner />
 					<Outlet />
 				</main>
 			</div>

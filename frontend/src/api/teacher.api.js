@@ -39,3 +39,9 @@ export async function getStudentStats(estudianteId) {
 	const { data } = await api.get(`/docente/estudiantes/${encodeURIComponent(estudianteId)}/estadisticas`);
 	return data;
 }
+
+// Actividades activas que el docente puede elegir para una sala en vivo (RF-019).
+export async function listActivities() {
+	const { data } = await api.get("/docente/actividades");
+	return data;
+}

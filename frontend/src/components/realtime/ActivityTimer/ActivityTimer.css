@@ -1,0 +1,24 @@
+.activity-timer {
+	display: inline-flex;
+	align-items: baseline;
+	gap: var(--space-2);
+	margin: 0;
+	padding: 0.35rem 0.8rem;
+	border-radius: 999px;
+	background: var(--color-primary-50);
+	color: var(--color-primary-700);
+}
+
+.activity-timer__label {
+	font-size: 0.75rem;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+}
+
+.activity-timer__value {
+	font-family: var(--font-heading);
+	font-size: 1.25rem;
+	font-weight: 700;
+	font-variant-numeric: tabular-nums;
+}
