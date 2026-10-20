@@ -38,6 +38,32 @@ function getDummyHash() {
 	return dummyHashPromise;
 }
 
+// Comparación en tiempo constante: se hashea con SHA-256 para igualar longitudes
+// y evitar filtrar el largo del código esperado.
+function codigosCoinciden(recibido, esperado) {
+	const a = crypto.createHash("sha256").update(recibido).digest();
+	const b = crypto.createHash("sha256").update(esperado).digest();
+	return crypto.timingSafeEqual(a, b);
+}
+
+// Falla cerrado: sin código configurado en el servidor nadie puede registrarse como docente.
+function verificarCodigoDocente(codigoRecibido) {
+	const codigoEsperado = env.docenteRegistrationCode;
+
+	if (!codigoEsperado) {
+		throw new AppError(
+			"El registro de docentes no está habilitado: falta configurar el código de docente.",
+			403,
+		);
+	}
+
+	const codigo = typeof codigoRecibido === "string" ? codigoRecibido.trim() : "";
+
+	if (!codigo || !codigosCoinciden(codigo, codigoEsperado)) {
+		throw new AppError("Código de docente inválido.", 403);
+	}
+}
+
 export async function register(data) {
 	const errors = validateRegister(data);
 
@@ -48,32 +74,11 @@ export async function register(data) {
 	const correo = data.correo.trim().toLowerCase();
 	const nombreUsuario = data.nombreUsuario.trim();
 
-	const rolSolicitado = data.rol;
-
-// El registro público no debe permitir crear administradores.
-if (rolSolicitado === "admin") {
-	throw new AppError(
-		"No está permitido registrar administradores desde este endpoint.",
-		403
-	);
-}
-
-// El rol docente requiere un código de autorización.
-if (rolSolicitado === "docente") {
-	const codigoDocente = data.codigoDocente;
-	const codigoAutorizacion = env.docenteRegistrationCode;
-
-	if (
-		!codigoAutorizacion ||
-		typeof codigoDocente !== "string" ||
-		codigoDocente.trim() !== codigoAutorizacion
-	) {
-		throw new AppError(
-			"No estás autorizado para registrarte como docente.",
-			403
-		);
+	// El rol docente requiere un código de autorización. validateRegister ya rechaza
+	// con 400 cualquier rol distinto de estudiante/docente (p. ej. administrador).
+	if (data.rol === "docente") {
+		verificarCodigoDocente(data.codigoDocente);
 	}
-}
 
 	const existingByEmail = await usuarioRepository.findByEmail(correo);
 	if (existingByEmail) {
@@ -196,4 +201,3 @@ export async function resetPassword(token, newPassword) {
 
 	return { message: "Contraseña restablecida correctamente." };
 }
-
