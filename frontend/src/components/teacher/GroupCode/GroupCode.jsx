@@ -33,9 +33,10 @@ function copiarConSeleccion(texto) {
  * Código de un grupo con botón "Copiar" (RF-022). El resultado se anuncia en una
  * región `status` para lectores de pantalla; si el navegador no permite copiar
  * (contexto no seguro o permiso denegado) se pide copiarlo a mano.
- * `size="large"` agranda el código (pantalla "Grupo creado").
+ * `size="large"` agranda el código (pantalla "Grupo creado"). `etiqueta` es el texto que leen
+ * los lectores de pantalla antes del código (por defecto "Código del grupo"; la sala en vivo usa "Código de la sala").
  */
-function GroupCode({ codigo, size = "normal" }) {
+function GroupCode({ codigo, size = "normal", etiqueta = "Código del grupo" }) {
 	const [estado, setEstado] = useState("idle");
 	const timeoutRef = useRef(null);
 	const montadoRef = useRef(true);
@@ -71,7 +72,7 @@ function GroupCode({ codigo, size = "normal" }) {
 	return (
 		<span className={size === "large" ? "group-code group-code--large" : "group-code"}>
 			<code className="group-code__value">
-				<span className="group-code__sr">Código del grupo: </span>
+				<span className="group-code__sr">{etiqueta}: </span>
 				{codigo}
 			</code>
 			<button type="button" className="group-code__copy" onClick={copiar}>

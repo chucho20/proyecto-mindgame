@@ -19,4 +19,7 @@ router.get("/grupos/:id/estadisticas", teacherController.estadisticasDelGrupo);
 
 router.get("/estudiantes/:id/estadisticas", teacherController.estadisticasDelEstudiante);
 
+// Actividades activas para elegir la de una sala en vivo (RF-019).
+router.get("/actividades", teacherController.listarActividades);
+
 export default router;

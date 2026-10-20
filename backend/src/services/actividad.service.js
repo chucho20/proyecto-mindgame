@@ -55,6 +55,24 @@ export async function listar(misionId, usuarioId) {
 	}));
 }
 
+/**
+ * Actividades activas que el docente puede elegir para una sala en vivo (RF-019). Solo lo necesario para
+ * elegir: la retroalimentación se entrega a los estudiantes recién al completar la actividad.
+ */
+export async function listarActivasParaDocente() {
+	const actividades = await actividadRepository.findAllActivasConMision();
+
+	return actividades.map((actividad) => ({
+		id: actividad.id,
+		titulo: actividad.titulo,
+		descripcion: actividad.descripcion,
+		tipo: actividad.tipo,
+		puntos: actividad.puntos,
+		mision_id: actividad.mision_id,
+		mision_titulo: actividad.mision_titulo,
+	}));
+}
+
 export async function completar(actividadId, usuarioId) {
 	const actividad = await actividadRepository.findById(actividadId);
 

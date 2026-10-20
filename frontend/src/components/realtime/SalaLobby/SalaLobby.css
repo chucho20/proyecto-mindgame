@@ -1,0 +1,99 @@
+.sala-lobby {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-5);
+	min-width: 0;
+}
+
+.sala-lobby__header {
+	min-width: 0;
+}
+
+.sala-lobby__eyebrow {
+	margin: 0;
+	color: var(--color-primary-700);
+	font-size: 0.78rem;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+}
+
+.sala-lobby__title {
+	margin: var(--space-1) 0;
+	font-family: var(--font-heading);
+	font-size: 1.5rem;
+	color: var(--color-slate-800);
+	overflow-wrap: anywhere;
+}
+
+.sala-lobby__title:focus {
+	outline: none;
+}
+
+.sala-lobby__title:focus-visible {
+	box-shadow: var(--shadow-focus);
+	border-radius: var(--radius-sm);
+}
+
+.sala-lobby__meta {
+	margin: 0;
+	color: var(--color-slate-500);
+	font-size: 0.9rem;
+	overflow-wrap: anywhere;
+}
+
+.sala-lobby__grid {
+	display: grid;
+	grid-template-columns: 1fr;
+	gap: var(--space-4);
+}
+
+@media (min-width: 900px) {
+	.sala-lobby__grid {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+}
+
+.sala-lobby__form {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+}
+
+.sala-lobby__label {
+	font-size: 0.85rem;
+	font-weight: 700;
+	color: var(--color-slate-700);
+}
+
+.sala-lobby__textarea {
+	width: 100%;
+	padding: 0.6rem 0.8rem;
+	border: 1px solid var(--color-slate-300);
+	border-radius: var(--radius-sm);
+	font: inherit;
+	font-size: 0.9rem;
+	resize: vertical;
+	box-sizing: border-box;
+}
+
+.sala-lobby__textarea:focus {
+	outline: none;
+	border-color: var(--color-primary-600);
+	box-shadow: var(--shadow-focus);
+}
+
+.sala-lobby__instructions {
+	margin: 0;
+	color: var(--color-slate-700);
+	font-size: 0.95rem;
+	line-height: 1.5;
+	white-space: pre-wrap;
+	overflow-wrap: anywhere;
+}
+
+.sala-lobby__requirement {
+	margin: 0;
+	color: var(--color-slate-700);
+	font-size: 0.9rem;
+}

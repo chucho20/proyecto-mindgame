@@ -38,6 +38,20 @@ export async function findByMisionId(misionId, { onlyActive = false } = {}) {
 	return actividades.map(aFilaActividad);
 }
 
+// Actividades activas con el título de su misión (si la tienen), para que el docente elija la de una sala.
+export async function findAllActivasConMision() {
+	const actividades = await prisma.actividad.findMany({
+		where: { estado: "activa" },
+		orderBy: [{ misionId: "asc" }, ...ORDEN_POR_DEFECTO],
+		include: { mision: { select: { titulo: true } } },
+	});
+
+	return actividades.map((actividad) => ({
+		...aFilaActividad(actividad),
+		mision_titulo: actividad.mision?.titulo ?? null,
+	}));
+}
+
 export async function findAllAdmin({ misionId } = {}) {
 	if (misionId) {
 		const misionIdNormalizado = normalizarId(misionId);
