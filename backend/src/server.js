@@ -15,10 +15,13 @@ const io = new Server(server, {
 	cors: {
 		origin: process.env.FRONTEND_URL || "http://localhost:5173",
 		methods: ["GET", "POST"],
+		credentials: true,
 	},
+	// Tope del tamaño de un mensaje (por defecto 1 MB): los eventos de las actividades son pequeños.
+	maxHttpBufferSize: 20 * 1024,
 });
 
-registerGameSocket(io);
+await registerGameSocket(io);
 
 server.listen(PORT, () => {
 	console.log(`🎮 MindGame API ejecutándose en puerto ${PORT}`);
