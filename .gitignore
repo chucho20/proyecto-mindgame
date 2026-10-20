@@ -4,7 +4,12 @@
 .agents/
 node_modules/
 
+# Variables de entorno y credenciales: nunca se versionan (solo los .env.example).
 .env
+.env.*
+!.env.example
+*.pem
+*.key
 
 # Cliente Prisma generado (backend/src/generated/prisma) - se regenera con
 # `npx prisma generate`, no hace falta versionarlo.
