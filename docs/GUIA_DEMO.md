@@ -107,8 +107,9 @@ reset avisa si pasó). Los ids autoincrementales siguen creciendo; es normal.
   deshabilitados. Conviene navegar por Misiones, Mi progreso, Logros, Recompensas, Mis grupos y Actividades en vivo.
 - "Misiones" lista juntas las de historia y las de convivencia aunque el subtítulo habla solo de históricas.
 - Las salas en vivo y los límites de intentos viven en la memoria del servidor: reiniciarlo las borra.
-- El correo de recuperación de contraseña solo se envía con SMTP configurado; en desarrollo el enlace se imprime en la
-  consola del backend.
+- El correo de recuperación de contraseña solo se envía de verdad con `NODE_ENV=production` y las cuatro variables
+  `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER` y `SMTP_PASSWORD` configuradas. Fuera de producción, aunque haya SMTP, el enlace
+  se imprime en la consola del backend; para la demo, copialo de ahí.
 - Las actividades recreativas se marcan como completadas con un botón; no tienen una interacción propia.
 
 ## 7. Problemas frecuentes
