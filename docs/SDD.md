@@ -72,7 +72,7 @@ MindGame utiliza una arquitectura cliente-servidor de tres capas, con el patrón
 ## 3.4 Justificación de decisiones tecnológicas
 Socket.io se eligió sobre alternativas basadas en listeners de bases de datos documentales (por ejemplo, Firestore) porque RF-019 requiere sincronización de eventos de juego con baja latencia entre varios participantes simultáneos, un caso de uso para el que Socket.io está diseñado de forma nativa (salas, difusión de eventos, reconexión).
 MySQL se eligió porque el dominio de MindGame es fuertemente relacional (usuarios, grupos docente-estudiante, misiones, retos, progreso, recompensas, logros), lo que favorece un modelo relacional con integridad referencial sobre un modelo documental.
-React + Vite y el hospedaje en Vercel/Render se mantienen por consistencia con el resto de proyectos del programa y por ajustarse a los planes gratuitos disponibles.
+React + Vite y el hospedaje en Vercel/Render se mantienen por ajustarse a los planes gratuitos disponibles.
 # 4. Modelo de datos
 ## 4.1 Diagrama entidad-relación (conceptual)
 Usuario (1)───(N) Progreso ───(N) Mision
